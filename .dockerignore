@@ -1,0 +1,9 @@
+# Aplica al build del backend (contexto = raíz del repo, ver backend/Dockerfile)
+**/node_modules
+**/dist
+**/.angular
+backend/lambda
+backend/lambda.zip
+executor/executor.zip
+.git
+.gitignore
