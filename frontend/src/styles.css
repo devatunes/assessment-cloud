@@ -1,0 +1,84 @@
+/* Ajustes puntuales sobre Pico.css (ver angular.json) */
+
+:root {
+  --pico-font-size: 100%;
+}
+
+body {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.app-nav a {
+  margin-left: 1rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-right: 0.35rem;
+}
+
+.badge-easy { background: #d1fae5; color: #065f46; }
+.badge-medium { background: #fef3c7; color: #92400e; }
+.badge-hard { background: #fee2e2; color: #991b1b; }
+.badge-mc { background: #e0e7ff; color: #3730a3; }
+.badge-code { background: #dbeafe; color: #1e40af; }
+
+.test-case-result {
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.test-case-result.pass {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.test-case-result.fail {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.result-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  font-family: var(--pico-font-family-monospace);
+  font-size: 0.85rem;
+}
+
+.result-columns pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.progress-indicator {
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.editor-host {
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.editor-host .cm-editor {
+  height: 260px;
+}

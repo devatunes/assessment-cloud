@@ -1,0 +1,22 @@
+# Entorno local de desarrollo: PostgreSQL 16 (misma versión que RDS en AWS)
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: assessment-db
+    environment:
+      POSTGRES_DB: assessment
+      POSTGRES_USER: assessment
+      POSTGRES_PASSWORD: assessment_local_dev
+    ports:
+      # 5433 en el host para no chocar con un Postgres local existente
+      - "5433:5432"
+    volumes:
+      - assessment_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U assessment -d assessment"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  assessment_pgdata:
