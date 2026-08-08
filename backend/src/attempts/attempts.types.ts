@@ -27,3 +27,22 @@ export type AttemptWithQuestions = {
   maxScore: number;
   questions: SanitizedQuestion[];
 };
+
+export type AttemptResult = {
+  id: string;
+  assessmentId: string;
+  assessmentName: string;
+  candidateName: string;
+  status: string;
+  score: number | null;
+  maxScore: number;
+  startedAt: Date;
+  finishedAt: Date | null;
+  breakdown: Array<{
+    questionId: string;
+    title: string;
+    type: QuestionType;
+    isCorrect: boolean;
+    points: number;
+  }>;
+};

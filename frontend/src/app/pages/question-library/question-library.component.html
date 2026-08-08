@@ -46,9 +46,20 @@
             <legend>Opciones</legend>
             @for (option of newQuestion.options; track $index) {
               <div class="grid">
-                <input type="text" [(ngModel)]="option.text" [name]="'option-' + $index" placeholder="Texto de la opción" />
+                <input
+                  type="text"
+                  [(ngModel)]="option.text"
+                  [ngModelOptions]="{ standalone: true }"
+                  [attr.name]="'option-' + $index"
+                  placeholder="Texto de la opción"
+                />
                 <label>
-                  <input type="checkbox" [(ngModel)]="option.isCorrect" [name]="'correct-' + $index" />
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="option.isCorrect"
+                    [ngModelOptions]="{ standalone: true }"
+                    [attr.name]="'correct-' + $index"
+                  />
                   Correcta
                 </label>
                 <button type="button" class="secondary" (click)="removeOption($index)">Quitar</button>
@@ -61,7 +72,46 @@
             Template de código inicial
             <textarea [(ngModel)]="newQuestion.codeTemplate" name="codeTemplate" rows="4"></textarea>
           </label>
-          <p><small>Los test cases se administran vía API/Swagger — este formulario crea un placeholder.</small></p>
+
+          <fieldset>
+            <legend>Test cases</legend>
+            <p>
+              <small>
+                El input se escribe en formato JSON: <code>[1,2,3]</code>, <code>"texto"</code>, <code>5</code>.
+                El output esperado se compara como texto plano contra la salida del programa.
+                Los ocultos solo se usan al calificar, nunca se muestran al candidato.
+              </small>
+            </p>
+            @for (testCase of newQuestion.testCases; track $index) {
+              <div class="grid">
+                <input
+                  type="text"
+                  [(ngModel)]="testCase.input"
+                  [ngModelOptions]="{ standalone: true }"
+                  [attr.name]="'tc-input-' + $index"
+                  placeholder="Input (JSON), ej: [1,2,3]"
+                />
+                <input
+                  type="text"
+                  [(ngModel)]="testCase.expectedOutput"
+                  [ngModelOptions]="{ standalone: true }"
+                  [attr.name]="'tc-output-' + $index"
+                  placeholder="Output esperado"
+                />
+                <label>
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="testCase.hidden"
+                    [ngModelOptions]="{ standalone: true }"
+                    [attr.name]="'tc-hidden-' + $index"
+                  />
+                  Oculto
+                </label>
+                <button type="button" class="secondary" (click)="removeTestCase($index)">Quitar</button>
+              </div>
+            }
+            <button type="button" class="secondary" (click)="addTestCase()">+ Agregar test case</button>
+          </fieldset>
         }
 
         <button type="submit" [disabled]="creating">{{ creating ? 'Guardando...' : 'Guardar pregunta' }}</button>

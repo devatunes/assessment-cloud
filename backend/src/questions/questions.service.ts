@@ -12,6 +12,8 @@ export class QuestionsService {
   constructor(
     @InjectRepository(Question)
     private readonly questionRepository: Repository<Question>,
+    @InjectRepository(QuestionOption)
+    private readonly optionRepository: Repository<QuestionOption>,
   ) {}
 
   async findAll(query: QueryQuestionsDto): Promise<Question[]> {
@@ -86,6 +88,11 @@ export class QuestionsService {
     });
 
     if (dto.options) {
+      // Borra las opciones anteriores explícitamente: dejar que TypeORM lo
+      // infiera del cascade reemplazando el array requeriría que question_id
+      // fuera nullable (orphanedRowAction intenta poner NULL antes de
+      // borrar), y no lo es. Borrar-y-recrear es simple y siempre correcto.
+      await this.optionRepository.delete({ questionId: id });
       question.options = dto.options.map((option, position) =>
         Object.assign(new QuestionOption(), {
           text: option.text,

@@ -1,9 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   ArrayMinSize,
   IsArray,
   IsBoolean,
+  IsDefined,
   IsEnum,
   IsNotEmpty,
   IsOptional,
@@ -28,6 +30,11 @@ export class CreateQuestionTestCaseDto {
   @ApiProperty({
     description: 'Input que recibe la función solution(input)',
   })
+  // Sin @IsDefined() acá, el ValidationPipe global (whitelist: true) elimina
+  // esta propiedad por no tener NINGÚN decorador de class-validator (un valor
+  // "cualquier JSON" no tiene un decorador de tipo propio) — @IsDefined()
+  // solo exige que venga presente, sin restringir su tipo.
+  @IsDefined()
   input: unknown;
 
   @ApiProperty({ description: 'Output esperado, comparado como string' })
@@ -83,6 +90,9 @@ export class CreateQuestionDto {
   @ValidateIf((dto: CreateQuestionDto) => dto.type === QuestionType.CODE)
   @IsArray()
   @ArrayMinSize(1)
+  // Tope duro: cada test case corre secuencialmente (hasta unos segundos c/u,
+  // ver executor/runner.js) durante el scoring de CADA intento finalizado.
+  @ArrayMaxSize(20)
   @ValidateNested({ each: true })
   @Type(() => CreateQuestionTestCaseDto)
   testCases?: CreateQuestionTestCaseDto[];

@@ -52,4 +52,12 @@ export class AttemptsController {
   finish(@Param('id') id: string) {
     return this.attemptsService.finish(id);
   }
+
+  @Get(':id/result')
+  @ApiOperation({
+    summary: 'Obtiene el resultado de un intento ya finalizado (no lo finaliza)',
+  })
+  getResult(@Param('id') id: string) {
+    return this.attemptsService.getResult(id);
+  }
 }

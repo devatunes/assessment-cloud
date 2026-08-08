@@ -129,6 +129,30 @@ npm start
 El seed inicial crea 8 preguntas (5 de opción múltiple, 3 de código) y un assessment de
 ejemplo ("Assessment de ejemplo — Fundamentos") listo para probar el flujo completo.
 
+## Tests
+
+```bash
+# Runner del executor (4 casos: correcto, incorrecto, timeout, error de sintaxis)
+npm run test:executor
+
+# Unit tests del backend (scoring de attempts, dispatch local/lambda del executor,
+# validación de assessments) — no requieren base de datos
+npm run test:backend
+
+# E2E de flujo completo (biblioteca -> assessment -> intento -> resolver -> finalizar)
+# contra un Postgres real. Requiere `docker compose up -d db` corriendo primero;
+# usa su propia base "assessment_test", no toca los datos de desarrollo.
+npm run test:backend:e2e
+
+# Los tres juntos
+npm test
+```
+
+El e2e cubre explícitamente los bugs corregidos en revisión de código: input real en
+test cases (antes lo rechazaba el ValidationPipe), tope de 20 test cases por pregunta,
+opciones huérfanas al editar una pregunta, y el guard de `/attempts/:id/result` que
+impide finalizar un intento por navegación accidental a la URL.
+
 ## Desplegar en AWS
 
 Requisitos: AWS CLI configurado, Terraform, acceso al repo `app-iac`.
@@ -153,8 +177,10 @@ quedan disponibles con `terraform output` desde `app-iac/`.
 ## Qué haría con más tiempo
 
 - Autenticación para el rol reclutador (hoy los endpoints de administración están abiertos).
-- Editor de test cases desde la UI (hoy se administran vía Swagger/API).
 - Soporte de Java en el executor (contenedor con JDK en vez de Lambda + `spawnSync`).
-- Tests automatizados (unit + e2e) del backend y del frontend.
+- Sandbox más fuerte para el executor (vm2/isolated-vm o contenedores efímeros): hoy
+  `spawnSync` con `env: {}` y timeout es una mitigación razonable para una kata, pero no
+  aísla filesystem/red del proceso.
+- Tests unitarios del frontend (hoy la cobertura automatizada es solo backend + e2e).
 - Mover la Lambda del backend a la VPC (Interface Endpoints) para cerrar por completo el
   acceso público a RDS.
