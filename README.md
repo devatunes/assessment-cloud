@@ -20,7 +20,9 @@ código JavaScript y resultado Pass/Fail por caso de prueba.
 - 🏆 **Resultado** — al finalizar, scoring autoritativo en el servidor (las preguntas de
   código se re-ejecutan contra *todos* los test cases, incluidos los ocultos).
 - 📄 **Swagger** — documentación interactiva de la API en `/docs`.
-- 🐳 **Docker** — Postgres local vía `docker-compose.yml`, cero dependencia de AWS para desarrollar.
+- 🐳 **Docker** — `docker compose up --build` levanta Postgres + backend + frontend
+  dockerizados de punta a punta (o solo `docker compose up -d db` para desarrollar con
+  hot-reload fuera de contenedor).
 - ☁️ **Desplegado en AWS** — Lambda + API Gateway + RDS + S3/CloudFront.
 
 ## Arquitectura
@@ -82,20 +84,34 @@ sequenceDiagram
 
 ```
 assessment-cloud/
-  docker-compose.yml       # Postgres 16 local
+  docker-compose.yml       # Postgres + backend + frontend, dockerizados
   package.json             # scripts de dev y deploy
   deploy-backend.sh / deploy-frontend.sh / deploy-executor.sh
-  backend/                 # NestJS (API REST + Swagger)
-  frontend/                # Angular 18 standalone
+  backend/                 # NestJS (API REST + Swagger) + Dockerfile
+  frontend/                # Angular 18 standalone + Dockerfile (nginx)
   executor/                # Lambda JS plano (runner.js + index.js)
 ```
 
 ## Ejecutar en local
 
-Requisitos: Node 20+, Docker, npm.
+Requisitos: Docker (y Node 20+/npm solo si vas a correr fuera de contenedor).
+
+### Opción A — todo dockerizado (bonus Docker)
 
 ```bash
-# 1. Base de datos
+docker compose up --build
+# Frontend: http://localhost:4200
+# Backend:  http://localhost:3000  (Swagger en /docs)
+```
+
+Migraciones + seed corren solas al arrancar el contenedor del backend. El frontend se
+sirve con nginx y ya apunta a `http://localhost:3000` (publicado por el contenedor del
+backend), igual que en desarrollo sin Docker.
+
+### Opción B — hot-reload para desarrollar
+
+```bash
+# 1. Solo la base de datos en Docker
 docker compose up -d db
 
 # 2. Backend (puerto 3000, migraciones + seed corren solas al arrancar)
@@ -103,13 +119,11 @@ cd backend
 cp .env.example .env
 npm install
 npm run start:dev
-# Swagger: http://localhost:3000/docs
 
 # 3. Frontend (puerto 4200), en otra terminal
 cd frontend
 npm install
 npm start
-# App: http://localhost:4200
 ```
 
 El seed inicial crea 8 preguntas (5 de opción múltiple, 3 de código) y un assessment de
