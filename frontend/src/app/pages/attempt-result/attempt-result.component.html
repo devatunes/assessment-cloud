@@ -1,0 +1,41 @@
+<section>
+  @if (loading) {
+    <p aria-busy="true">Calculando resultado...</p>
+  }
+  @if (error) {
+    <p style="color:#b91c1c">{{ error }}</p>
+  }
+
+  @if (result) {
+    <article>
+      <h2>Resultado — {{ result.assessmentName }}</h2>
+      <p>Candidato: {{ result.candidateName }}</p>
+      <h1 style="font-size: 3rem">{{ result.score }} / {{ result.maxScore }}</h1>
+    </article>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Pregunta</th>
+          <th>Tipo</th>
+          <th>Resultado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of result.breakdown; track item.questionId) {
+          <tr>
+            <td>{{ item.title }}</td>
+            <td>{{ item.type === 'CODE' ? 'Código' : 'Opción múltiple' }}</td>
+            <td>
+              @if (item.isCorrect) {
+                <span style="color:#059669">✅ Correcto</span>
+              } @else {
+                <span style="color:#b91c1c">❌ Incorrecto</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

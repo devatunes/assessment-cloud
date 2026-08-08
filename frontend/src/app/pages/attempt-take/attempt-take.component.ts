@@ -1,0 +1,158 @@
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { AttemptsService } from '../../core/attempts.service';
+import { AttemptWithQuestions, RunResult, SanitizedQuestion } from '../../core/models';
+import { DifficultyBadgeComponent } from '../../shared/difficulty-badge.component';
+import { CodeEditorComponent } from '../../shared/code-editor.component';
+
+// Wizard pregunta a pregunta. El código del candidato se guarda:
+//  - al presionar "Ejecutar" (el endpoint /run también persiste submittedCode)
+//  - al navegar (Anterior/Siguiente/Finalizar), por si no corrió el código
+// así nunca se pierde lo escrito aunque no se haya ejecutado.
+@Component({
+  selector: 'app-attempt-take',
+  standalone: true,
+  imports: [CommonModule, FormsModule, DifficultyBadgeComponent, CodeEditorComponent],
+  templateUrl: './attempt-take.component.html',
+})
+export class AttemptTakeComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly attemptsService = inject(AttemptsService);
+
+  attempt: AttemptWithQuestions | null = null;
+  loading = false;
+  error: string | null = null;
+
+  currentIndex = 0;
+  selectedOptionByQuestion: Record<string, string> = {};
+  codeByQuestion: Record<string, string> = {};
+  runResultByQuestion: Record<string, RunResult> = {};
+
+  running = false;
+  saving = false;
+  finishing = false;
+
+  get currentQuestion(): SanitizedQuestion | null {
+    return this.attempt?.questions[this.currentIndex] ?? null;
+  }
+
+  get isLastQuestion(): boolean {
+    return !!this.attempt && this.currentIndex === this.attempt.questions.length - 1;
+  }
+
+  get currentRunResult(): RunResult | null {
+    const q = this.currentQuestion;
+    return q ? (this.runResultByQuestion[q.id] ?? null) : null;
+  }
+
+  ngOnInit(): void {
+    const attemptId = this.route.snapshot.paramMap.get('id')!;
+    this.loading = true;
+
+    this.attemptsService.get(attemptId).subscribe({
+      next: (attempt) => {
+        if (attempt.status === 'COMPLETED') {
+          this.router.navigate(['/attempt', attempt.id, 'result']);
+          return;
+        }
+        this.attempt = attempt;
+        for (const q of attempt.questions) {
+          if (q.type === 'CODE') {
+            this.codeByQuestion[q.id] = q.codeTemplate ?? '';
+          }
+        }
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'No se pudo cargar el intento';
+        this.loading = false;
+      },
+    });
+  }
+
+  selectOption(questionId: string, optionId: string): void {
+    this.selectedOptionByQuestion[questionId] = optionId;
+    this.attemptsService.submitAnswer(this.attempt!.id, questionId, { selectedOptionId: optionId }).subscribe();
+  }
+
+  onCodeChange(questionId: string, code: string): void {
+    this.codeByQuestion[questionId] = code;
+  }
+
+  runCode(): void {
+    const question = this.currentQuestion;
+    if (!question || !this.attempt) return;
+
+    this.running = true;
+    const code = this.codeByQuestion[question.id] ?? '';
+
+    this.attemptsService.runCode(this.attempt.id, question.id, code).subscribe({
+      next: (result) => {
+        this.runResultByQuestion[question.id] = result;
+        this.running = false;
+      },
+      error: () => {
+        this.running = false;
+        this.error = 'No se pudo ejecutar el código';
+      },
+    });
+  }
+
+  goNext(): void {
+    this.persistCurrentCodeIfNeeded(() => {
+      if (this.attempt && this.currentIndex < this.attempt.questions.length - 1) {
+        this.currentIndex += 1;
+      }
+    });
+  }
+
+  goPrev(): void {
+    if (this.currentIndex > 0) {
+      this.currentIndex -= 1;
+    }
+  }
+
+  finish(): void {
+    if (!this.attempt) return;
+
+    this.persistCurrentCodeIfNeeded(() => {
+      this.finishing = true;
+      this.attemptsService.finish(this.attempt!.id).subscribe({
+        next: () => {
+          this.finishing = false;
+          this.router.navigate(['/attempt', this.attempt!.id, 'result']);
+        },
+        error: () => {
+          this.finishing = false;
+          this.error = 'No se pudo finalizar el intento';
+        },
+      });
+    });
+  }
+
+  private persistCurrentCodeIfNeeded(after: () => void): void {
+    const question = this.currentQuestion;
+
+    if (!question || !this.attempt || question.type !== 'CODE') {
+      after();
+      return;
+    }
+
+    this.saving = true;
+    const code = this.codeByQuestion[question.id] ?? '';
+
+    this.attemptsService.submitAnswer(this.attempt.id, question.id, { code }).subscribe({
+      next: () => {
+        this.saving = false;
+        after();
+      },
+      error: () => {
+        this.saving = false;
+        after();
+      },
+    });
+  }
+}

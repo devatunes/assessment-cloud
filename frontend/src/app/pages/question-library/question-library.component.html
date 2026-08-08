@@ -1,0 +1,130 @@
+<section>
+  <div class="app-header">
+    <h2>Biblioteca de preguntas</h2>
+    <button (click)="toggleCreateForm()">{{ showCreateForm ? 'Cancelar' : '+ Nueva pregunta' }}</button>
+  </div>
+
+  @if (showCreateForm) {
+    <article>
+      <h3>Nueva pregunta</h3>
+      @if (createError) {
+        <p style="color:#b91c1c">{{ createError }}</p>
+      }
+      <form (ngSubmit)="submitNewQuestion()">
+        <label>
+          Título
+          <input type="text" [(ngModel)]="newQuestion.title" name="title" required />
+        </label>
+        <label>
+          Enunciado
+          <textarea [(ngModel)]="newQuestion.statement" name="statement" required rows="2"></textarea>
+        </label>
+        <div class="grid">
+          <label>
+            Categoría
+            <input type="text" [(ngModel)]="newQuestion.category" name="category" placeholder="javascript" required />
+          </label>
+          <label>
+            Dificultad
+            <select [(ngModel)]="newQuestion.difficulty" name="difficulty">
+              <option value="EASY">EASY</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="HARD">HARD</option>
+            </select>
+          </label>
+          <label>
+            Tipo
+            <select [(ngModel)]="newQuestion.type" name="type">
+              <option value="MULTIPLE_CHOICE">Selección múltiple</option>
+              <option value="CODE">Código</option>
+            </select>
+          </label>
+        </div>
+
+        @if (newQuestion.type === 'MULTIPLE_CHOICE') {
+          <fieldset>
+            <legend>Opciones</legend>
+            @for (option of newQuestion.options; track $index) {
+              <div class="grid">
+                <input type="text" [(ngModel)]="option.text" [name]="'option-' + $index" placeholder="Texto de la opción" />
+                <label>
+                  <input type="checkbox" [(ngModel)]="option.isCorrect" [name]="'correct-' + $index" />
+                  Correcta
+                </label>
+                <button type="button" class="secondary" (click)="removeOption($index)">Quitar</button>
+              </div>
+            }
+            <button type="button" class="secondary" (click)="addOption()">+ Agregar opción</button>
+          </fieldset>
+        } @else {
+          <label>
+            Template de código inicial
+            <textarea [(ngModel)]="newQuestion.codeTemplate" name="codeTemplate" rows="4"></textarea>
+          </label>
+          <p><small>Los test cases se administran vía API/Swagger — este formulario crea un placeholder.</small></p>
+        }
+
+        <button type="submit" [disabled]="creating">{{ creating ? 'Guardando...' : 'Guardar pregunta' }}</button>
+      </form>
+    </article>
+  }
+
+  <article>
+    <div class="grid">
+      <label>
+        Categoría
+        <input type="text" [(ngModel)]="filterCategory" (change)="load()" placeholder="javascript" />
+      </label>
+      <label>
+        Dificultad
+        <select [(ngModel)]="filterDifficulty" (change)="load()">
+          <option value="">Todas</option>
+          <option value="EASY">EASY</option>
+          <option value="MEDIUM">MEDIUM</option>
+          <option value="HARD">HARD</option>
+        </select>
+      </label>
+      <label>
+        Tipo
+        <select [(ngModel)]="filterType" (change)="load()">
+          <option value="">Todos</option>
+          <option value="MULTIPLE_CHOICE">Selección múltiple</option>
+          <option value="CODE">Código</option>
+        </select>
+      </label>
+    </div>
+    <button class="secondary" (click)="clearFilters()">Limpiar filtros</button>
+  </article>
+
+  @if (loading) {
+    <p aria-busy="true">Cargando preguntas...</p>
+  }
+  @if (error) {
+    <p style="color:#b91c1c">{{ error }}</p>
+  }
+
+  @if (!loading && questions.length === 0) {
+    <p>No hay preguntas con estos filtros.</p>
+  }
+
+  <table>
+    <thead>
+      <tr>
+        <th>Título</th>
+        <th>Categoría</th>
+        <th>Etiquetas</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (question of questions; track question.id) {
+        <tr>
+          <td>{{ question.title }}</td>
+          <td>{{ question.category }}</td>
+          <td>
+            <app-difficulty-badge [difficulty]="question.difficulty" [type]="question.type" />
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</section>

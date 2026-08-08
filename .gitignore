@@ -1,0 +1,21 @@
+# Dependencias
+node_modules/
+
+# Builds
+dist/
+backend/lambda/
+backend/lambda.zip
+executor/executor.zip
+frontend/.angular/
+
+# Entornos locales (nunca subir credenciales)
+.env
+.env.local
+*.local.env
+
+# Config de producción generada por deploy-frontend.sh
+frontend/src/environments/environment.prod.generated.ts
+
+# Sistema
+.DS_Store
+*.log

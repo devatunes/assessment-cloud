@@ -1,0 +1,55 @@
+<section>
+  <h2>Crear assessment</h2>
+
+  @if (error) {
+    <p style="color:#b91c1c">{{ error }}</p>
+  }
+
+  <label>
+    Nombre
+    <input type="text" [(ngModel)]="name" name="name" placeholder="Evaluación Backend Junior" />
+  </label>
+  <label>
+    Descripción
+    <textarea [(ngModel)]="description" name="description" rows="2"></textarea>
+  </label>
+
+  <h3>Selecciona preguntas ({{ selectedIds.length }} seleccionadas)</h3>
+
+  @if (loading) {
+    <p aria-busy="true">Cargando preguntas...</p>
+  }
+
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>Título</th>
+        <th>Categoría</th>
+        <th>Etiquetas</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (question of questions; track question.id) {
+        <tr>
+          <td>
+            <input
+              type="checkbox"
+              [checked]="isSelected(question.id)"
+              (change)="toggleSelected(question.id)"
+            />
+          </td>
+          <td>{{ question.title }}</td>
+          <td>{{ question.category }}</td>
+          <td>
+            <app-difficulty-badge [difficulty]="question.difficulty" [type]="question.type" />
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <button (click)="submit()" [disabled]="saving">
+    {{ saving ? 'Creando...' : 'Crear assessment' }}
+  </button>
+</section>
