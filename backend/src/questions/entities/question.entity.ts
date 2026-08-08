@@ -54,6 +54,10 @@ export class Question {
   @Column('jsonb', { name: 'test_cases', nullable: true })
   testCases: QuestionTestCase[] | null;
 
+  // Nota: NO se usa orphanedRowAction para borrar opciones reemplazadas —
+  // requiere que la FK sea nullable (TypeORM intenta poner NULL antes de
+  // borrar) y question_id es NOT NULL. QuestionsService.update() borra las
+  // opciones anteriores explícitamente antes de insertar las nuevas.
   @OneToMany(() => QuestionOption, (option) => option.question, {
     cascade: true,
   })

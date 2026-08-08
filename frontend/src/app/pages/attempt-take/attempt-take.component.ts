@@ -74,8 +74,21 @@ export class AttemptTakeComponent implements OnInit {
   }
 
   selectOption(questionId: string, optionId: string): void {
+    const previousSelection = this.selectedOptionByQuestion[questionId];
     this.selectedOptionByQuestion[questionId] = optionId;
-    this.attemptsService.submitAnswer(this.attempt!.id, questionId, { selectedOptionId: optionId }).subscribe();
+    this.error = null;
+
+    this.attemptsService.submitAnswer(this.attempt!.id, questionId, { selectedOptionId: optionId }).subscribe({
+      error: () => {
+        // Revierte la selección optimista: si no se guardó, no debe verse marcada.
+        if (previousSelection) {
+          this.selectedOptionByQuestion[questionId] = previousSelection;
+        } else {
+          delete this.selectedOptionByQuestion[questionId];
+        }
+        this.error = 'No se pudo guardar tu respuesta, intenta de nuevo';
+      },
+    });
   }
 
   onCodeChange(questionId: string, code: string): void {
@@ -110,9 +123,11 @@ export class AttemptTakeComponent implements OnInit {
   }
 
   goPrev(): void {
-    if (this.currentIndex > 0) {
-      this.currentIndex -= 1;
-    }
+    this.persistCurrentCodeIfNeeded(() => {
+      if (this.currentIndex > 0) {
+        this.currentIndex -= 1;
+      }
+    });
   }
 
   finish(): void {

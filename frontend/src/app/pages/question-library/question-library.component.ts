@@ -5,6 +5,15 @@ import { QuestionsService } from '../../core/questions.service';
 import { CreateQuestionPayload, Question, QuestionDifficulty, QuestionType } from '../../core/models';
 import { DifficultyBadgeComponent } from '../../shared/difficulty-badge.component';
 
+// El input de un test case se captura como texto en formato JSON (ej. `[1,2,3]`,
+// `"hola"`, `5`) porque QuestionTestCase.input admite cualquier valor: se
+// parsea recién al enviar el formulario (ver parseTestCaseInput).
+type TestCaseFormRow = {
+  input: string;
+  expectedOutput: string;
+  hidden: boolean;
+};
+
 @Component({
   selector: 'app-question-library',
   standalone: true,
@@ -34,6 +43,7 @@ export class QuestionLibraryComponent implements OnInit {
     type: QuestionType;
     codeTemplate: string;
     options: { text: string; isCorrect: boolean }[];
+    testCases: TestCaseFormRow[];
   } = this.emptyForm();
 
   ngOnInit(): void {
@@ -82,6 +92,14 @@ export class QuestionLibraryComponent implements OnInit {
     this.newQuestion.options.splice(index, 1);
   }
 
+  addTestCase(): void {
+    this.newQuestion.testCases.push({ input: '', expectedOutput: '', hidden: false });
+  }
+
+  removeTestCase(index: number): void {
+    this.newQuestion.testCases.splice(index, 1);
+  }
+
   submitNewQuestion(): void {
     this.createError = null;
 
@@ -105,8 +123,33 @@ export class QuestionLibraryComponent implements OnInit {
         this.createError = 'Agrega un template de código inicial';
         return;
       }
+
+      const parsedTestCases: { input: unknown; expectedOutput: string; hidden: boolean }[] = [];
+      for (let i = 0; i < this.newQuestion.testCases.length; i++) {
+        const row = this.newQuestion.testCases[i];
+        if (!row.input.trim() && !row.expectedOutput.trim()) {
+          continue; // fila vacía, se ignora
+        }
+        if (!row.expectedOutput.trim()) {
+          this.createError = `El caso ${i + 1} necesita un output esperado`;
+          return;
+        }
+        try {
+          const input = row.input.trim() ? JSON.parse(row.input) : null;
+          parsedTestCases.push({ input, expectedOutput: row.expectedOutput, hidden: row.hidden });
+        } catch {
+          this.createError = `El input del caso ${i + 1} debe ser JSON válido (ej: [1,2,3], "texto", 5)`;
+          return;
+        }
+      }
+
+      if (parsedTestCases.length === 0) {
+        this.createError = 'Agrega al menos un test case con su output esperado';
+        return;
+      }
+
       payload.codeTemplate = this.newQuestion.codeTemplate;
-      payload.testCases = [{ input: null, expectedOutput: '', hidden: false }];
+      payload.testCases = parsedTestCases;
     }
 
     this.creating = true;
@@ -135,6 +178,10 @@ export class QuestionLibraryComponent implements OnInit {
       options: [
         { text: '', isCorrect: true },
         { text: '', isCorrect: false },
+      ],
+      testCases: [
+        { input: '', expectedOutput: '', hidden: false },
+        { input: '', expectedOutput: '', hidden: true },
       ],
     };
   }

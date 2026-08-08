@@ -8,7 +8,7 @@ import { Question, QuestionType } from '../questions/entities/question.entity';
 import { CreateAttemptDto } from './dto/create-attempt.dto';
 import { SubmitAnswerDto } from './dto/submit-answer.dto';
 import { ExecutorService } from '../executor/executor.service';
-import { AttemptWithQuestions, SanitizedQuestion } from './attempts.types';
+import { AttemptResult, AttemptWithQuestions, SanitizedQuestion } from './attempts.types';
 
 @Injectable()
 export class AttemptsService {
@@ -115,7 +115,22 @@ export class AttemptsService {
     return result;
   }
 
-  async finish(attemptId: string) {
+  // Lectura pura del resultado: NO finaliza el intento. Si el candidato
+  // navega manualmente a la página de resultado antes de terminar, esto
+  // rechaza con 400 en vez de completar el intento por accidente (a
+  // diferencia de finish(), que sí es la acción mutante e idempotente
+  // disparada por el botón "Finalizar").
+  async getResult(attemptId: string): Promise<AttemptResult> {
+    const { attempt, assessment } = await this.loadAttemptWithAssessment(attemptId);
+
+    if (attempt.status !== AttemptStatus.COMPLETED) {
+      throw new BadRequestException('El intento aún no ha finalizado');
+    }
+
+    return this.buildResultView(attempt, assessment);
+  }
+
+  async finish(attemptId: string): Promise<AttemptResult> {
     const { attempt, assessment } = await this.loadAttemptWithAssessment(attemptId);
 
     if (attempt.status === AttemptStatus.COMPLETED) {
@@ -252,7 +267,7 @@ export class AttemptsService {
     };
   }
 
-  private async buildResultView(attempt: Attempt, assessment: Assessment) {
+  private async buildResultView(attempt: Attempt, assessment: Assessment): Promise<AttemptResult> {
     const answers = await this.answerRepository.find({ where: { attemptId: attempt.id } });
     const answersByQuestionId = new Map(answers.map((a) => [a.questionId, a]));
 
