@@ -61,7 +61,7 @@ describe('AssessmentsService', () => {
 
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       expect.stringContaining('organization_id'),
-      { organizationId: ORG_A },
+      expect.objectContaining({ organizationId: ORG_A }),
     );
   });
 });

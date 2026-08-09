@@ -240,6 +240,15 @@ export class AttemptsService {
       throw new BadRequestException('El intento ya fue finalizado');
     }
 
+    // Corte del lado del servidor, no solo visual: si el tiempo del examen
+    // ya expiró, no se aceptan más respuestas ni ejecuciones de código. El
+    // candidato (o su timer en el frontend) debe llamar a /finish, que sí
+    // sigue permitido siempre (califica lo que ya se alcanzó a responder).
+    const deadline = this.getDeadline(attempt, assessment);
+    if (deadline && deadline.getTime() < Date.now()) {
+      throw new BadRequestException('El tiempo del examen expiró');
+    }
+
     const aq = assessment.questions.find((q) => q.questionId === questionId);
 
     if (!aq) {
@@ -247,6 +256,12 @@ export class AttemptsService {
     }
 
     return { attempt, question: aq.question };
+  }
+
+  private getDeadline(attempt: Attempt, assessment: Assessment): Date | null {
+    if (!assessment.timeLimitMinutes) return null;
+
+    return new Date(attempt.startedAt.getTime() + assessment.timeLimitMinutes * 60 * 1000);
   }
 
   private buildSanitizedView(attempt: Attempt, assessment: Assessment): AttemptWithQuestions {
@@ -275,6 +290,7 @@ export class AttemptsService {
       finishedAt: attempt.finishedAt,
       score: attempt.score,
       maxScore: attempt.maxScore,
+      deadline: this.getDeadline(attempt, assessment),
       questions,
     };
   }

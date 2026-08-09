@@ -26,6 +26,9 @@ export type AttemptWithQuestions = {
   finishedAt: Date | null;
   score: number | null;
   maxScore: number;
+  // Momento en que el examen se corta automáticamente (startedAt +
+  // assessment.timeLimitMinutes); null si el assessment no tiene límite.
+  deadline: Date | null;
   questions: SanitizedQuestion[];
 };
 

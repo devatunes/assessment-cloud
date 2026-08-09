@@ -6,6 +6,16 @@
   <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" type="image/x-icon" href="data:," />
+  <script>
+    // Aplica el tema guardado ANTES de que Angular arranque, para evitar
+    // el parpadeo de tema claro -> oscuro en la primera pintura.
+    (function () {
+      var saved = localStorage.getItem('assessment_cloud_theme');
+      if (saved === 'light' || saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', saved);
+      }
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

@@ -45,6 +45,12 @@ export class Assessment {
   @Column('jsonb', { name: 'level_thresholds', nullable: true })
   levelThresholds: AssessmentLevelThresholds | null;
 
+  // Duración total en minutos desde que el candidato inicia el intento.
+  // Nulo = sin límite. Se refuerza también del lado del servidor (ver
+  // AttemptsService.assertNotExpired), no es solo un timer visual.
+  @Column({ name: 'time_limit_minutes', type: 'int', nullable: true })
+  timeLimitMinutes: number | null;
+
   @OneToMany(() => AssessmentQuestion, (aq) => aq.assessment, {
     cascade: true,
   })

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/auth.service';
+import { ThemeService } from './core/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -26,6 +27,14 @@ import { AuthService } from './core/auth.service';
           <a routerLink="/login" routerLinkActive="contrast">Iniciar sesión</a>
           <a routerLink="/register" routerLinkActive="contrast">Crear organización</a>
         }
+        <button
+          type="button"
+          class="theme-toggle outline secondary"
+          (click)="themeService.toggle()"
+          [attr.aria-label]="themeService.theme() === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        >
+          {{ themeService.theme() === 'dark' ? '☀️' : '🌙' }}
+        </button>
       </nav>
     </header>
     <main>
@@ -35,6 +44,7 @@ import { AuthService } from './core/auth.service';
 })
 export class AppComponent {
   protected readonly authService = inject(AuthService);
+  protected readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
 
   logout(event: Event): void {

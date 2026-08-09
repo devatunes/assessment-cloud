@@ -17,8 +17,19 @@ body {
   margin-bottom: 1.5rem;
 }
 
+.app-nav {
+  display: flex;
+  align-items: center;
+}
+
 .app-nav a {
   margin-left: 1rem;
+}
+
+.theme-toggle {
+  margin-left: 1rem;
+  padding: 0.35rem 0.6rem;
+  width: auto;
 }
 
 .badge {

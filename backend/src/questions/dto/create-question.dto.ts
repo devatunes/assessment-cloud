@@ -13,7 +13,8 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
-import { QuestionDifficulty, QuestionType } from '../entities/question.entity';
+import { QuestionCategory, QuestionDifficulty, QuestionType } from '../entities/question.entity';
+import { ContentVisibility } from '../../question-banks/entities/question-bank.entity';
 
 export class CreateQuestionOptionDto {
   @ApiProperty()
@@ -59,10 +60,9 @@ export class CreateQuestionDto {
   @IsNotEmpty()
   statement: string;
 
-  @ApiProperty({ example: 'javascript' })
-  @IsString()
-  @IsNotEmpty()
-  category: string;
+  @ApiProperty({ enum: QuestionCategory })
+  @IsEnum(QuestionCategory)
+  category: QuestionCategory;
 
   @ApiProperty({ enum: QuestionDifficulty })
   @IsEnum(QuestionDifficulty)
@@ -71,6 +71,21 @@ export class CreateQuestionDto {
   @ApiProperty({ enum: QuestionType })
   @IsEnum(QuestionType)
   type: QuestionType;
+
+  @ApiPropertyOptional({
+    description: 'Por qué la respuesta correcta es correcta (y las demás no). Se muestra al candidato al finalizar.',
+  })
+  @IsOptional()
+  @IsString()
+  explanation?: string;
+
+  @ApiPropertyOptional({
+    enum: ContentVisibility,
+    description: 'PRIVATE (default): solo tu organización. PUBLIC: visible para todas, de solo lectura.',
+  })
+  @IsOptional()
+  @IsEnum(ContentVisibility)
+  visibility?: ContentVisibility;
 
   @ApiPropertyOptional({ type: [CreateQuestionOptionDto] })
   @ValidateIf((dto: CreateQuestionDto) => dto.type === QuestionType.MULTIPLE_CHOICE)

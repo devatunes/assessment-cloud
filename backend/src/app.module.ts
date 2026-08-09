@@ -8,6 +8,7 @@ import { OrganizationsModule } from './organizations/organizations.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { InvitationsModule } from './invitations/invitations.module';
+import { QuestionBanksModule } from './question-banks/question-banks.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { InvitationsModule } from './invitations/invitations.module';
     UsersModule,
     AuthModule,
     QuestionsModule,
+    QuestionBanksModule,
     AssessmentsModule,
     AttemptsModule,
     ExecutorModule,

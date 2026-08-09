@@ -85,7 +85,7 @@ describe('Invitations (e2e)', () => {
       .send({
         title: '¿1 + 1?',
         statement: 'x',
-        category: 'math',
+        category: 'BACKEND',
         difficulty: 'EASY',
         type: 'MULTIPLE_CHOICE',
         options: [
@@ -172,7 +172,7 @@ describe('Invitations (e2e)', () => {
       .send({
         title: 'Pregunta simulacro',
         statement: 'x',
-        category: 'math',
+        category: 'BACKEND',
         difficulty: 'EASY',
         type: 'MULTIPLE_CHOICE',
         options: [
