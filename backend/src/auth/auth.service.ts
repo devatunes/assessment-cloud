@@ -19,13 +19,14 @@ import { AcceptInviteDto } from './dto/accept-invite.dto';
 
 const DEFAULT_ORGANIZATION_NAME = 'Organización por defecto';
 
-function toSafeUser(user: User) {
+function toSafeUser(user: User, organizationName: string) {
   return {
     id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
     organizationId: user.organizationId,
+    organizationName,
   };
 }
 
@@ -139,7 +140,7 @@ export class AuthService implements OnModuleInit {
     return this.buildAuthResponse(activated);
   }
 
-  private buildAuthResponse(user: User) {
+  private async buildAuthResponse(user: User) {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -147,9 +148,11 @@ export class AuthService implements OnModuleInit {
       organizationId: user.organizationId,
     };
 
+    const organization = await this.organizationRepository.findOneBy({ id: user.organizationId });
+
     return {
       accessToken: this.jwtService.sign(payload),
-      user: toSafeUser(user),
+      user: toSafeUser(user, organization?.name ?? ''),
     };
   }
 }

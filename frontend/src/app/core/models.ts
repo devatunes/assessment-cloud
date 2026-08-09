@@ -8,6 +8,7 @@ export interface CurrentUser {
   email: string;
   role: UserRole;
   organizationId: string;
+  organizationName: string;
 }
 
 export interface AuthResponse {
