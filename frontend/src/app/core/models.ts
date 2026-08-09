@@ -15,6 +15,18 @@ export interface AuthResponse {
   user: CurrentUser;
 }
 
+export type UserStatus = 'PENDING_ACTIVATION' | 'ACTIVE';
+
+// Fila de GET /users (listado de la organización, solo admin).
+export interface OrgUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  createdAt: string;
+}
+
 export type ContentVisibility = 'PRIVATE' | 'PUBLIC';
 
 export type QuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
