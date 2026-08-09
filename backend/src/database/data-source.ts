@@ -11,6 +11,7 @@ import { User } from '../users/entities/user.entity';
 import { Invitation } from '../invitations/entities/invitation.entity';
 import { QuestionBank } from '../question-banks/entities/question-bank.entity';
 import { QuestionBankItem } from '../question-banks/entities/question-bank-item.entity';
+import { Candidate } from '../candidates/entities/candidate.entity';
 
 // Fuente de datos única, usada tanto por NestJS (app.module.ts) como por
 // la CLI de TypeORM (migration:run/show) y por el arranque de la Lambda
@@ -28,6 +29,7 @@ export const typeOrmEntities = [
   Invitation,
   QuestionBank,
   QuestionBankItem,
+  Candidate,
 ];
 
 export function buildDataSourceOptions(): DataSourceOptions {

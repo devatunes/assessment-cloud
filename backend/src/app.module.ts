@@ -9,6 +9,9 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { QuestionBanksModule } from './question-banks/question-banks.module';
+import { CandidatesModule } from './candidates/candidates.module';
+import { CandidateAuthModule } from './candidate-auth/candidate-auth.module';
+import { PracticeModule } from './practice/practice.module';
 
 @Module({
   imports: [
@@ -22,6 +25,9 @@ import { QuestionBanksModule } from './question-banks/question-banks.module';
     AttemptsModule,
     ExecutorModule,
     InvitationsModule,
+    CandidatesModule,
+    CandidateAuthModule,
+    PracticeModule,
   ],
 })
 export class AppModule {}

@@ -63,7 +63,11 @@ export class AttemptsService {
     return { saved: true };
   }
 
-  async create(dto: CreateAttemptDto): Promise<AttemptWithQuestions> {
+  // candidateId es un parámetro interno (nunca viene del DTO público que
+  // acepta el controller /attempts): solo lo pasa PracticeService cuando un
+  // candidato logueado inicia un simulacro. Aceptarlo desde el DTO abriría
+  // la puerta a que cualquiera se atribuya un intento ajeno.
+  async create(dto: CreateAttemptDto, candidateId?: string): Promise<AttemptWithQuestions> {
     const assessment = await this.assessmentRepository.findOne({
       where: { id: dto.assessmentId },
       relations: { questions: { question: { options: true } } },
@@ -79,6 +83,7 @@ export class AttemptsService {
         assessmentId: assessment.id,
         candidateName: dto.candidateName,
         candidateEmail: dto.candidateEmail ?? null,
+        candidateId: candidateId ?? null,
         status: AttemptStatus.IN_PROGRESS,
         maxScore: assessment.questions.length,
       }),

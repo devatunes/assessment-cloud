@@ -5,13 +5,16 @@ import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
 // Adjunta el Bearer del staff de organización a las llamadas a la API.
-// Los endpoints públicos (attempts, invitations/:token, practice catalog
-// antes de login) simplemente no tienen token y siguen sin header — el
-// backend decide si lo exige o no.
+// Los endpoints públicos (attempts, invitations/:token) simplemente no
+// tienen token y siguen sin header — el backend decide si lo exige o no.
+// Nunca se adjunta a rutas de candidato (/candidate-auth, /practice): esas
+// llevan su propio Bearer con otra audience (ver candidate-auth.interceptor.ts)
+// y jamás deben mezclarse, aunque ambas sesiones convivan en el mismo navegador.
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  const token = authService.token;
+  const isCandidateRoute = req.url.includes('/candidate-auth') || req.url.includes('/practice');
+  const token = isCandidateRoute ? null : authService.token;
 
   const authedReq = token
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
@@ -19,7 +22,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authedReq).pipe(
     catchError((error) => {
-      if (error?.status === 401 && authService.isLoggedIn) {
+      if (!isCandidateRoute && error?.status === 401 && authService.isLoggedIn) {
         authService.logout();
         router.navigate(['/login']);
       }

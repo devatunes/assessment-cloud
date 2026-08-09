@@ -34,6 +34,15 @@ export class Attempt {
   @Column({ name: 'candidate_email', type: 'varchar', nullable: true })
   candidateEmail: string | null;
 
+  // Solo se estampa en intentos de PRÁCTICA iniciados por un candidato
+  // logueado (ver PracticeService.start) — los oficiales vía invitación
+  // siguen siendo 100% anónimos. Esto es lo que hace que el historial del
+  // candidato (PracticeService.myAttempts) y el reporte de una organización
+  // nunca se mezclen: cada uno filtra por un criterio distinto y mutuamente
+  // excluyente.
+  @Column({ name: 'candidate_id', type: 'uuid', nullable: true })
+  candidateId: string | null;
+
   @Column({
     type: 'enum',
     enum: AttemptStatus,

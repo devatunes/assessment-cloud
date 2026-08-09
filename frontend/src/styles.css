@@ -22,7 +22,8 @@ body {
   align-items: center;
 }
 
-.app-nav a {
+.app-nav a,
+.app-nav span {
   margin-left: 1rem;
 }
 
