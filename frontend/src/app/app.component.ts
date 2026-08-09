@@ -24,7 +24,10 @@ import { OnboardingTourComponent } from './shared/onboarding-tour.component';
           @if (authService.isLoggedIn) {
             <span class="user-chip">
               <span class="user-avatar">{{ initials(authService.currentUser()?.name) }}</span>
-              {{ authService.currentUser()?.name }}
+              <span class="user-chip-text">
+                <strong>{{ authService.currentUser()?.name }}</strong>
+                <small>{{ authService.currentUser()?.organizationName }}</small>
+              </span>
             </span>
             <a class="nav-pill" href="#" (click)="logout($event)">Salir</a>
           } @else if (candidateAuthService.isLoggedIn) {
