@@ -178,9 +178,14 @@ export class AttemptTakeComponent implements OnInit, OnDestroy {
     this.persistCurrentCodeIfNeeded(() => {
       this.finishing = true;
       this.attemptsService.finish(this.attempt!.id).subscribe({
-        next: () => {
+        next: (result) => {
           this.finishing = false;
-          this.router.navigate(['/attempt', this.attempt!.id, 'result']);
+          // Las insignias nuevas viajan por router state (no por la URL):
+          // attempt-result las lee de history.state para mostrar el aviso de
+          // desbloqueo justo después de finalizar, sin volver a consultarlas.
+          this.router.navigate(['/attempt', this.attempt!.id, 'result'], {
+            state: { newBadges: result.newBadges },
+          });
         },
         error: () => {
           this.finishing = false;

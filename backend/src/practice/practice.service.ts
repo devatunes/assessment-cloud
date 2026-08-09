@@ -8,6 +8,7 @@ import { AttemptsService } from '../attempts/attempts.service';
 import { AttemptWithQuestions } from '../attempts/attempts.types';
 import { computeLevel } from '../assessments/level.util';
 import { AuthenticatedCandidate } from '../candidate-auth/candidate-auth-user.interface';
+import { BadgesService } from '../badges/badges.service';
 
 @Injectable()
 export class PracticeService {
@@ -19,7 +20,12 @@ export class PracticeService {
     @InjectRepository(Attempt)
     private readonly attemptRepository: Repository<Attempt>,
     private readonly attemptsService: AttemptsService,
+    private readonly badgesService: BadgesService,
   ) {}
+
+  myBadges(candidateId: string) {
+    return this.badgesService.listForCandidate(candidateId);
+  }
 
   // Catálogo GLOBAL: simulacros de CUALQUIER organización, visibles para
   // cualquier candidato registrado (decisión ya validada con el usuario).

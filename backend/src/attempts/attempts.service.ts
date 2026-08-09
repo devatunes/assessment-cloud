@@ -13,6 +13,7 @@ import { SubmitFeedbackDto } from './dto/submit-feedback.dto';
 import { ExecutorService } from '../executor/executor.service';
 import { AttemptResult, AttemptWithQuestions, SanitizedQuestion } from './attempts.types';
 import { computeLevel } from '../assessments/level.util';
+import { BadgesService } from '../badges/badges.service';
 
 @Injectable()
 export class AttemptsService {
@@ -28,6 +29,7 @@ export class AttemptsService {
     @InjectRepository(Invitation)
     private readonly invitationRepository: Repository<Invitation>,
     private readonly executorService: ExecutorService,
+    private readonly badgesService: BadgesService,
   ) {}
 
   // Encuesta breve al candidato (rating 1-5 + comentario opcional) sobre la
@@ -247,7 +249,22 @@ export class AttemptsService {
       { status: InvitationStatus.COMPLETED, completedAt: new Date() },
     );
 
-    return this.buildResultView(attempt, assessment);
+    const result = await this.buildResultView(attempt, assessment);
+
+    // Las insignias solo aplican a intentos de PRÁCTICA (candidateId
+    // presente); los oficiales vía invitación son anónimos y no tienen
+    // cuenta de candidato donde guardarlas.
+    if (attempt.candidateId) {
+      result.newBadges = await this.badgesService.evaluateAndAward({
+        candidateId: attempt.candidateId,
+        attemptId: attempt.id,
+        score: attempt.score!,
+        maxScore: attempt.maxScore,
+        level: result.level,
+      });
+    }
+
+    return result;
   }
 
   private async loadAttemptWithAssessment(
@@ -357,6 +374,9 @@ export class AttemptsService {
       level: attempt.score !== null ? computeLevel(scorePercentage, assessment.levelThresholds) : null,
       startedAt: attempt.startedAt,
       finishedAt: attempt.finishedAt,
+      // Se sobreescribe en finish() cuando corresponde otorgar insignias
+      // nuevas; en toda otra vista (getResult, finish repetido) queda vacío.
+      newBadges: [],
       breakdown: assessment.questions.map((aq) => {
         const answer = answersByQuestionId.get(aq.questionId);
 

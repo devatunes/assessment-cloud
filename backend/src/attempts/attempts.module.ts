@@ -8,6 +8,7 @@ import { Invitation } from '../invitations/entities/invitation.entity';
 import { AttemptsService } from './attempts.service';
 import { AttemptsController } from './attempts.controller';
 import { ExecutorModule } from '../executor/executor.module';
+import { BadgesModule } from '../badges/badges.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ExecutorModule } from '../executor/executor.module';
     // ya que InvitationsModule sí importa AttemptsModule).
     TypeOrmModule.forFeature([Attempt, AttemptAnswer, AttemptFeedback, Assessment, Invitation]),
     ExecutorModule,
+    BadgesModule,
   ],
   controllers: [AttemptsController],
   providers: [AttemptsService],

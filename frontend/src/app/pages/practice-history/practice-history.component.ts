@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PracticeService } from '../../core/practice.service';
-import { PracticeAttemptSummary } from '../../core/models';
+import { EarnedBadge, PracticeAttemptSummary } from '../../core/models';
 
 @Component({
   selector: 'app-practice-history',
@@ -17,6 +17,9 @@ export class PracticeHistoryComponent implements OnInit {
   loading = false;
   error: string | null = null;
 
+  badges: EarnedBadge[] = [];
+  loadingBadges = false;
+
   ngOnInit(): void {
     this.loading = true;
     this.practiceService.myAttempts().subscribe({
@@ -27,6 +30,17 @@ export class PracticeHistoryComponent implements OnInit {
       error: () => {
         this.error = 'No se pudo cargar tu historial';
         this.loading = false;
+      },
+    });
+
+    this.loadingBadges = true;
+    this.practiceService.myBadges().subscribe({
+      next: (badges) => {
+        this.badges = badges;
+        this.loadingBadges = false;
+      },
+      error: () => {
+        this.loadingBadges = false;
       },
     });
   }

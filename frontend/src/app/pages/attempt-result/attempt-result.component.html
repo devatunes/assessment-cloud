@@ -6,6 +6,21 @@
     <p style="color:#b91c1c">{{ error }}</p>
   }
 
+  @if (newBadges.length > 0) {
+    <article style="border: 2px solid #f59e0b">
+      <h3>🎉 ¡Nuevas insignias desbloqueadas!</h3>
+      <div class="grid">
+        @for (badge of newBadges; track badge.code) {
+          <div>
+            <p style="font-size: 2rem; margin-bottom: 0">{{ badge.icon }}</p>
+            <strong>{{ badge.label }}</strong>
+            <p><small>{{ badge.description }}</small></p>
+          </div>
+        }
+      </div>
+    </article>
+  }
+
   @if (result) {
     <article>
       <h2>Resultado — {{ result.assessmentName }}</h2>

@@ -1,5 +1,6 @@
 import { QuestionDifficulty, QuestionType } from '../questions/entities/question.entity';
 import { CandidateLevel } from '../assessments/level.util';
+import { BadgeDefinition } from '../badges/badge-catalog';
 
 // Vista de una pregunta tal como la ve el candidato: sin isCorrect en las
 // opciones y sin los test cases marcados como hidden.
@@ -53,4 +54,8 @@ export type AttemptResult = {
     points: number;
     explanation: string | null;
   }>;
+  // Insignias otorgadas EN ESTA llamada a finish() (vacío en getResult(), o
+  // en un finish() repetido sobre un intento ya completado — ver
+  // AttemptsService.finish). Solo se otorgan en intentos de práctica.
+  newBadges: BadgeDefinition[];
 };

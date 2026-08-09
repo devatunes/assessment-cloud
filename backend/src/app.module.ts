@@ -12,6 +12,7 @@ import { QuestionBanksModule } from './question-banks/question-banks.module';
 import { CandidatesModule } from './candidates/candidates.module';
 import { CandidateAuthModule } from './candidate-auth/candidate-auth.module';
 import { PracticeModule } from './practice/practice.module';
+import { BadgesModule } from './badges/badges.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { PracticeModule } from './practice/practice.module';
     CandidatesModule,
     CandidateAuthModule,
     PracticeModule,
+    BadgesModule,
   ],
 })
 export class AppModule {}

@@ -3,7 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AttemptsService } from '../../core/attempts.service';
-import { AttemptResult } from '../../core/models';
+import { AttemptResult, Badge } from '../../core/models';
 
 @Component({
   selector: 'app-attempt-result',
@@ -20,6 +20,11 @@ export class AttemptResultComponent implements OnInit {
   loading = false;
   error: string | null = null;
   attemptId = '';
+
+  // Insignias otorgadas justo al finalizar (viajan por router state desde
+  // attempt-take, ver AttemptTakeComponent.finish) — se muestran una sola
+  // vez, no persisten si se recarga la página.
+  newBadges: Badge[] = history.state?.newBadges ?? [];
 
   feedbackRating: number | null = null;
   feedbackComment = '';
