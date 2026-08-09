@@ -8,5 +8,5 @@ export const candidateAuthGuard: CanActivateFn = (_route, state) => {
 
   if (candidateAuthService.isLoggedIn) return true;
 
-  return router.createUrlTree(['/candidato/login'], { queryParams: { returnUrl: state.url } });
+  return router.createUrlTree(['/login'], { queryParams: { role: 'candidate', returnUrl: state.url } });
 };

@@ -104,8 +104,15 @@ export class InvitationsService {
 
   // Inicia el attempt la primera vez; si el candidato ya empezó o terminó,
   // RETOMA el mismo attempt en vez de crear uno nuevo (mismo espíritu de
-  // idempotencia que AttemptsService.getResult).
-  async startOrResume(token: string, candidateName: string): Promise<AttemptWithQuestions> {
+  // idempotencia que AttemptsService.getResult). candidateId es opcional: si
+  // viene (candidato logueado con su cuenta de práctica), el intento oficial
+  // queda vinculado a su historial además de contar en el reporte de la
+  // organización — ambas cosas conviven sin conflicto (ver AttemptsService.create).
+  async startOrResume(
+    token: string,
+    candidateName: string,
+    candidateId?: string,
+  ): Promise<AttemptWithQuestions> {
     const invitation = await this.findByToken(token);
 
     if (invitation.status === InvitationStatus.EXPIRED) {
@@ -116,11 +123,14 @@ export class InvitationsService {
       return this.attemptsService.findOne(invitation.attemptId!);
     }
 
-    const attempt = await this.attemptsService.create({
-      assessmentId: invitation.assessmentId,
-      candidateName,
-      candidateEmail: invitation.candidateEmail ?? undefined,
-    });
+    const attempt = await this.attemptsService.create(
+      {
+        assessmentId: invitation.assessmentId,
+        candidateName,
+        candidateEmail: invitation.candidateEmail ?? undefined,
+      },
+      candidateId,
+    );
 
     invitation.attemptId = attempt.id;
     invitation.candidateName = candidateName;

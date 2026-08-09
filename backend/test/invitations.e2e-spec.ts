@@ -46,6 +46,7 @@ describe('Invitations (e2e)', () => {
     process.env.JWT_SECRET = 'e2e-test-secret';
     process.env.JWT_ISSUER = 'assessment-cloud-api';
     process.env.JWT_AUDIENCE = 'assessment-cloud-org';
+    process.env.CANDIDATE_JWT_AUDIENCE = 'assessment-cloud-candidates';
     delete process.env.SEED_ADMIN_EMAIL;
     delete process.env.SEED_ADMIN_PASSWORD;
 
@@ -201,5 +202,120 @@ describe('Invitations (e2e)', () => {
 
   it('un token inexistente responde 404 en la landing pública', async () => {
     await request(httpServer).get('/invitations/token-que-no-existe').expect(404);
+  });
+
+  it('vincula el intento oficial a la cuenta del candidato si está logueado al abrir la invitación', async () => {
+    const auth = `Bearer ${orgToken}`;
+
+    const questionRes = await request(httpServer)
+      .post('/questions')
+      .set('Authorization', auth)
+      .send({
+        title: 'Pregunta vínculo candidato',
+        statement: 'x',
+        category: 'BACKEND',
+        difficulty: 'EASY',
+        type: 'MULTIPLE_CHOICE',
+        options: [
+          { text: 'a', isCorrect: true },
+          { text: 'b', isCorrect: false },
+        ],
+      })
+      .expect(201);
+
+    const assessmentRes = await request(httpServer)
+      .post('/assessments')
+      .set('Authorization', auth)
+      .send({ name: 'Assessment con candidato logueado', questionIds: [questionRes.body.id] })
+      .expect(201);
+
+    const invitationRes = await request(httpServer)
+      .post(`/assessments/${assessmentRes.body.id}/invitations`)
+      .set('Authorization', auth)
+      .send({})
+      .expect(201);
+
+    const candidateRes = await request(httpServer)
+      .post('/candidate-auth/register')
+      .send({
+        name: 'Candidato Con Cuenta',
+        email: `candidato-vinculado-${Date.now()}@example.com`,
+        password: 'password123',
+      })
+      .expect(201);
+    const candidateAuth = `Bearer ${candidateRes.body.accessToken}`;
+
+    // Abre la invitación CON su token de candidato (a diferencia del resto
+    // de tests de este archivo, que la abren de forma anónima)
+    const startRes = await request(httpServer)
+      .post(`/invitations/${invitationRes.body.token}/start`)
+      .set('Authorization', candidateAuth)
+      .send({ candidateName: 'Candidato Con Cuenta' })
+      .expect(201);
+    const attemptId = startRes.body.id;
+
+    const correctOptionId = questionRes.body.options.find((o: any) => o.isCorrect).id;
+    await request(httpServer)
+      .put(`/attempts/${attemptId}/answers/${questionRes.body.id}`)
+      .send({ selectedOptionId: correctOptionId })
+      .expect(200);
+    await request(httpServer).post(`/attempts/${attemptId}/finish`).expect(201);
+
+    // Aparece en su historial de candidato, marcado como OFFICIAL (no PRACTICE)
+    const historyRes = await request(httpServer)
+      .get('/practice/my-attempts')
+      .set('Authorization', candidateAuth)
+      .expect(200);
+    expect(historyRes.body).toHaveLength(1);
+    expect(historyRes.body[0].id).toBe(attemptId);
+    expect(historyRes.body[0].assessmentVisibility).toBe('OFFICIAL');
+    expect(historyRes.body[0].status).toBe('COMPLETED');
+
+    // Y sigue apareciendo en el reporte de la organización (la vinculación
+    // a la cuenta del candidato no le quita visibilidad al reclutador)
+    const reportRes = await request(httpServer)
+      .get(`/assessments/${assessmentRes.body.id}/report`)
+      .set('Authorization', auth)
+      .expect(200);
+    expect(reportRes.body.completed).toBe(1);
+  });
+
+  it('abrir una invitación sin token sigue funcionando igual (regresión: no exige cuenta de candidato)', async () => {
+    const auth = `Bearer ${orgToken}`;
+
+    const questionRes = await request(httpServer)
+      .post('/questions')
+      .set('Authorization', auth)
+      .send({
+        title: 'Pregunta anónima',
+        statement: 'x',
+        category: 'BACKEND',
+        difficulty: 'EASY',
+        type: 'MULTIPLE_CHOICE',
+        options: [
+          { text: 'a', isCorrect: true },
+          { text: 'b', isCorrect: false },
+        ],
+      })
+      .expect(201);
+
+    const assessmentRes = await request(httpServer)
+      .post('/assessments')
+      .set('Authorization', auth)
+      .send({ name: 'Assessment anónimo', questionIds: [questionRes.body.id] })
+      .expect(201);
+
+    const invitationRes = await request(httpServer)
+      .post(`/assessments/${assessmentRes.body.id}/invitations`)
+      .set('Authorization', auth)
+      .send({})
+      .expect(201);
+
+    const startRes = await request(httpServer)
+      .post(`/invitations/${invitationRes.body.token}/start`)
+      .send({ candidateName: 'Anónimo de siempre' })
+      .expect(201);
+
+    expect(startRes.body.candidateName).toBe('Anónimo de siempre');
   });
 });

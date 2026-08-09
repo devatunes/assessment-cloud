@@ -180,6 +180,9 @@ export interface PracticeAttemptSummary {
   id: string;
   assessmentId: string;
   assessmentName: string;
+  // OFFICIAL solo aparece si el candidato estaba logueado al abrir una
+  // invitación (ver InvitationsController.start) — normalmente todo acá es PRACTICE.
+  assessmentVisibility: AssessmentVisibility;
   status: 'IN_PROGRESS' | 'COMPLETED';
   score: number | null;
   maxScore: number;

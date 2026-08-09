@@ -3,12 +3,15 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InvitationsService } from '../../core/invitations.service';
+import { CandidateAuthService } from '../../core/candidate-auth.service';
 import { InvitationPublicView } from '../../core/models';
 
 // Landing pública del candidato invitado (reemplaza el viejo flujo abierto
 // de "Iniciar como candidato" desde una lista pública de assessments). El
-// token en la URL es la única credencial — no hay cuenta de candidato acá
-// (eso es solo para simulacros, ver pages/practice/).
+// token en la URL sigue siendo la única credencial NECESARIA — pero si el
+// visitante ya tiene una cuenta de candidato y está logueado, el intento
+// queda vinculado a esa cuenta también (ver candidate-auth.interceptor.ts,
+// que adjunta el Bearer automáticamente en esta ruta si existe).
 @Component({
   selector: 'app-invite-landing',
   standalone: true,
@@ -19,6 +22,7 @@ export class InviteLandingComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly invitationsService = inject(InvitationsService);
+  protected readonly candidateAuthService = inject(CandidateAuthService);
 
   invitation: InvitationPublicView | null = null;
   loading = false;
