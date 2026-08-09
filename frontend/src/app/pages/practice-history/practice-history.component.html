@@ -1,0 +1,67 @@
+<section>
+  <div class="app-header">
+    <h2>Mi historial de práctica</h2>
+    <a routerLink="/practica">← Volver al catálogo</a>
+  </div>
+
+  @if (loading) {
+    <p aria-busy="true">Cargando historial...</p>
+  }
+  @if (error) {
+    <p style="color:#b91c1c">{{ error }}</p>
+  }
+  @if (!loading && attempts.length === 0) {
+    <p>Todavía no has practicado ningún simulacro.</p>
+  }
+
+  <table>
+    <thead>
+      <tr>
+        <th>Simulacro</th>
+        <th>Estado</th>
+        <th>Score</th>
+        <th>Nivel</th>
+        <th>Fecha</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (attempt of attempts; track attempt.id) {
+        <tr>
+          <td>{{ attempt.assessmentName }}</td>
+          <td>
+            <span
+              class="badge"
+              [class.badge-easy]="attempt.status === 'COMPLETED'"
+              [class.badge-medium]="attempt.status === 'IN_PROGRESS'"
+            >
+              {{ attempt.status === 'COMPLETED' ? 'Completado' : 'En curso' }}
+            </span>
+          </td>
+          <td>{{ attempt.score ?? '—' }} / {{ attempt.maxScore }}</td>
+          <td>
+            @if (attempt.level) {
+              <span class="badge" [class]="'badge-level-' + attempt.level.toLowerCase()">
+                {{ attempt.level }}
+              </span>
+            } @else {
+              —
+            }
+          </td>
+          <td>{{ attempt.startedAt | date: 'short' }}</td>
+          <td>
+            @if (attempt.status === 'COMPLETED') {
+              <a role="button" class="secondary" [routerLink]="['/attempt', attempt.id, 'result']">
+                Ver resultado
+              </a>
+            } @else {
+              <a role="button" class="secondary" [routerLink]="['/attempt', attempt.id]">
+                Continuar
+              </a>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</section>

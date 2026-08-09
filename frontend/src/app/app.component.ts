@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/auth.service';
+import { CandidateAuthService } from './core/candidate-auth.service';
 import { ThemeService } from './core/theme.service';
 
 @Component({
@@ -24,9 +25,15 @@ import { ThemeService } from './core/theme.service';
           }
           <span>{{ authService.currentUser()?.name }}</span>
           <a href="#" (click)="logout($event)">Cerrar sesión</a>
+        } @else if (candidateAuthService.isLoggedIn) {
+          <a routerLink="/practica" routerLinkActive="contrast">Practicar</a>
+          <a routerLink="/practica/historial" routerLinkActive="contrast">Mi historial</a>
+          <span>{{ candidateAuthService.currentCandidate()?.name }}</span>
+          <a href="#" (click)="logoutCandidate($event)">Cerrar sesión</a>
         } @else {
           <a routerLink="/login" routerLinkActive="contrast">Iniciar sesión</a>
           <a routerLink="/register" routerLinkActive="contrast">Crear organización</a>
+          <a routerLink="/candidato/login" routerLinkActive="contrast">Practicar (candidatos)</a>
         }
         <button
           type="button"
@@ -45,6 +52,7 @@ import { ThemeService } from './core/theme.service';
 })
 export class AppComponent {
   protected readonly authService = inject(AuthService);
+  protected readonly candidateAuthService = inject(CandidateAuthService);
   protected readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
 
@@ -52,5 +60,11 @@ export class AppComponent {
     event.preventDefault();
     this.authService.logout();
     this.router.navigateByUrl('/login');
+  }
+
+  logoutCandidate(event: Event): void {
+    event.preventDefault();
+    this.candidateAuthService.logout();
+    this.router.navigateByUrl('/candidato/login');
   }
 }

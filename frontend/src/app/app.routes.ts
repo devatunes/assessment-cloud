@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { candidateAuthGuard } from './core/guards/candidate-auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'questions', pathMatch: 'full' },
@@ -11,6 +12,36 @@ export const routes: Routes = [
     path: 'register',
     loadComponent: () =>
       import('./pages/register/register.component').then((m) => m.RegisterComponent),
+  },
+  {
+    path: 'candidato/login',
+    loadComponent: () =>
+      import('./pages/candidate-login/candidate-login.component').then(
+        (m) => m.CandidateLoginComponent,
+      ),
+  },
+  {
+    path: 'candidato/registro',
+    loadComponent: () =>
+      import('./pages/candidate-register/candidate-register.component').then(
+        (m) => m.CandidateRegisterComponent,
+      ),
+  },
+  {
+    path: 'practica',
+    canActivate: [candidateAuthGuard],
+    loadComponent: () =>
+      import('./pages/practice-catalog/practice-catalog.component').then(
+        (m) => m.PracticeCatalogComponent,
+      ),
+  },
+  {
+    path: 'practica/historial',
+    canActivate: [candidateAuthGuard],
+    loadComponent: () =>
+      import('./pages/practice-history/practice-history.component').then(
+        (m) => m.PracticeHistoryComponent,
+      ),
   },
   {
     path: 'questions',

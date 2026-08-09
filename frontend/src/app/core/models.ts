@@ -141,6 +141,41 @@ export interface QuestionBankDetail extends QuestionBank {
   items: Array<{ bankId: string; questionId: string; addedAt: string; question: Question }>;
 }
 
+// --- Candidatos (se registran solos para practicar; sistema separado del
+// staff de organización, ver CandidateAuthService) ---
+
+export interface CurrentCandidate {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface CandidateAuthResponse {
+  accessToken: string;
+  candidate: CurrentCandidate;
+}
+
+export interface PracticeCatalogEntry {
+  id: string;
+  name: string;
+  description: string | null;
+  timeLimitMinutes: number | null;
+  questionCount: number;
+  createdAt: string;
+}
+
+export interface PracticeAttemptSummary {
+  id: string;
+  assessmentId: string;
+  assessmentName: string;
+  status: 'IN_PROGRESS' | 'COMPLETED';
+  score: number | null;
+  maxScore: number;
+  level: 'JUNIOR' | 'SEMISENIOR' | 'SENIOR' | null;
+  startedAt: string;
+  finishedAt: string | null;
+}
+
 export interface SanitizedQuestion {
   id: string;
   title: string;
