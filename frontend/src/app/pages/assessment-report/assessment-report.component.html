@@ -3,7 +3,7 @@
     <p aria-busy="true">Cargando reporte...</p>
   }
   @if (error) {
-    <p style="color:#b91c1c">{{ error }}</p>
+    <p class="form-error">{{ error }}</p>
   }
 
   @if (report) {
@@ -11,7 +11,7 @@
       <hgroup>
         <h2>Reporte — {{ report.assessmentName }}</h2>
       </hgroup>
-      <div style="display: flex; align-items: center; gap: 1rem; white-space: nowrap">
+      <div class="header-actions">
         <a routerLink="/assessments">← Volver</a>
         <button class="secondary" (click)="exportCsv()" [disabled]="exporting">
           {{ exporting ? 'Exportando...' : 'Exportar CSV' }}

@@ -3,16 +3,16 @@
     <p aria-busy="true">Calculando resultado...</p>
   }
   @if (error) {
-    <p style="color:#b91c1c">{{ error }}</p>
+    <p class="form-error">{{ error }}</p>
   }
 
   @if (newBadges.length > 0) {
-    <article style="border: 2px solid #f59e0b">
+    <article class="badge-unlock-banner">
       <h3>🎉 ¡Nuevas insignias desbloqueadas!</h3>
       <div class="grid">
         @for (badge of newBadges; track badge.code) {
           <div>
-            <p style="font-size: 2rem; margin-bottom: 0">{{ badge.icon }}</p>
+            <p class="badge-icon">{{ badge.icon }}</p>
             <strong>{{ badge.label }}</strong>
             <p><small>{{ badge.description }}</small></p>
           </div>
@@ -25,7 +25,7 @@
     <article>
       <h2>Resultado — {{ result.assessmentName }}</h2>
       <p>Candidato: {{ result.candidateName }}</p>
-      <h1 style="font-size: 3rem">{{ result.score }} / {{ result.maxScore }}</h1>
+      <h1 class="stat-hero">{{ result.score }} / {{ result.maxScore }}</h1>
       @if (result.level) {
         <p>
           Nivel alcanzado:
@@ -51,9 +51,9 @@
             <td>{{ item.type === 'CODE' ? 'Código' : 'Opción múltiple' }}</td>
             <td>
               @if (item.isCorrect) {
-                <span style="color:#059669">✅ Correcto</span>
+                <span class="text-success">✅ Correcto</span>
               } @else {
-                <span style="color:#b91c1c">❌ Incorrecto</span>
+                <span class="form-error">❌ Incorrecto</span>
               }
             </td>
           </tr>
@@ -100,7 +100,7 @@
           ></textarea>
         </label>
         @if (feedbackError) {
-          <p style="color:#b91c1c">{{ feedbackError }}</p>
+          <p class="form-error">{{ feedbackError }}</p>
         }
         <button
           type="button"

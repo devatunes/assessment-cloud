@@ -67,6 +67,6 @@ export class AppComponent {
   logoutCandidate(event: Event): void {
     event.preventDefault();
     this.candidateAuthService.logout();
-    this.router.navigate(['/login'], { queryParams: { role: 'candidate' } });
+    this.router.navigateByUrl('/login');
   }
 }

@@ -8,7 +8,7 @@
     <article>
       <h3>Nueva pregunta</h3>
       @if (createError) {
-        <p style="color:#b91c1c">{{ createError }}</p>
+        <p class="form-error">{{ createError }}</p>
       }
       <form (ngSubmit)="submitNewQuestion()">
         <label>
@@ -179,7 +179,7 @@
     <p aria-busy="true">Cargando preguntas...</p>
   }
   @if (error) {
-    <p style="color:#b91c1c">{{ error }}</p>
+    <p class="form-error">{{ error }}</p>
   }
 
   @if (!loading && questions.length === 0) {

@@ -3,7 +3,7 @@
     <p aria-busy="true">Cargando banco...</p>
   }
   @if (error) {
-    <p style="color:#b91c1c">{{ error }}</p>
+    <p class="form-error">{{ error }}</p>
   }
 
   @if (bank) {
@@ -35,7 +35,7 @@
       @if (showEditForm) {
         <article>
           @if (editError) {
-            <p style="color:#b91c1c">{{ editError }}</p>
+            <p class="form-error">{{ editError }}</p>
           }
           <form (ngSubmit)="saveEdit()">
             <label>
@@ -75,7 +75,7 @@
     @if (showAddPicker) {
       <article>
         @if (addError) {
-          <p style="color:#b91c1c">{{ addError }}</p>
+          <p class="form-error">{{ addError }}</p>
         }
         @if (loadingAvailable) {
           <p aria-busy="true">Cargando preguntas disponibles...</p>

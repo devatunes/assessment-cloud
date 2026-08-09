@@ -3,7 +3,7 @@
     <p aria-busy="true">Cargando...</p>
   }
   @if (error) {
-    <p style="color:#b91c1c">{{ error }}</p>
+    <p class="form-error">{{ error }}</p>
   }
 
   @if (attempt && currentQuestion) {
@@ -51,13 +51,13 @@
         </button>
 
         @if (currentRunResult) {
-          <div style="margin-top: 1rem">
+          <div class="mt-1">
             <p>
               <strong>Resultado: </strong>
               @if (currentRunResult.allPassed) {
-                <span style="color:#059669">✅ Todos los casos pasaron</span>
+                <span class="text-success">✅ Todos los casos pasaron</span>
               } @else {
-                <span style="color:#b91c1c">❌ Hay casos que no pasan</span>
+                <span class="form-error">❌ Hay casos que no pasan</span>
               }
             </p>
 

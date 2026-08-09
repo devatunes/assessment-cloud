@@ -11,7 +11,7 @@
     <p aria-busy="true">Cargando catálogo...</p>
   }
   @if (error) {
-    <p style="color:#b91c1c">{{ error }}</p>
+    <p class="form-error">{{ error }}</p>
   }
   @if (!loading && catalog.length === 0) {
     <p>Todavía no hay simulacros disponibles. Vuelve pronto.</p>

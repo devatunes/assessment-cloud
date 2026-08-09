@@ -33,7 +33,7 @@ export const candidateAuthInterceptor: HttpInterceptorFn = (req, next) => {
         req.url.includes('/candidate-auth') || req.url.includes('/practice');
       if (requiresCandidateSession && error?.status === 401 && candidateAuthService.isLoggedIn) {
         candidateAuthService.logout();
-        router.navigate(['/login'], { queryParams: { role: 'candidate' } });
+        router.navigateByUrl('/login');
       }
       return throwError(() => error);
     }),
