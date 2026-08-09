@@ -29,4 +29,10 @@ export class PracticeController {
   myAttempts(@CurrentCandidate() candidate: AuthenticatedCandidate) {
     return this.practiceService.myAttempts(candidate.candidateId);
   }
+
+  @Get('my-badges')
+  @ApiOperation({ summary: 'Insignias obtenidas por el candidato autenticado' })
+  myBadges(@CurrentCandidate() candidate: AuthenticatedCandidate) {
+    return this.practiceService.myBadges(candidate.candidateId);
+  }
 }

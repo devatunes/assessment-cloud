@@ -50,6 +50,7 @@ describe('AttemptsService', () => {
   let assessmentRepository: any;
   let invitationRepository: any;
   let executorService: any;
+  let badgesService: any;
 
   beforeEach(() => {
     attemptRepository = {
@@ -71,6 +72,7 @@ describe('AttemptsService', () => {
     assessmentRepository = { findOne: jest.fn() };
     invitationRepository = { update: jest.fn().mockResolvedValue({ affected: 0 }) };
     executorService = { run: jest.fn() };
+    badgesService = { evaluateAndAward: jest.fn().mockResolvedValue([]) };
 
     service = new AttemptsService(
       attemptRepository,
@@ -79,6 +81,7 @@ describe('AttemptsService', () => {
       assessmentRepository,
       invitationRepository,
       executorService,
+      badgesService,
     );
   });
 
@@ -185,6 +188,52 @@ describe('AttemptsService', () => {
       expect(executorService.run).not.toHaveBeenCalled();
       expect(attemptRepository.save).not.toHaveBeenCalled();
       expect(result.score).toBe(2);
+    });
+
+    it('otorga insignias cuando el intento es de práctica (tiene candidateId)', async () => {
+      const assessment = buildAssessmentFixture();
+      attemptRepository.findOne.mockResolvedValue({
+        id: 'attempt-1',
+        status: AttemptStatus.IN_PROGRESS,
+        assessmentId: assessment.id,
+        maxScore: 2,
+        candidateId: 'candidate-1',
+      });
+      assessmentRepository.findOne.mockResolvedValue(assessment);
+      answerRepository.find.mockResolvedValue([
+        { questionId: 'q-mc', selectedOptionId: 'opt-correct' },
+        { questionId: 'q-code', submittedCode: 'function solution(n){return String(n);}' },
+      ]);
+      executorService.run.mockResolvedValue({ results: [], allPassed: true });
+      badgesService.evaluateAndAward.mockResolvedValue([
+        { code: 'FIRST_ATTEMPT_COMPLETED', icon: '🎯', label: 'x', description: 'x' },
+      ]);
+
+      const result = await service.finish('attempt-1');
+
+      expect(badgesService.evaluateAndAward).toHaveBeenCalledWith(
+        expect.objectContaining({ candidateId: 'candidate-1', attemptId: 'attempt-1', score: 2, maxScore: 2 }),
+      );
+      expect(result.newBadges).toHaveLength(1);
+      expect(result.newBadges[0].code).toBe('FIRST_ATTEMPT_COMPLETED');
+    });
+
+    it('NO otorga insignias en un intento anónimo (invitación oficial, sin candidateId)', async () => {
+      const assessment = buildAssessmentFixture();
+      attemptRepository.findOne.mockResolvedValue({
+        id: 'attempt-1',
+        status: AttemptStatus.IN_PROGRESS,
+        assessmentId: assessment.id,
+        maxScore: 2,
+        candidateId: null,
+      });
+      assessmentRepository.findOne.mockResolvedValue(assessment);
+      answerRepository.find.mockResolvedValue([]);
+
+      const result = await service.finish('attempt-1');
+
+      expect(badgesService.evaluateAndAward).not.toHaveBeenCalled();
+      expect(result.newBadges).toEqual([]);
     });
   });
 

@@ -4,6 +4,7 @@ import { Assessment } from '../assessments/entities/assessment.entity';
 import { AssessmentQuestion } from '../assessments/entities/assessment-question.entity';
 import { Attempt } from '../attempts/entities/attempt.entity';
 import { AttemptsModule } from '../attempts/attempts.module';
+import { BadgesModule } from '../badges/badges.module';
 import { PracticeService } from './practice.service';
 import { PracticeController } from './practice.controller';
 
@@ -11,6 +12,7 @@ import { PracticeController } from './practice.controller';
   imports: [
     TypeOrmModule.forFeature([Assessment, AssessmentQuestion, Attempt]),
     AttemptsModule,
+    BadgesModule,
   ],
   controllers: [PracticeController],
   providers: [PracticeService],

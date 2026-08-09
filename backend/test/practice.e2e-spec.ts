@@ -174,6 +174,84 @@ describe('Practice (e2e)', () => {
     expect(retryRes.body.id).not.toBe(attemptId);
   });
 
+  it('otorga insignias al completar simulacros de práctica (primera vez, puntaje perfecto, nivel, y racha de 5)', async () => {
+    const orgAuth = `Bearer ${orgToken}`;
+
+    const questionRes = await request(httpServer)
+      .post('/questions')
+      .set('Authorization', orgAuth)
+      .send({
+        title: '¿3 + 3?',
+        statement: 'x',
+        category: 'BACKEND',
+        difficulty: 'EASY',
+        type: 'MULTIPLE_CHOICE',
+        options: [
+          { text: '6', isCorrect: true },
+          { text: '7', isCorrect: false },
+        ],
+      })
+      .expect(201);
+
+    const assessmentRes = await request(httpServer)
+      .post('/assessments')
+      .set('Authorization', orgAuth)
+      .send({
+        name: 'Simulacro de insignias',
+        questionIds: [questionRes.body.id],
+        visibility: 'PRACTICE',
+        levelThresholds: { junior: 1 },
+      })
+      .expect(201);
+
+    const candidateRes = await request(httpServer)
+      .post('/candidate-auth/register')
+      .send({
+        name: 'Candidato Insignias',
+        email: `candidato-insignias-${Date.now()}@example.com`,
+        password: 'password123',
+      })
+      .expect(201);
+    const candidateAuth = `Bearer ${candidateRes.body.accessToken}`;
+    const correctOptionId = questionRes.body.options.find((o: any) => o.isCorrect).id;
+
+    let lastFinishBody: any;
+    for (let i = 0; i < 5; i++) {
+      const startRes = await request(httpServer)
+        .post(`/practice/assessments/${assessmentRes.body.id}/start`)
+        .set('Authorization', candidateAuth)
+        .expect(201);
+      const attemptId = startRes.body.id;
+      const questionId = startRes.body.questions[0].id;
+
+      await request(httpServer)
+        .put(`/attempts/${attemptId}/answers/${questionId}`)
+        .send({ selectedOptionId: correctOptionId })
+        .expect(200);
+
+      const finishRes = await request(httpServer).post(`/attempts/${attemptId}/finish`).expect(201);
+      lastFinishBody = finishRes.body;
+    }
+
+    // El PRIMER finish ya otorgó FIRST_ATTEMPT_COMPLETED + PERFECT_SCORE +
+    // LEVEL_JUNIOR de una sola vez; el QUINTO otorga MILESTONE_5_ATTEMPTS.
+    const newBadgeCodes = lastFinishBody.newBadges.map((b: any) => b.code);
+    expect(newBadgeCodes).toEqual(['MILESTONE_5_ATTEMPTS']);
+
+    const badgesRes = await request(httpServer)
+      .get('/practice/my-badges')
+      .set('Authorization', candidateAuth)
+      .expect(200);
+    const allCodes = badgesRes.body.map((b: any) => b.code).sort();
+    expect(allCodes).toEqual(
+      ['FIRST_ATTEMPT_COMPLETED', 'LEVEL_JUNIOR', 'MILESTONE_5_ATTEMPTS', 'PERFECT_SCORE'].sort(),
+    );
+    // Cada insignia se otorga una única vez, aunque las condiciones se
+    // repitan en varios intentos (puntaje perfecto y nivel Junior se
+    // cumplieron los 5 intentos, pero solo aparecen una vez en el listado).
+    expect(badgesRes.body).toHaveLength(4);
+  });
+
   it('un token de candidato no da acceso a endpoints de organización, y viceversa', async () => {
     const candidateRes = await request(httpServer)
       .post('/candidate-auth/register')

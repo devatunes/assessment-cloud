@@ -4,6 +4,27 @@
     <a routerLink="/practica">← Volver al catálogo</a>
   </div>
 
+  <article>
+    <h3>Mis insignias</h3>
+    @if (loadingBadges) {
+      <p aria-busy="true">Cargando insignias...</p>
+    }
+    @if (!loadingBadges && badges.length === 0) {
+      <p><small>Todavía no tienes insignias. Completa un simulacro para empezar a ganarlas.</small></p>
+    }
+    @if (badges.length > 0) {
+      <div class="grid">
+        @for (badge of badges; track badge.code) {
+          <div>
+            <p style="font-size: 2rem; margin-bottom: 0" [title]="badge.description">{{ badge.icon }}</p>
+            <strong>{{ badge.label }}</strong>
+            <p><small>{{ badge.earnedAt | date: 'short' }}</small></p>
+          </div>
+        }
+      </div>
+    }
+  </article>
+
   @if (loading) {
     <p aria-busy="true">Cargando historial...</p>
   }

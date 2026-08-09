@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AttemptWithQuestions, PracticeAttemptSummary, PracticeCatalogEntry } from './models';
+import { AttemptWithQuestions, EarnedBadge, PracticeAttemptSummary, PracticeCatalogEntry } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class PracticeService {
@@ -22,5 +22,9 @@ export class PracticeService {
 
   myAttempts(): Observable<PracticeAttemptSummary[]> {
     return this.http.get<PracticeAttemptSummary[]>(`${this.baseUrl}/my-attempts`);
+  }
+
+  myBadges(): Observable<EarnedBadge[]> {
+    return this.http.get<EarnedBadge[]>(`${this.baseUrl}/my-badges`);
   }
 }

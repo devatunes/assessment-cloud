@@ -229,6 +229,19 @@ export interface RunResult {
   error?: string;
 }
 
+// Insignia que un candidato colecciona al completar simulacros de práctica
+// (nunca vía invitación oficial, que es anónima).
+export interface Badge {
+  code: string;
+  icon: string;
+  label: string;
+  description: string;
+}
+
+export interface EarnedBadge extends Badge {
+  earnedAt: string;
+}
+
 export interface AttemptResult {
   id: string;
   assessmentId: string;
@@ -250,4 +263,7 @@ export interface AttemptResult {
     points: number;
     explanation: string | null;
   }>;
+  // Insignias otorgadas EN ESTA llamada a finish(); vacío en getResult() o
+  // en un finish() repetido sobre un intento ya completado.
+  newBadges: Badge[];
 }
