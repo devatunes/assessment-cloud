@@ -47,6 +47,7 @@ describe('AttemptsService', () => {
   let attemptRepository: any;
   let answerRepository: any;
   let assessmentRepository: any;
+  let invitationRepository: any;
   let executorService: any;
 
   beforeEach(() => {
@@ -62,12 +63,14 @@ describe('AttemptsService', () => {
       create: jest.fn((a: unknown) => a),
     };
     assessmentRepository = { findOne: jest.fn() };
+    invitationRepository = { update: jest.fn().mockResolvedValue({ affected: 0 }) };
     executorService = { run: jest.fn() };
 
     service = new AttemptsService(
       attemptRepository,
       answerRepository,
       assessmentRepository,
+      invitationRepository,
       executorService,
     );
   });

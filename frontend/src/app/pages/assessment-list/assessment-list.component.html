@@ -17,11 +17,18 @@
   <div class="grid">
     @for (assessment of assessments; track assessment.id) {
       <article>
-        <h3>{{ assessment.name }}</h3>
+        <h3>
+          {{ assessment.name }}
+          @if (assessment.visibility === 'PRACTICE') {
+            <span class="badge badge-code">Simulacro</span>
+          }
+        </h3>
         <p>{{ assessment.description }}</p>
-        <a role="button" class="secondary" [routerLink]="['/assessments', assessment.id, 'start']">
-          Iniciar como candidato
-        </a>
+        @if (assessment.visibility === 'OFFICIAL') {
+          <a role="button" class="secondary" [routerLink]="['/assessments', assessment.id, 'invite']">
+            Invitar candidato
+          </a>
+        }
       </article>
     }
   </div>

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { QuestionsService } from '../../core/questions.service';
 import { AssessmentsService } from '../../core/assessments.service';
-import { Question } from '../../core/models';
+import { AssessmentVisibility, Question } from '../../core/models';
 import { DifficultyBadgeComponent } from '../../shared/difficulty-badge.component';
 
 @Component({
@@ -26,6 +26,14 @@ export class AssessmentCreateComponent implements OnInit {
   name = '';
   description = '';
   selectedIds: string[] = [];
+  visibility: AssessmentVisibility = 'OFFICIAL';
+
+  // Umbrales de nivel: se dejan como string en el form para permitir el
+  // input vacío (número inválido en HTML no dispara ngModel limpiamente);
+  // se parsean a number recién al enviar.
+  levelJunior = '';
+  levelSemisenior = '';
+  levelSenior = '';
 
   ngOnInit(): void {
     this.loading = true;
@@ -66,9 +74,21 @@ export class AssessmentCreateComponent implements OnInit {
       return;
     }
 
+    const levelThresholds: { junior?: number; semisenior?: number; senior?: number } = {};
+    if (this.levelJunior) levelThresholds.junior = Number(this.levelJunior);
+    if (this.levelSemisenior) levelThresholds.semisenior = Number(this.levelSemisenior);
+    if (this.levelSenior) levelThresholds.senior = Number(this.levelSenior);
+    const hasLevels = Object.keys(levelThresholds).length > 0;
+
     this.saving = true;
     this.assessmentsService
-      .create({ name: this.name, description: this.description || undefined, questionIds: this.selectedIds })
+      .create({
+        name: this.name,
+        description: this.description || undefined,
+        questionIds: this.selectedIds,
+        visibility: this.visibility,
+        levelThresholds: hasLevels ? levelThresholds : undefined,
+      })
       .subscribe({
         next: () => {
           this.saving = false;

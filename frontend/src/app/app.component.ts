@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from './core/auth.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   template: `
     <header class="app-header">
       <hgroup>
@@ -12,8 +14,18 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         <p>Plataforma de evaluaciones técnicas</p>
       </hgroup>
       <nav class="app-nav">
-        <a routerLink="/questions" routerLinkActive="contrast">Preguntas</a>
-        <a routerLink="/assessments" routerLinkActive="contrast">Assessments</a>
+        @if (authService.isLoggedIn) {
+          <a routerLink="/questions" routerLinkActive="contrast">Preguntas</a>
+          <a routerLink="/assessments" routerLinkActive="contrast">Assessments</a>
+          @if (authService.isAdmin) {
+            <a routerLink="/admin/users" routerLinkActive="contrast">Usuarios</a>
+          }
+          <span>{{ authService.currentUser()?.name }}</span>
+          <a href="#" (click)="logout($event)">Cerrar sesión</a>
+        } @else {
+          <a routerLink="/login" routerLinkActive="contrast">Iniciar sesión</a>
+          <a routerLink="/register" routerLinkActive="contrast">Crear organización</a>
+        }
       </nav>
     </header>
     <main>
@@ -21,4 +33,13 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     </main>
   `,
 })
-export class AppComponent {}
+export class AppComponent {
+  protected readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+
+  logout(event: Event): void {
+    event.preventDefault();
+    this.authService.logout();
+    this.router.navigateByUrl('/login');
+  }
+}

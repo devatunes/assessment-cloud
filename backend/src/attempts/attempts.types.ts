@@ -1,4 +1,5 @@
 import { QuestionDifficulty, QuestionType } from '../questions/entities/question.entity';
+import { CandidateLevel } from '../assessments/level.util';
 
 // Vista de una pregunta tal como la ve el candidato: sin isCorrect en las
 // opciones y sin los test cases marcados como hidden.
@@ -36,6 +37,9 @@ export type AttemptResult = {
   status: string;
   score: number | null;
   maxScore: number;
+  // Nivel alcanzado según los umbrales configurados en el assessment (ver
+  // AssessmentLevelThresholds); null si el evaluador no configuró niveles.
+  level: CandidateLevel | null;
   startedAt: Date;
   finishedAt: Date | null;
   breakdown: Array<{

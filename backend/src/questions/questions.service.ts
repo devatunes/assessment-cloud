@@ -16,10 +16,11 @@ export class QuestionsService {
     private readonly optionRepository: Repository<QuestionOption>,
   ) {}
 
-  async findAll(query: QueryQuestionsDto): Promise<Question[]> {
+  async findAll(organizationId: string, query: QueryQuestionsDto): Promise<Question[]> {
     const qb = this.questionRepository
       .createQueryBuilder('question')
       .leftJoinAndSelect('question.options', 'option')
+      .where('question.organization_id = :organizationId', { organizationId })
       .orderBy('question.createdAt', 'DESC')
       .addOrderBy('option.position', 'ASC');
 
@@ -36,9 +37,9 @@ export class QuestionsService {
     return qb.getMany();
   }
 
-  async findOne(id: string): Promise<Question> {
+  async findOne(organizationId: string, id: string): Promise<Question> {
     const question = await this.questionRepository.findOne({
-      where: { id },
+      where: { id, organizationId },
       relations: { options: true },
       order: { options: { position: 'ASC' } },
     });
@@ -50,8 +51,9 @@ export class QuestionsService {
     return question;
   }
 
-  async create(dto: CreateQuestionDto): Promise<Question> {
+  async create(organizationId: string, dto: CreateQuestionDto): Promise<Question> {
     const question = this.questionRepository.create({
+      organizationId,
       title: dto.title,
       statement: dto.statement,
       category: dto.category,
@@ -74,8 +76,8 @@ export class QuestionsService {
     return this.questionRepository.save(question);
   }
 
-  async update(id: string, dto: UpdateQuestionDto): Promise<Question> {
-    const question = await this.findOne(id);
+  async update(organizationId: string, id: string, dto: UpdateQuestionDto): Promise<Question> {
+    const question = await this.findOne(organizationId, id);
 
     Object.assign(question, {
       title: dto.title ?? question.title,
@@ -105,8 +107,8 @@ export class QuestionsService {
     return this.questionRepository.save(question);
   }
 
-  async remove(id: string): Promise<void> {
-    const result = await this.questionRepository.delete(id);
+  async remove(organizationId: string, id: string): Promise<void> {
+    const result = await this.questionRepository.delete({ id, organizationId });
 
     if (result.affected === 0) {
       throw new NotFoundException(`Pregunta ${id} no encontrada`);
