@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AuthResponse, CurrentUser } from './models';
+import { AuthResponse, CurrentUser, UserRole } from './models';
 
 const TOKEN_KEY = 'assessment_cloud_token';
 const USER_KEY = 'assessment_cloud_user';
@@ -50,6 +50,13 @@ export class AuthService {
     return this.http
       .post<AuthResponse>(`${this.baseUrl}/accept-invite`, { token, password })
       .pipe(tap((res) => this.persistSession(res)));
+  }
+
+  // Solo admin (reforzado por el backend). No hay envío de email real: el
+  // frontend arma el link de activación con el token devuelto y el admin lo
+  // copia/envía manualmente (mismo patrón que las invitaciones de candidatos).
+  inviteTeammate(payload: { name: string; email: string; role: UserRole }): Observable<{ activationToken: string }> {
+    return this.http.post<{ activationToken: string }>(`${this.baseUrl}/invite-teammate`, payload);
   }
 
   logout(): void {

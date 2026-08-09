@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { adminGuard } from './core/guards/admin.guard';
 import { candidateAuthGuard } from './core/guards/candidate-auth.guard';
 
 export const routes: Routes = [
@@ -49,6 +50,19 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/question-library/question-library.component').then(
         (m) => m.QuestionLibraryComponent,
+      ),
+  },
+  {
+    path: 'admin/users',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./pages/admin-users/admin-users.component').then((m) => m.AdminUsersComponent),
+  },
+  {
+    path: 'accept-invite/:token',
+    loadComponent: () =>
+      import('./pages/accept-invite/accept-invite.component').then(
+        (m) => m.AcceptInviteComponent,
       ),
   },
   {
