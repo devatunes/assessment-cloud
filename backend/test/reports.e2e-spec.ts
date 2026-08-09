@@ -274,4 +274,77 @@ describe('Reports (e2e)', () => {
       .set('Authorization', otherOrgAuth)
       .expect(404);
   });
+
+  it('historial de candidatos: agrupa por correo a través de varios assessments y filtra por track', async () => {
+    const auth = `Bearer ${orgToken}`;
+    const candidateEmail = `historial-${Date.now()}@example.com`;
+
+    const questionRes = await request(httpServer)
+      .post('/questions')
+      .set('Authorization', auth)
+      .send({
+        title: 'Pregunta historial',
+        statement: 'x',
+        category: 'BACKEND',
+        difficulty: 'EASY',
+        type: 'MULTIPLE_CHOICE',
+        options: [
+          { text: 'a', isCorrect: true },
+          { text: 'b', isCorrect: false },
+        ],
+      })
+      .expect(201);
+
+    // Dos assessments distintos ("dos convocatorias"), mismo candidato, tracks distintos
+    const assessment1 = await request(httpServer)
+      .post('/assessments')
+      .set('Authorization', auth)
+      .send({ name: 'Convocatoria Backend', questionIds: [questionRes.body.id] })
+      .expect(201);
+    const assessment2 = await request(httpServer)
+      .post('/assessments')
+      .set('Authorization', auth)
+      .send({ name: 'Convocatoria QA', questionIds: [questionRes.body.id] })
+      .expect(201);
+
+    await request(httpServer)
+      .post(`/assessments/${assessment1.body.id}/invitations`)
+      .set('Authorization', auth)
+      .send({ candidateEmail, candidateName: 'Candidato Historial', track: 'DEVELOPER', specialty: 'Backend' })
+      .expect(201);
+    await request(httpServer)
+      .post(`/assessments/${assessment2.body.id}/invitations`)
+      .set('Authorization', auth)
+      .send({ candidateEmail, candidateName: 'Candidato Historial', track: 'QA', specialty: 'Automation' })
+      .expect(201);
+
+    // Otro candidato, no debe mezclarse en el grupo del primero
+    await request(httpServer)
+      .post(`/assessments/${assessment1.body.id}/invitations`)
+      .set('Authorization', auth)
+      .send({ candidateEmail: `otro-${Date.now()}@example.com`, track: 'DEVELOPER', specialty: 'Frontend' })
+      .expect(201);
+
+    const historyRes = await request(httpServer)
+      .get('/reports/candidates')
+      .set('Authorization', auth)
+      .expect(200);
+
+    const group = historyRes.body.find((g: any) => g.email === candidateEmail);
+    expect(group).toBeDefined();
+    expect(group.entries).toHaveLength(2);
+    expect(group.name).toBe('Candidato Historial');
+    const tracks = group.entries.map((e: any) => e.track).sort();
+    expect(tracks).toEqual(['DEVELOPER', 'QA']);
+
+    // Filtro por track: solo trae la entrada QA de este candidato
+    const filteredRes = await request(httpServer)
+      .get('/reports/candidates?track=QA')
+      .set('Authorization', auth)
+      .expect(200);
+    const filteredGroup = filteredRes.body.find((g: any) => g.email === candidateEmail);
+    expect(filteredGroup.entries).toHaveLength(1);
+    expect(filteredGroup.entries[0].track).toBe('QA');
+    expect(filteredGroup.entries[0].specialty).toBe('Automation');
+  });
 });

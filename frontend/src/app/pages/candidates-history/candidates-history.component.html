@@ -1,0 +1,112 @@
+<section>
+  <div class="app-header">
+    <hgroup>
+      <h2>Candidatos</h2>
+      <p>Historial a través de todos los assessments oficiales y años</p>
+    </hgroup>
+  </div>
+
+  <article>
+    <div class="grid">
+      <label>
+        Track
+        <select [(ngModel)]="filterTrack" (change)="load()">
+          <option value="">Todos</option>
+          @for (t of tracks; track t) {
+            <option [value]="t">{{ trackLabels[t] }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Especialidad
+        <input
+          type="text"
+          [(ngModel)]="filterSpecialty"
+          (change)="load()"
+          placeholder="Backend, Frontend, Cloud..."
+        />
+      </label>
+      <label>
+        Año
+        <select [(ngModel)]="filterYear" (change)="load()">
+          <option [ngValue]="null">Todos</option>
+          @for (year of availableYears; track year) {
+            <option [ngValue]="year">{{ year }}</option>
+          }
+        </select>
+      </label>
+    </div>
+    <button class="secondary" (click)="clearFilters()">Limpiar filtros</button>
+  </article>
+
+  @if (loading) {
+    <p aria-busy="true">Cargando historial...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+  @if (!loading && groups.length === 0) {
+    <p>No hay candidatos que coincidan con estos filtros.</p>
+  }
+
+  @for (group of groups; track group.email) {
+    <details>
+      <summary>
+        <strong>{{ group.name || group.email }}</strong>
+        <small> — {{ group.email }} · {{ group.entries.length }} candidatura(s)</small>
+      </summary>
+      <table>
+        <thead>
+          <tr>
+            <th>Assessment</th>
+            <th>Año</th>
+            <th>Clasificación</th>
+            <th>Estado</th>
+            <th>Score</th>
+            <th>Nivel</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of group.entries; track entry.invitationId) {
+            <tr>
+              <td>{{ entry.assessmentName }}</td>
+              <td>{{ entry.year }}</td>
+              <td>
+                @if (entry.track) {
+                  <span class="badge badge-mc">{{ trackLabels[entry.track] }}</span>
+                }
+                @if (entry.specialty) {
+                  <span class="badge badge-code">{{ entry.specialty }}</span>
+                }
+                @if (!entry.track && !entry.specialty) {
+                  <small>Sin clasificar</small>
+                }
+              </td>
+              <td>
+                <span
+                  class="badge"
+                  [class.badge-code]="entry.status === 'PENDING'"
+                  [class.badge-easy]="entry.status === 'COMPLETED'"
+                  [class.badge-medium]="entry.status === 'STARTED'"
+                  [class.badge-hard]="entry.status === 'EXPIRED'"
+                >
+                  {{ entry.status }}
+                </span>
+              </td>
+              <td>{{ entry.score !== null ? entry.score + ' / ' + entry.maxScore : '—' }}</td>
+              <td>
+                @if (entry.level) {
+                  <span class="badge" [class]="'badge-level-' + entry.level.toLowerCase()">
+                    {{ entry.level }}
+                  </span>
+                } @else {
+                  —
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </details>
+  }
+</section>

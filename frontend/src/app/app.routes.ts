@@ -108,6 +108,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'candidates',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/candidates-history/candidates-history.component').then(
+        (m) => m.CandidatesHistoryComponent,
+      ),
+  },
+  {
     path: 'invite/:token',
     loadComponent: () =>
       import('./pages/invite-landing/invite-landing.component').then(

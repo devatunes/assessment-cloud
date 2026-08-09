@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsEmail, IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { InvitationTrack } from '../entities/invitation.entity';
 
 export class CreateInvitationDto {
   @ApiPropertyOptional()
@@ -17,4 +18,14 @@ export class CreateInvitationDto {
   @IsInt()
   @Min(1)
   expiresInDays?: number;
+
+  @ApiPropertyOptional({ enum: InvitationTrack })
+  @IsOptional()
+  @IsEnum(InvitationTrack)
+  track?: InvitationTrack;
+
+  @ApiPropertyOptional({ description: 'Especialidad libre dentro del track, ej: "Backend", "Automation"' })
+  @IsOptional()
+  @IsString()
+  specialty?: string;
 }

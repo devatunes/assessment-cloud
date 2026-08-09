@@ -116,6 +116,16 @@ export interface Assessment {
 
 export type InvitationStatus = 'PENDING' | 'STARTED' | 'COMPLETED' | 'EXPIRED';
 
+// Track amplio del candidato invitado; la especialidad (Backend, Frontend,
+// Cloud, Automation...) es texto libre a propósito, ver backend.
+export type InvitationTrack = 'DEVELOPER' | 'QA' | 'OTHER';
+
+export const INVITATION_TRACK_LABELS: Record<InvitationTrack, string> = {
+  DEVELOPER: 'Desarrollo',
+  QA: 'QA',
+  OTHER: 'Otro',
+};
+
 export interface Invitation {
   id: string;
   assessmentId: string;
@@ -127,6 +137,8 @@ export interface Invitation {
   expiresAt: string | null;
   startedAt: string | null;
   completedAt: string | null;
+  track: InvitationTrack | null;
+  specialty: string | null;
   createdAt: string;
 }
 
@@ -328,4 +340,25 @@ export interface CategoryOverviewEntry {
 export interface OrganizationOverview {
   assessments: AssessmentOverviewEntry[];
   categoryBreakdown: CategoryOverviewEntry[];
+}
+
+export interface CandidateHistoryEntry {
+  invitationId: string;
+  assessmentId: string;
+  assessmentName: string;
+  year: number;
+  track: InvitationTrack | null;
+  specialty: string | null;
+  status: InvitationStatus;
+  score: number | null;
+  maxScore: number | null;
+  scorePercentage: number | null;
+  level: 'JUNIOR' | 'SEMISENIOR' | 'SENIOR' | null;
+  completedAt: string | null;
+}
+
+export interface CandidateHistoryGroup {
+  email: string;
+  name: string;
+  entries: CandidateHistoryEntry[];
 }

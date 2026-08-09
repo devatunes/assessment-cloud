@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AttemptWithQuestions, Invitation, InvitationPublicView } from './models';
+import { AttemptWithQuestions, Invitation, InvitationPublicView, InvitationTrack } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class InvitationsService {
@@ -13,7 +13,13 @@ export class InvitationsService {
 
   create(
     assessmentId: string,
-    payload: { candidateName?: string; candidateEmail?: string; expiresInDays?: number },
+    payload: {
+      candidateName?: string;
+      candidateEmail?: string;
+      expiresInDays?: number;
+      track?: InvitationTrack;
+      specialty?: string;
+    },
   ): Observable<Invitation> {
     return this.http.post<Invitation>(
       `${this.apiUrl}/assessments/${assessmentId}/invitations`,
@@ -23,6 +29,18 @@ export class InvitationsService {
 
   listForAssessment(assessmentId: string): Observable<Invitation[]> {
     return this.http.get<Invitation[]>(`${this.apiUrl}/assessments/${assessmentId}/invitations`);
+  }
+
+  // El track/especialidad se puede reasignar después de generada la invitación.
+  updateClassification(
+    assessmentId: string,
+    invitationId: string,
+    payload: { track?: InvitationTrack; specialty?: string },
+  ): Observable<Invitation> {
+    return this.http.patch<Invitation>(
+      `${this.apiUrl}/assessments/${assessmentId}/invitations/${invitationId}`,
+      payload,
+    );
   }
 
   // --- Lado candidato (público, sin sesión) ---

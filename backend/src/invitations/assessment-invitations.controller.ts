@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InvitationsService } from './invitations.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
+import { UpdateInvitationClassificationDto } from './dto/update-invitation-classification.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -34,5 +35,15 @@ export class AssessmentInvitationsController {
   @ApiOperation({ summary: 'Lista las invitaciones de un assessment con su estado' })
   list(@Param('assessmentId') assessmentId: string, @CurrentUser() user: AuthenticatedUser) {
     return this.invitationsService.listForAssessment(user.organizationId, assessmentId);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Actualiza el track/especialidad del candidato (editable en cualquier momento)' })
+  updateClassification(
+    @Param('id') id: string,
+    @Body() dto: UpdateInvitationClassificationDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.invitationsService.updateClassification(user.organizationId, id, dto);
   }
 }

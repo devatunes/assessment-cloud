@@ -12,29 +12,41 @@ import { OnboardingTourComponent } from './shared/onboarding-tour.component';
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, OnboardingTourComponent],
   template: `
     <header class="app-header">
-      <hgroup>
-        <h1>Assessment Cloud</h1>
-        <p>Plataforma de evaluaciones técnicas</p>
-      </hgroup>
+      <a class="app-brand" routerLink="/">
+        <span class="app-brand-mark">☁️</span>
+        <hgroup>
+          <h1>Assessment Cloud</h1>
+          <p>Plataforma de evaluaciones técnicas</p>
+        </hgroup>
+      </a>
       <nav class="app-nav">
         @if (authService.isLoggedIn) {
-          <a routerLink="/questions" routerLinkActive="contrast">Preguntas</a>
-          <a routerLink="/question-banks" routerLinkActive="contrast">Bancos</a>
-          <a routerLink="/assessments" routerLinkActive="contrast">Assessments</a>
-          <a routerLink="/reports" routerLinkActive="contrast">Reportes</a>
+          <a class="nav-pill" routerLink="/questions" routerLinkActive="active">Preguntas</a>
+          <a class="nav-pill" routerLink="/question-banks" routerLinkActive="active">Bancos</a>
+          <a class="nav-pill" routerLink="/assessments" routerLinkActive="active">Assessments</a>
+          <a class="nav-pill" routerLink="/candidates" routerLinkActive="active">Candidatos</a>
+          <a class="nav-pill" routerLink="/reports" routerLinkActive="active">Reportes</a>
           @if (authService.isAdmin) {
-            <a routerLink="/admin/users" routerLinkActive="contrast">Usuarios</a>
+            <a class="nav-pill" routerLink="/admin/users" routerLinkActive="active">Usuarios</a>
           }
-          <span>{{ authService.currentUser()?.name }}</span>
-          <a href="#" (click)="logout($event)">Cerrar sesión</a>
+          <span class="nav-divider"></span>
+          <span class="user-chip">
+            <span class="user-avatar">{{ initials(authService.currentUser()?.name) }}</span>
+            {{ authService.currentUser()?.name }}
+          </span>
+          <a class="nav-pill" href="#" (click)="logout($event)">Salir</a>
         } @else if (candidateAuthService.isLoggedIn) {
-          <a routerLink="/practice" routerLinkActive="contrast">Practicar</a>
-          <a routerLink="/practice/history" routerLinkActive="contrast">Mi historial</a>
-          <span>{{ candidateAuthService.currentCandidate()?.name }}</span>
-          <a href="#" (click)="logoutCandidate($event)">Cerrar sesión</a>
+          <a class="nav-pill" routerLink="/practice" routerLinkActive="active">Practicar</a>
+          <a class="nav-pill" routerLink="/practice/history" routerLinkActive="active">Mi historial</a>
+          <span class="nav-divider"></span>
+          <span class="user-chip">
+            <span class="user-avatar">{{ initials(candidateAuthService.currentCandidate()?.name) }}</span>
+            {{ candidateAuthService.currentCandidate()?.name }}
+          </span>
+          <a class="nav-pill" href="#" (click)="logoutCandidate($event)">Salir</a>
         } @else {
-          <a routerLink="/login" routerLinkActive="contrast">Iniciar sesión</a>
-          <a routerLink="/register" routerLinkActive="contrast">Crear cuenta</a>
+          <a class="nav-pill" routerLink="/login" routerLinkActive="active">Iniciar sesión</a>
+          <a class="nav-pill" routerLink="/register" routerLinkActive="active">Crear cuenta</a>
         }
         <button
           type="button"
@@ -57,6 +69,14 @@ export class AppComponent {
   protected readonly candidateAuthService = inject(CandidateAuthService);
   protected readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
+
+  initials(name: string | undefined): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    const first = parts[0]?.[0] ?? '';
+    const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+    return (first + last).toUpperCase();
+  }
 
   logout(event: Event): void {
     event.preventDefault();

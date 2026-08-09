@@ -7,6 +7,7 @@ import { Assessment, AssessmentVisibility } from '../assessments/entities/assess
 import { AttemptsService } from '../attempts/attempts.service';
 import { AttemptWithQuestions } from '../attempts/attempts.types';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
+import { UpdateInvitationClassificationDto } from './dto/update-invitation-classification.dto';
 
 @Injectable()
 export class InvitationsService {
@@ -50,8 +51,33 @@ export class InvitationsService {
         token: randomBytes(32).toString('hex'),
         createdByUserId,
         expiresAt,
+        track: dto.track ?? null,
+        specialty: dto.specialty ?? null,
       }),
     );
+  }
+
+  // El track/especialidad puede reasignarse después de creada la invitación
+  // (ej: el reclutador se equivocó, o decide reclasificar al candidato para
+  // el historial de este año) — a diferencia del resto de la invitación, que
+  // no se edita una vez generada.
+  async updateClassification(
+    organizationId: string,
+    invitationId: string,
+    dto: UpdateInvitationClassificationDto,
+  ): Promise<Invitation> {
+    const invitation = await this.invitationRepository.findOne({
+      where: { id: invitationId, organizationId },
+    });
+
+    if (!invitation) {
+      throw new NotFoundException(`Invitación ${invitationId} no encontrada`);
+    }
+
+    if (dto.track !== undefined) invitation.track = dto.track;
+    if (dto.specialty !== undefined) invitation.specialty = dto.specialty;
+
+    return this.invitationRepository.save(invitation);
   }
 
   async listForAssessment(organizationId: string, assessmentId: string): Promise<Invitation[]> {
