@@ -16,7 +16,7 @@
       <div class="grid">
         @for (badge of badges; track badge.code) {
           <div>
-            <p style="font-size: 2rem; margin-bottom: 0" [title]="badge.description">{{ badge.icon }}</p>
+            <p class="badge-icon" [title]="badge.description">{{ badge.icon }}</p>
             <strong>{{ badge.label }}</strong>
             <p><small>{{ badge.earnedAt | date: 'short' }}</small></p>
           </div>
@@ -29,7 +29,7 @@
     <p aria-busy="true">Cargando historial...</p>
   }
   @if (error) {
-    <p style="color:#b91c1c">{{ error }}</p>
+    <p class="form-error">{{ error }}</p>
   }
   @if (!loading && attempts.length === 0) {
     <p>Todavía no has practicado ningún simulacro.</p>

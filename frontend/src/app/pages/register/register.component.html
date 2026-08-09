@@ -1,4 +1,4 @@
-<section style="max-width: 420px; margin: 2rem auto">
+<section class="auth-page">
   <article>
     <hgroup>
       <h2>Crear cuenta</h2>
@@ -25,7 +25,7 @@
     </div>
 
     @if (error) {
-      <p style="color:#b91c1c">{{ error }}</p>
+      <p class="form-error">{{ error }}</p>
     }
 
     <form (ngSubmit)="submit()">

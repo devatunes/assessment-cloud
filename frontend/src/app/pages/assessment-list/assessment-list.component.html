@@ -8,7 +8,7 @@
     <p aria-busy="true">Cargando...</p>
   }
   @if (error) {
-    <p style="color:#b91c1c">{{ error }}</p>
+    <p class="form-error">{{ error }}</p>
   }
   @if (!loading && assessments.length === 0) {
     <p>Todavía no hay assessments. Crea el primero.</p>

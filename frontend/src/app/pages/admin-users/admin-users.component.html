@@ -8,7 +8,7 @@
     <article>
       <h3>Invitar un nuevo usuario</h3>
       @if (inviteError) {
-        <p style="color:#b91c1c">{{ inviteError }}</p>
+        <p class="form-error">{{ inviteError }}</p>
       }
       <form (ngSubmit)="invite()">
         <div class="grid">
@@ -34,7 +34,7 @@
       </form>
 
       @if (lastActivationLink) {
-        <div style="margin-top: 1rem">
+        <div class="mt-1">
           <p><strong>Copia y envía este link para que active su cuenta:</strong></p>
           <div class="grid">
             <input type="text" [value]="lastActivationLink" readonly />
@@ -52,7 +52,7 @@
     <p aria-busy="true">Cargando equipo...</p>
   }
   @if (error) {
-    <p style="color:#b91c1c">{{ error }}</p>
+    <p class="form-error">{{ error }}</p>
   }
 
   <table>

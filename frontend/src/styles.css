@@ -83,6 +83,50 @@ h3 {
   font-weight: 700;
 }
 
+/* --- Utilidades del sistema de diseño (reemplazan estilos inline sueltos) --- */
+
+.auth-page {
+  max-width: 420px;
+  margin: 2rem auto;
+}
+
+.form-error {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.text-success {
+  color: #059669;
+  font-weight: 600;
+}
+
+.mt-1 {
+  margin-top: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  white-space: nowrap;
+}
+
+.stat-hero {
+  font-size: 3rem;
+  letter-spacing: -0.03em;
+  color: var(--pico-primary);
+}
+
+.badge-icon {
+  font-size: 2rem;
+  margin-bottom: 0;
+}
+
+.badge-unlock-banner {
+  border: 2px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.06);
+}
+
 /* --- Encabezado --- */
 
 .app-header {

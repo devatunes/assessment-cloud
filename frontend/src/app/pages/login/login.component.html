@@ -1,25 +1,12 @@
-<section style="max-width: 420px; margin: 2rem auto">
+<section class="auth-page">
   <article>
     <hgroup>
       <h2>Iniciar sesión</h2>
-      <p>Elige cómo quieres entrar</p>
+      <p>Sirve tanto para cuentas de organización como de candidato</p>
     </hgroup>
 
-    <div class="grid role-toggle">
-      <button type="button" [class]="role === 'org' ? '' : 'secondary'" (click)="selectRole('org')">
-        Organización
-      </button>
-      <button
-        type="button"
-        [class]="role === 'candidate' ? '' : 'secondary'"
-        (click)="selectRole('candidate')"
-      >
-        Candidato
-      </button>
-    </div>
-
     @if (error) {
-      <p style="color:#b91c1c">{{ error }}</p>
+      <p class="form-error">{{ error }}</p>
     }
 
     <form (ngSubmit)="submit()">
@@ -42,6 +29,6 @@
       </button>
     </form>
 
-    <p><small>¿No tienes cuenta? <a routerLink="/register" [queryParams]="{ role }">Crear cuenta</a></small></p>
+    <p><small>¿No tienes cuenta? <a routerLink="/register">Crear cuenta</a></small></p>
   </article>
 </section>

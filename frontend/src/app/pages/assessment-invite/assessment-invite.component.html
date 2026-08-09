@@ -5,7 +5,7 @@
     <p aria-busy="true">Cargando...</p>
   }
   @if (error) {
-    <p style="color:#b91c1c">{{ error }}</p>
+    <p class="form-error">{{ error }}</p>
   }
 
   @if (assessment) {
@@ -32,7 +32,7 @@
       </button>
 
       @if (lastCreatedLink) {
-        <div style="margin-top: 1rem">
+        <div class="mt-1">
           <p><strong>Copia y envía este link al candidato:</strong></p>
           <div class="grid">
             <input type="text" [value]="lastCreatedLink" readonly />

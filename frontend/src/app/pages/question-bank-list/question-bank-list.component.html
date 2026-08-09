@@ -8,7 +8,7 @@
     <article>
       <h3>Nuevo banco</h3>
       @if (createError) {
-        <p style="color:#b91c1c">{{ createError }}</p>
+        <p class="form-error">{{ createError }}</p>
       }
       <form (ngSubmit)="submitNewBank()">
         <label>
@@ -37,7 +37,7 @@
     <p aria-busy="true">Cargando bancos...</p>
   }
   @if (error) {
-    <p style="color:#b91c1c">{{ error }}</p>
+    <p class="form-error">{{ error }}</p>
   }
   @if (!loading && banks.length === 0) {
     <p>Todavía no hay bancos de preguntas.</p>
