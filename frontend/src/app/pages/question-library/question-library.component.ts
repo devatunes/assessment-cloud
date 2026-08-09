@@ -3,6 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { QuestionsService } from '../../core/questions.service';
 import { AuthService } from '../../core/auth.service';
+import { OnboardingTourService } from '../../core/onboarding-tour.service';
 import {
   ContentVisibility,
   CreateQuestionPayload,
@@ -32,6 +33,7 @@ type TestCaseFormRow = {
 export class QuestionLibraryComponent implements OnInit {
   private readonly questionsService = inject(QuestionsService);
   private readonly authService = inject(AuthService);
+  private readonly onboardingTourService = inject(OnboardingTourService);
 
   readonly categories = Object.keys(QUESTION_CATEGORY_LABELS) as QuestionCategory[];
   readonly categoryLabels = QUESTION_CATEGORY_LABELS;
@@ -64,6 +66,7 @@ export class QuestionLibraryComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    this.onboardingTourService.startOrgTourIfNeeded();
   }
 
   isOwn(question: Question): boolean {

@@ -3,6 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { PracticeService } from '../../core/practice.service';
 import { CandidateAuthService } from '../../core/candidate-auth.service';
+import { OnboardingTourService } from '../../core/onboarding-tour.service';
 import { PracticeCatalogEntry } from '../../core/models';
 
 @Component({
@@ -15,6 +16,7 @@ export class PracticeCatalogComponent implements OnInit {
   private readonly practiceService = inject(PracticeService);
   private readonly router = inject(Router);
   protected readonly candidateAuthService = inject(CandidateAuthService);
+  private readonly onboardingTourService = inject(OnboardingTourService);
 
   catalog: PracticeCatalogEntry[] = [];
   loading = false;
@@ -22,6 +24,7 @@ export class PracticeCatalogComponent implements OnInit {
   startingId: string | null = null;
 
   ngOnInit(): void {
+    this.onboardingTourService.startCandidateTourIfNeeded();
     this.loading = true;
     this.practiceService.listCatalog().subscribe({
       next: (catalog) => {
