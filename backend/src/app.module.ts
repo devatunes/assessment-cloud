@@ -13,6 +13,7 @@ import { CandidatesModule } from './candidates/candidates.module';
 import { CandidateAuthModule } from './candidate-auth/candidate-auth.module';
 import { PracticeModule } from './practice/practice.module';
 import { BadgesModule } from './badges/badges.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { BadgesModule } from './badges/badges.module';
     CandidateAuthModule,
     PracticeModule,
     BadgesModule,
+    ReportsModule,
   ],
 })
 export class AppModule {}

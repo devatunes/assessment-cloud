@@ -267,3 +267,62 @@ export interface AttemptResult {
   // en un finish() repetido sobre un intento ya completado.
   newBadges: Badge[];
 }
+
+// --- Reportes de organización (individual por assessment y grupal/overview) ---
+
+export interface CandidateReportRow {
+  invitationId: string;
+  candidateName: string | null;
+  candidateEmail: string | null;
+  status: InvitationStatus;
+  score: number | null;
+  maxScore: number | null;
+  scorePercentage: number | null;
+  level: 'JUNIOR' | 'SEMISENIOR' | 'SENIOR' | null;
+  completedAt: string | null;
+}
+
+export interface QuestionStat {
+  questionId: string;
+  title: string;
+  category: string;
+  answered: number;
+  correctRate: number;
+}
+
+export interface LevelDistributionEntry {
+  level: 'JUNIOR' | 'SEMISENIOR' | 'SENIOR' | null;
+  count: number;
+}
+
+export interface AssessmentReport {
+  assessmentId: string;
+  assessmentName: string;
+  totalInvitations: number;
+  completed: number;
+  completionRate: number;
+  averageScorePercentage: number | null;
+  levelDistribution: LevelDistributionEntry[];
+  questionStats: QuestionStat[];
+  candidates: CandidateReportRow[];
+}
+
+export interface AssessmentOverviewEntry {
+  assessmentId: string;
+  assessmentName: string;
+  totalInvitations: number;
+  completed: number;
+  completionRate: number;
+  averageScorePercentage: number | null;
+}
+
+export interface CategoryOverviewEntry {
+  category: string;
+  answered: number;
+  correctRate: number;
+}
+
+export interface OrganizationOverview {
+  assessments: AssessmentOverviewEntry[];
+  categoryBreakdown: CategoryOverviewEntry[];
+}
