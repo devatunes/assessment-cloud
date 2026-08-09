@@ -32,40 +32,42 @@
 
       <article>
         <h3>Assessments</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Invitados</th>
-              <th>Completados</th>
-              <th>Tasa de completitud</th>
-              <th>Score promedio</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (a of overview.assessments; track a.assessmentId) {
+        <div class="table-responsive">
+          <table>
+            <thead>
               <tr>
-                <td>{{ a.assessmentName }}</td>
-                <td>{{ a.totalInvitations }}</td>
-                <td>{{ a.completed }}</td>
-                <td>{{ a.completionRate | number: '1.0-0' }}%</td>
-                <td>
-                  {{
-                    a.averageScorePercentage !== null
-                      ? (a.averageScorePercentage | number: '1.0-0') + '%'
-                      : '—'
-                  }}
-                </td>
-                <td>
-                  <a role="button" class="secondary" [routerLink]="['/assessments', a.assessmentId, 'report']">
-                    Ver reporte
-                  </a>
-                </td>
+                <th>Nombre</th>
+                <th>Invitados</th>
+                <th>Completados</th>
+                <th>Tasa de completitud</th>
+                <th>Score promedio</th>
+                <th></th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (a of overview.assessments; track a.assessmentId) {
+                <tr>
+                  <td>{{ a.assessmentName }}</td>
+                  <td>{{ a.totalInvitations }}</td>
+                  <td>{{ a.completed }}</td>
+                  <td>{{ a.completionRate | number: '1.0-0' }}%</td>
+                  <td>
+                    {{
+                      a.averageScorePercentage !== null
+                        ? (a.averageScorePercentage | number: '1.0-0') + '%'
+                        : '—'
+                    }}
+                  </td>
+                  <td>
+                    <a role="button" class="secondary" [routerLink]="['/assessments', a.assessmentId, 'report']">
+                      Ver reporte
+                    </a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </article>
     }
   }

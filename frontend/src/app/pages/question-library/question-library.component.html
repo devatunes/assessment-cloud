@@ -186,48 +186,50 @@
     <p>No hay preguntas con estos filtros.</p>
   }
 
-  <table>
-    <thead>
-      <tr>
-        <th>Título</th>
-        <th>Categoría</th>
-        <th>Etiquetas</th>
-        <th>Origen</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (question of questions; track question.id) {
+  <div class="table-responsive">
+    <table>
+      <thead>
         <tr>
-          <td>{{ question.title }}</td>
-          <td>{{ categoryLabels[question.category] }}</td>
-          <td>
-            <app-difficulty-badge [difficulty]="question.difficulty" [type]="question.type" />
-          </td>
-          <td>
-            @if (isOwn(question)) {
-              @if (question.visibility === 'PUBLIC') {
-                <span class="badge badge-code">Pública (mía)</span>
-              } @else {
-                <span class="badge badge-mc">Privada</span>
-              }
-            } @else {
-              <span class="badge badge-easy">Pública (de otra org)</span>
-            }
-          </td>
-          <td>
-            @if (!isOwn(question)) {
-              <button
-                class="secondary"
-                (click)="duplicate(question)"
-                [disabled]="duplicatingId === question.id"
-              >
-                {{ duplicatingId === question.id ? 'Copiando...' : 'Copiar a mi biblioteca' }}
-              </button>
-            }
-          </td>
+          <th>Título</th>
+          <th>Categoría</th>
+          <th>Etiquetas</th>
+          <th>Origen</th>
+          <th></th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (question of questions; track question.id) {
+          <tr>
+            <td>{{ question.title }}</td>
+            <td>{{ categoryLabels[question.category] }}</td>
+            <td>
+              <app-difficulty-badge [difficulty]="question.difficulty" [type]="question.type" />
+            </td>
+            <td>
+              @if (isOwn(question)) {
+                @if (question.visibility === 'PUBLIC') {
+                  <span class="badge badge-code">Pública (mía)</span>
+                } @else {
+                  <span class="badge badge-mc">Privada</span>
+                }
+              } @else {
+                <span class="badge badge-easy">Pública (de otra org)</span>
+              }
+            </td>
+            <td>
+              @if (!isOwn(question)) {
+                <button
+                  class="secondary"
+                  (click)="duplicate(question)"
+                  [disabled]="duplicatingId === question.id"
+                >
+                  {{ duplicatingId === question.id ? 'Copiando...' : 'Copiar a mi biblioteca' }}
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 </section>
