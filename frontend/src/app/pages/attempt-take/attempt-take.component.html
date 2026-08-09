@@ -7,9 +7,16 @@
   }
 
   @if (attempt && currentQuestion) {
-    <p class="progress-indicator">
-      Pregunta {{ currentIndex + 1 }} / {{ attempt.questions.length }} — {{ attempt.assessmentName }}
-    </p>
+    <div class="app-header">
+      <p class="progress-indicator">
+        Pregunta {{ currentIndex + 1 }} / {{ attempt.questions.length }} — {{ attempt.assessmentName }}
+      </p>
+      @if (remainingSeconds !== null) {
+        <span class="badge" [class.badge-hard]="timeIsRunningOut" [class.badge-code]="!timeIsRunningOut">
+          ⏱ {{ remainingTimeLabel }}
+        </span>
+      }
+    </div>
 
     <article>
       <header>

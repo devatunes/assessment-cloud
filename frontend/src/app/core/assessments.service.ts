@@ -23,6 +23,7 @@ export class AssessmentsService {
     questionIds: string[];
     visibility?: AssessmentVisibility;
     levelThresholds?: AssessmentLevelThresholds;
+    timeLimitMinutes?: number;
   }): Observable<Assessment> {
     return this.http.post<Assessment>(this.baseUrl, payload);
   }

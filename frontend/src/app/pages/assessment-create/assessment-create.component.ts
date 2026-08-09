@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { QuestionsService } from '../../core/questions.service';
 import { AssessmentsService } from '../../core/assessments.service';
-import { AssessmentVisibility, Question } from '../../core/models';
+import { QuestionBanksService } from '../../core/question-banks.service';
+import { AssessmentVisibility, QUESTION_CATEGORY_LABELS, Question, QuestionBank } from '../../core/models';
 import { DifficultyBadgeComponent } from '../../shared/difficulty-badge.component';
 
 @Component({
@@ -16,12 +17,19 @@ import { DifficultyBadgeComponent } from '../../shared/difficulty-badge.componen
 export class AssessmentCreateComponent implements OnInit {
   private readonly questionsService = inject(QuestionsService);
   private readonly assessmentsService = inject(AssessmentsService);
+  private readonly banksService = inject(QuestionBanksService);
   private readonly router = inject(Router);
+
+  readonly categoryLabels = QUESTION_CATEGORY_LABELS;
 
   questions: Question[] = [];
   loading = false;
   saving = false;
   error: string | null = null;
+
+  banks: QuestionBank[] = [];
+  selectedBankId = '';
+  importingBank = false;
 
   name = '';
   description = '';
@@ -35,6 +43,9 @@ export class AssessmentCreateComponent implements OnInit {
   levelSemisenior = '';
   levelSenior = '';
 
+  // Duración total del examen en minutos; vacío = sin límite.
+  timeLimitMinutes = '';
+
   ngOnInit(): void {
     this.loading = true;
     this.questionsService.list({}).subscribe({
@@ -45,6 +56,37 @@ export class AssessmentCreateComponent implements OnInit {
       error: () => {
         this.error = 'No se pudieron cargar las preguntas';
         this.loading = false;
+      },
+    });
+
+    this.banksService.list().subscribe({
+      next: (banks) => (this.banks = banks),
+      error: () => {
+        // No bloqueamos la creación del assessment si esto falla; es solo un atajo.
+      },
+    });
+  }
+
+  // Atajo para "escoger del banco de preguntas": selecciona de una vez todas
+  // las preguntas de un banco, sin duplicar las que ya estaban marcadas.
+  importFromBank(): void {
+    if (!this.selectedBankId) {
+      return;
+    }
+
+    this.importingBank = true;
+    this.banksService.get(this.selectedBankId).subscribe({
+      next: (bank) => {
+        for (const item of bank.items) {
+          if (!this.selectedIds.includes(item.questionId)) {
+            this.selectedIds.push(item.questionId);
+          }
+        }
+        this.importingBank = false;
+      },
+      error: () => {
+        this.error = 'No se pudo importar el banco seleccionado';
+        this.importingBank = false;
       },
     });
   }
@@ -88,6 +130,7 @@ export class AssessmentCreateComponent implements OnInit {
         questionIds: this.selectedIds,
         visibility: this.visibility,
         levelThresholds: hasLevels ? levelThresholds : undefined,
+        timeLimitMinutes: this.timeLimitMinutes ? Number(this.timeLimitMinutes) : undefined,
       })
       .subscribe({
         next: () => {

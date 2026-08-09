@@ -1,0 +1,88 @@
+<section>
+  <div class="app-header">
+    <h2>Bancos de preguntas</h2>
+    <button (click)="toggleCreateForm()">{{ showCreateForm ? 'Cancelar' : '+ Nuevo banco' }}</button>
+  </div>
+
+  @if (showCreateForm) {
+    <article>
+      <h3>Nuevo banco</h3>
+      @if (createError) {
+        <p style="color:#b91c1c">{{ createError }}</p>
+      }
+      <form (ngSubmit)="submitNewBank()">
+        <label>
+          Nombre
+          <input type="text" [(ngModel)]="newBank.name" name="name" required />
+        </label>
+        <label>
+          Descripción (opcional)
+          <textarea [(ngModel)]="newBank.description" name="description" rows="2"></textarea>
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            [ngModel]="newBank.visibility === 'PUBLIC'"
+            (ngModelChange)="newBank.visibility = $event ? 'PUBLIC' : 'PRIVATE'"
+            name="visibility"
+          />
+          Compartir en el catálogo público (otras organizaciones podrán usarlo, de solo lectura)
+        </label>
+        <button type="submit" [disabled]="creating">{{ creating ? 'Guardando...' : 'Guardar banco' }}</button>
+      </form>
+    </article>
+  }
+
+  @if (loading) {
+    <p aria-busy="true">Cargando bancos...</p>
+  }
+  @if (error) {
+    <p style="color:#b91c1c">{{ error }}</p>
+  }
+  @if (!loading && banks.length === 0) {
+    <p>Todavía no hay bancos de preguntas.</p>
+  }
+
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Descripción</th>
+        <th>Preguntas</th>
+        <th>Origen</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (bank of banks; track bank.id) {
+        <tr>
+          <td><a [routerLink]="['/question-banks', bank.id]">{{ bank.name }}</a></td>
+          <td>{{ bank.description || '—' }}</td>
+          <td>{{ bank.questionCount }}</td>
+          <td>
+            @if (isOwn(bank)) {
+              @if (bank.visibility === 'PUBLIC') {
+                <span class="badge badge-code">Pública (mía)</span>
+              } @else {
+                <span class="badge badge-mc">Privada</span>
+              }
+            } @else {
+              <span class="badge badge-easy">Pública (de otra org)</span>
+            }
+          </td>
+          <td>
+            @if (isOwn(bank)) {
+              <button
+                class="secondary"
+                (click)="remove(bank)"
+                [disabled]="removingId === bank.id"
+              >
+                {{ removingId === bank.id ? 'Eliminando...' : 'Eliminar' }}
+              </button>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</section>

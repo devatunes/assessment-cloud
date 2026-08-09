@@ -51,5 +51,6 @@ export type AttemptResult = {
     type: QuestionType;
     isCorrect: boolean;
     points: number;
+    explanation: string | null;
   }>;
 };

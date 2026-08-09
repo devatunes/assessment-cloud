@@ -15,8 +15,30 @@ export interface AuthResponse {
   user: CurrentUser;
 }
 
+export type ContentVisibility = 'PRIVATE' | 'PUBLIC';
+
 export type QuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type QuestionType = 'MULTIPLE_CHOICE' | 'CODE';
+export type QuestionCategory =
+  | 'BACKEND'
+  | 'FRONTEND'
+  | 'FULLSTACK'
+  | 'DEVOPS'
+  | 'QA'
+  | 'DATA'
+  | 'MOBILE'
+  | 'OTHER';
+
+export const QUESTION_CATEGORY_LABELS: Record<QuestionCategory, string> = {
+  BACKEND: 'Backend',
+  FRONTEND: 'Frontend',
+  FULLSTACK: 'Fullstack',
+  DEVOPS: 'DevOps',
+  QA: 'QA',
+  DATA: 'Datos',
+  MOBILE: 'Móvil',
+  OTHER: 'Otro',
+};
 
 export interface QuestionOption {
   id: string;
@@ -33,13 +55,16 @@ export interface QuestionTestCase {
 
 export interface Question {
   id: string;
+  organizationId: string;
   title: string;
   statement: string;
-  category: string;
+  category: QuestionCategory;
   difficulty: QuestionDifficulty;
   type: QuestionType;
   codeTemplate: string | null;
   testCases: QuestionTestCase[] | null;
+  explanation: string | null;
+  visibility: ContentVisibility;
   options: QuestionOption[];
   createdAt: string;
 }
@@ -47,12 +72,14 @@ export interface Question {
 export interface CreateQuestionPayload {
   title: string;
   statement: string;
-  category: string;
+  category: QuestionCategory;
   difficulty: QuestionDifficulty;
   type: QuestionType;
   options?: { text: string; isCorrect: boolean }[];
   codeTemplate?: string;
   testCases?: QuestionTestCase[];
+  explanation?: string;
+  visibility?: ContentVisibility;
 }
 
 export type AssessmentVisibility = 'OFFICIAL' | 'PRACTICE';
@@ -65,10 +92,12 @@ export interface AssessmentLevelThresholds {
 
 export interface Assessment {
   id: string;
+  organizationId: string;
   name: string;
   description: string | null;
   visibility: AssessmentVisibility;
   levelThresholds: AssessmentLevelThresholds | null;
+  timeLimitMinutes: number | null;
   createdAt: string;
   questions?: { questionId: string; position: number; question: Question }[];
 }
@@ -98,6 +127,20 @@ export interface InvitationPublicView {
   attemptId: string | null;
 }
 
+export interface QuestionBank {
+  id: string;
+  organizationId: string;
+  name: string;
+  description: string | null;
+  visibility: ContentVisibility;
+  questionCount: number;
+  createdAt: string;
+}
+
+export interface QuestionBankDetail extends QuestionBank {
+  items: Array<{ bankId: string; questionId: string; addedAt: string; question: Question }>;
+}
+
 export interface SanitizedQuestion {
   id: string;
   title: string;
@@ -121,6 +164,8 @@ export interface AttemptWithQuestions {
   finishedAt: string | null;
   score: number | null;
   maxScore: number;
+  // Momento en que el examen se corta automáticamente; null = sin límite.
+  deadline: string | null;
   questions: SanitizedQuestion[];
 }
 
@@ -156,5 +201,6 @@ export interface AttemptResult {
     type: QuestionType;
     isCorrect: boolean;
     points: number;
+    explanation: string | null;
   }>;
 }

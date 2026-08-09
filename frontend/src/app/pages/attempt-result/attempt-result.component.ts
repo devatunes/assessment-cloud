@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AttemptsService } from '../../core/attempts.service';
 import { AttemptResult } from '../../core/models';
@@ -7,7 +8,7 @@ import { AttemptResult } from '../../core/models';
 @Component({
   selector: 'app-attempt-result',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './attempt-result.component.html',
 })
 export class AttemptResultComponent implements OnInit {
@@ -18,9 +19,17 @@ export class AttemptResultComponent implements OnInit {
   result: AttemptResult | null = null;
   loading = false;
   error: string | null = null;
+  attemptId = '';
+
+  feedbackRating: number | null = null;
+  feedbackComment = '';
+  feedbackSubmitted = false;
+  submittingFeedback = false;
+  feedbackError: string | null = null;
 
   ngOnInit(): void {
     const attemptId = this.route.snapshot.paramMap.get('id')!;
+    this.attemptId = attemptId;
     this.loading = true;
 
     // Lectura pura: NO finaliza el intento (a diferencia de /finish). Si
@@ -41,5 +50,29 @@ export class AttemptResultComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  submitFeedback(): void {
+    if (!this.feedbackRating) {
+      return;
+    }
+    this.submittingFeedback = true;
+    this.feedbackError = null;
+
+    this.attemptsService
+      .submitFeedback(this.attemptId, {
+        rating: this.feedbackRating,
+        comment: this.feedbackComment.trim() || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.feedbackSubmitted = true;
+          this.submittingFeedback = false;
+        },
+        error: () => {
+          this.feedbackError = 'No se pudo enviar la encuesta, intenta de nuevo';
+          this.submittingFeedback = false;
+        },
+      });
   }
 }

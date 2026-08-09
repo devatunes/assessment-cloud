@@ -22,7 +22,11 @@
         <div class="grid">
           <label>
             Categoría
-            <input type="text" [(ngModel)]="newQuestion.category" name="category" placeholder="javascript" required />
+            <select [(ngModel)]="newQuestion.category" name="category">
+              @for (cat of categories; track cat) {
+                <option [value]="cat">{{ categoryLabels[cat] }}</option>
+              }
+            </select>
           </label>
           <label>
             Dificultad
@@ -114,6 +118,26 @@
           </fieldset>
         }
 
+        <label>
+          Explicación de la respuesta correcta (opcional)
+          <textarea
+            [(ngModel)]="newQuestion.explanation"
+            name="explanation"
+            rows="2"
+            placeholder="Por qué esta es la respuesta correcta (y las demás no) — se muestra al candidato al finalizar"
+          ></textarea>
+        </label>
+
+        <label>
+          <input
+            type="checkbox"
+            [ngModel]="newQuestion.visibility === 'PUBLIC'"
+            (ngModelChange)="newQuestion.visibility = $event ? 'PUBLIC' : 'PRIVATE'"
+            name="visibility"
+          />
+          Compartir en el catálogo público (otras organizaciones podrán usarla, de solo lectura)
+        </label>
+
         <button type="submit" [disabled]="creating">{{ creating ? 'Guardando...' : 'Guardar pregunta' }}</button>
       </form>
     </article>
@@ -123,7 +147,12 @@
     <div class="grid">
       <label>
         Categoría
-        <input type="text" [(ngModel)]="filterCategory" (change)="load()" placeholder="javascript" />
+        <select [(ngModel)]="filterCategory" (change)="load()">
+          <option value="">Todas</option>
+          @for (cat of categories; track cat) {
+            <option [value]="cat">{{ categoryLabels[cat] }}</option>
+          }
+        </select>
       </label>
       <label>
         Dificultad
@@ -163,15 +192,39 @@
         <th>Título</th>
         <th>Categoría</th>
         <th>Etiquetas</th>
+        <th>Origen</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
       @for (question of questions; track question.id) {
         <tr>
           <td>{{ question.title }}</td>
-          <td>{{ question.category }}</td>
+          <td>{{ categoryLabels[question.category] }}</td>
           <td>
             <app-difficulty-badge [difficulty]="question.difficulty" [type]="question.type" />
+          </td>
+          <td>
+            @if (isOwn(question)) {
+              @if (question.visibility === 'PUBLIC') {
+                <span class="badge badge-code">Pública (mía)</span>
+              } @else {
+                <span class="badge badge-mc">Privada</span>
+              }
+            } @else {
+              <span class="badge badge-easy">Pública (de otra org)</span>
+            }
+          </td>
+          <td>
+            @if (!isOwn(question)) {
+              <button
+                class="secondary"
+                (click)="duplicate(question)"
+                [disabled]="duplicatingId === question.id"
+              >
+                {{ duplicatingId === question.id ? 'Copiando...' : 'Copiar a mi biblioteca' }}
+              </button>
+            }
           </td>
         </tr>
       }

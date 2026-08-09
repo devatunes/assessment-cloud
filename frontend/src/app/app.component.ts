@@ -17,6 +17,7 @@ import { ThemeService } from './core/theme.service';
       <nav class="app-nav">
         @if (authService.isLoggedIn) {
           <a routerLink="/questions" routerLinkActive="contrast">Preguntas</a>
+          <a routerLink="/question-banks" routerLinkActive="contrast">Bancos</a>
           <a routerLink="/assessments" routerLinkActive="contrast">Assessments</a>
           @if (authService.isAdmin) {
             <a routerLink="/admin/users" routerLinkActive="contrast">Usuarios</a>

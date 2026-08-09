@@ -2,7 +2,16 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { QuestionsService } from '../../core/questions.service';
-import { CreateQuestionPayload, Question, QuestionDifficulty, QuestionType } from '../../core/models';
+import { AuthService } from '../../core/auth.service';
+import {
+  ContentVisibility,
+  CreateQuestionPayload,
+  QUESTION_CATEGORY_LABELS,
+  Question,
+  QuestionCategory,
+  QuestionDifficulty,
+  QuestionType,
+} from '../../core/models';
 import { DifficultyBadgeComponent } from '../../shared/difficulty-badge.component';
 
 // El input de un test case se captura como texto en formato JSON (ej. `[1,2,3]`,
@@ -22,12 +31,17 @@ type TestCaseFormRow = {
 })
 export class QuestionLibraryComponent implements OnInit {
   private readonly questionsService = inject(QuestionsService);
+  private readonly authService = inject(AuthService);
+
+  readonly categories = Object.keys(QUESTION_CATEGORY_LABELS) as QuestionCategory[];
+  readonly categoryLabels = QUESTION_CATEGORY_LABELS;
 
   questions: Question[] = [];
   loading = false;
   error: string | null = null;
+  duplicatingId: string | null = null;
 
-  filterCategory = '';
+  filterCategory: QuestionCategory | '' = '';
   filterDifficulty: QuestionDifficulty | '' = '';
   filterType: QuestionType | '' = '';
 
@@ -38,16 +52,22 @@ export class QuestionLibraryComponent implements OnInit {
   newQuestion: {
     title: string;
     statement: string;
-    category: string;
+    category: QuestionCategory;
     difficulty: QuestionDifficulty;
     type: QuestionType;
     codeTemplate: string;
+    explanation: string;
+    visibility: ContentVisibility;
     options: { text: string; isCorrect: boolean }[];
     testCases: TestCaseFormRow[];
   } = this.emptyForm();
 
   ngOnInit(): void {
     this.load();
+  }
+
+  isOwn(question: Question): boolean {
+    return question.organizationId === this.authService.currentUser()?.organizationId;
   }
 
   load(): void {
@@ -100,6 +120,20 @@ export class QuestionLibraryComponent implements OnInit {
     this.newQuestion.testCases.splice(index, 1);
   }
 
+  duplicate(question: Question): void {
+    this.duplicatingId = question.id;
+    this.questionsService.duplicate(question.id).subscribe({
+      next: () => {
+        this.duplicatingId = null;
+        this.load();
+      },
+      error: () => {
+        this.duplicatingId = null;
+        this.error = 'No se pudo copiar la pregunta';
+      },
+    });
+  }
+
   submitNewQuestion(): void {
     this.createError = null;
 
@@ -109,6 +143,8 @@ export class QuestionLibraryComponent implements OnInit {
       category: this.newQuestion.category,
       difficulty: this.newQuestion.difficulty,
       type: this.newQuestion.type,
+      explanation: this.newQuestion.explanation || undefined,
+      visibility: this.newQuestion.visibility,
     };
 
     if (this.newQuestion.type === 'MULTIPLE_CHOICE') {
@@ -171,10 +207,12 @@ export class QuestionLibraryComponent implements OnInit {
     return {
       title: '',
       statement: '',
-      category: '',
+      category: 'BACKEND' as QuestionCategory,
       difficulty: 'EASY' as QuestionDifficulty,
       type: 'MULTIPLE_CHOICE' as QuestionType,
       codeTemplate: 'function solution(input) {\n  // tu código aquí\n}\n',
+      explanation: '',
+      visibility: 'PRIVATE' as ContentVisibility,
       options: [
         { text: '', isCorrect: true },
         { text: '', isCorrect: false },
