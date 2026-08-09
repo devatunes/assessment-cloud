@@ -36,37 +36,39 @@
       }
     </article>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Pregunta</th>
-          <th>Tipo</th>
-          <th>Resultado</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of result.breakdown; track item.questionId) {
+    <div class="table-responsive">
+      <table>
+        <thead>
           <tr>
-            <td>{{ item.title }}</td>
-            <td>{{ item.type === 'CODE' ? 'Código' : 'Opción múltiple' }}</td>
-            <td>
-              @if (item.isCorrect) {
-                <span class="text-success">✅ Correcto</span>
-              } @else {
-                <span class="form-error">❌ Incorrecto</span>
-              }
-            </td>
+            <th>Pregunta</th>
+            <th>Tipo</th>
+            <th>Resultado</th>
           </tr>
-          @if (item.explanation) {
+        </thead>
+        <tbody>
+          @for (item of result.breakdown; track item.questionId) {
             <tr>
-              <td colspan="3">
-                <small><strong>¿Por qué?</strong> {{ item.explanation }}</small>
+              <td>{{ item.title }}</td>
+              <td>{{ item.type === 'CODE' ? 'Código' : 'Opción múltiple' }}</td>
+              <td>
+                @if (item.isCorrect) {
+                  <span class="text-success">✅ Correcto</span>
+                } @else {
+                  <span class="form-error">❌ Incorrecto</span>
+                }
               </td>
             </tr>
+            @if (item.explanation) {
+              <tr>
+                <td colspan="3">
+                  <small><strong>¿Por qué?</strong> {{ item.explanation }}</small>
+                </td>
+              </tr>
+            }
           }
-        }
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
 
     <article>
       @if (feedbackSubmitted) {

@@ -84,30 +84,32 @@
           <p>No hay más preguntas disponibles para agregar.</p>
         }
         @if (!loadingAvailable && availableQuestions.length > 0) {
-          <table>
-            <thead>
-              <tr>
-                <th></th>
-                <th>Título</th>
-                <th>Categoría</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (question of availableQuestions; track question.id) {
+          <div class="table-responsive">
+            <table>
+              <thead>
                 <tr>
-                  <td>
-                    <input
-                      type="checkbox"
-                      [checked]="selectedToAdd.has(question.id)"
-                      (change)="toggleSelected(question.id)"
-                    />
-                  </td>
-                  <td>{{ question.title }}</td>
-                  <td>{{ categoryLabels[question.category] }}</td>
+                  <th></th>
+                  <th>Título</th>
+                  <th>Categoría</th>
                 </tr>
-              }
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                @for (question of availableQuestions; track question.id) {
+                  <tr>
+                    <td>
+                      <input
+                        type="checkbox"
+                        [checked]="selectedToAdd.has(question.id)"
+                        (change)="toggleSelected(question.id)"
+                      />
+                    </td>
+                    <td>{{ question.title }}</td>
+                    <td>{{ categoryLabels[question.category] }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
           <button [disabled]="adding || selectedToAdd.size === 0" (click)="confirmAdd()">
             {{ adding ? 'Agregando...' : 'Agregar seleccionadas (' + selectedToAdd.size + ')' }}
           </button>
@@ -119,35 +121,37 @@
       <p>Este banco todavía no tiene preguntas.</p>
     }
 
-    <table>
-      <thead>
-        <tr>
-          <th>Título</th>
-          <th>Categoría</th>
-          <th>Dificultad</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of bank.items; track item.questionId) {
+    <div class="table-responsive">
+      <table>
+        <thead>
           <tr>
-            <td>{{ item.question.title }}</td>
-            <td>{{ categoryLabels[item.question.category] }}</td>
-            <td>{{ item.question.difficulty }}</td>
-            <td>
-              @if (isOwn) {
-                <button
-                  class="secondary"
-                  (click)="removeQuestion(item.questionId)"
-                  [disabled]="removingQuestionId === item.questionId"
-                >
-                  {{ removingQuestionId === item.questionId ? 'Quitando...' : 'Quitar' }}
-                </button>
-              }
-            </td>
+            <th>Título</th>
+            <th>Categoría</th>
+            <th>Dificultad</th>
+            <th></th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (item of bank.items; track item.questionId) {
+            <tr>
+              <td>{{ item.question.title }}</td>
+              <td>{{ categoryLabels[item.question.category] }}</td>
+              <td>{{ item.question.difficulty }}</td>
+              <td>
+                @if (isOwn) {
+                  <button
+                    class="secondary"
+                    (click)="removeQuestion(item.questionId)"
+                    [disabled]="removingQuestionId === item.questionId"
+                  >
+                    {{ removingQuestionId === item.questionId ? 'Quitando...' : 'Quitar' }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </section>

@@ -78,34 +78,36 @@
     <p aria-busy="true">Cargando preguntas...</p>
   }
 
-  <table>
-    <thead>
-      <tr>
-        <th></th>
-        <th>Título</th>
-        <th>Categoría</th>
-        <th>Etiquetas</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (question of questions; track question.id) {
+  <div class="table-responsive">
+    <table>
+      <thead>
         <tr>
-          <td>
-            <input
-              type="checkbox"
-              [checked]="isSelected(question.id)"
-              (change)="toggleSelected(question.id)"
-            />
-          </td>
-          <td>{{ question.title }}</td>
-          <td>{{ categoryLabels[question.category] }}</td>
-          <td>
-            <app-difficulty-badge [difficulty]="question.difficulty" [type]="question.type" />
-          </td>
+          <th></th>
+          <th>Título</th>
+          <th>Categoría</th>
+          <th>Etiquetas</th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (question of questions; track question.id) {
+          <tr>
+            <td>
+              <input
+                type="checkbox"
+                [checked]="isSelected(question.id)"
+                (change)="toggleSelected(question.id)"
+              />
+            </td>
+            <td>{{ question.title }}</td>
+            <td>{{ categoryLabels[question.category] }}</td>
+            <td>
+              <app-difficulty-badge [difficulty]="question.difficulty" [type]="question.type" />
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 
   <button (click)="submit()" [disabled]="saving">
     {{ saving ? 'Creando...' : 'Crear assessment' }}

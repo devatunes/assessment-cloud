@@ -12,51 +12,58 @@ import { OnboardingTourComponent } from './shared/onboarding-tour.component';
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, OnboardingTourComponent],
   template: `
     <header class="app-header">
-      <a class="app-brand" routerLink="/">
-        <span class="app-brand-mark">☁️</span>
-        <hgroup>
-          <h1>Assessment Cloud</h1>
-          <p>Plataforma de evaluaciones técnicas</p>
-        </hgroup>
-      </a>
-      <nav class="app-nav">
-        @if (authService.isLoggedIn) {
-          <a class="nav-pill" routerLink="/questions" routerLinkActive="active">Preguntas</a>
-          <a class="nav-pill" routerLink="/question-banks" routerLinkActive="active">Bancos</a>
-          <a class="nav-pill" routerLink="/assessments" routerLinkActive="active">Assessments</a>
-          <a class="nav-pill" routerLink="/candidates" routerLinkActive="active">Candidatos</a>
-          <a class="nav-pill" routerLink="/reports" routerLinkActive="active">Reportes</a>
-          @if (authService.isAdmin) {
-            <a class="nav-pill" routerLink="/admin/users" routerLinkActive="active">Usuarios</a>
+      <div class="app-header-top">
+        <a class="app-brand" routerLink="/">
+          <span class="app-brand-mark">☁️</span>
+          <hgroup>
+            <h1>Assessment Cloud</h1>
+            <p>Plataforma de evaluaciones técnicas</p>
+          </hgroup>
+        </a>
+        <div class="app-header-actions">
+          @if (authService.isLoggedIn) {
+            <span class="user-chip">
+              <span class="user-avatar">{{ initials(authService.currentUser()?.name) }}</span>
+              {{ authService.currentUser()?.name }}
+            </span>
+            <a class="nav-pill" href="#" (click)="logout($event)">Salir</a>
+          } @else if (candidateAuthService.isLoggedIn) {
+            <span class="user-chip">
+              <span class="user-avatar">{{ initials(candidateAuthService.currentCandidate()?.name) }}</span>
+              {{ candidateAuthService.currentCandidate()?.name }}
+            </span>
+            <a class="nav-pill" href="#" (click)="logoutCandidate($event)">Salir</a>
+          } @else {
+            <a class="nav-pill" routerLink="/login" routerLinkActive="active">Iniciar sesión</a>
+            <a class="nav-pill" routerLink="/register" routerLinkActive="active">Crear cuenta</a>
           }
-          <span class="nav-divider"></span>
-          <span class="user-chip">
-            <span class="user-avatar">{{ initials(authService.currentUser()?.name) }}</span>
-            {{ authService.currentUser()?.name }}
-          </span>
-          <a class="nav-pill" href="#" (click)="logout($event)">Salir</a>
-        } @else if (candidateAuthService.isLoggedIn) {
-          <a class="nav-pill" routerLink="/practice" routerLinkActive="active">Practicar</a>
-          <a class="nav-pill" routerLink="/practice/history" routerLinkActive="active">Mi historial</a>
-          <span class="nav-divider"></span>
-          <span class="user-chip">
-            <span class="user-avatar">{{ initials(candidateAuthService.currentCandidate()?.name) }}</span>
-            {{ candidateAuthService.currentCandidate()?.name }}
-          </span>
-          <a class="nav-pill" href="#" (click)="logoutCandidate($event)">Salir</a>
-        } @else {
-          <a class="nav-pill" routerLink="/login" routerLinkActive="active">Iniciar sesión</a>
-          <a class="nav-pill" routerLink="/register" routerLinkActive="active">Crear cuenta</a>
-        }
-        <button
-          type="button"
-          class="theme-toggle outline secondary"
-          (click)="themeService.toggle()"
-          [attr.aria-label]="themeService.theme() === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
-        >
-          {{ themeService.theme() === 'dark' ? '☀️' : '🌙' }}
-        </button>
-      </nav>
+          <button
+            type="button"
+            class="theme-toggle outline secondary"
+            (click)="themeService.toggle()"
+            [attr.aria-label]="themeService.theme() === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+          >
+            {{ themeService.theme() === 'dark' ? '☀️' : '🌙' }}
+          </button>
+        </div>
+      </div>
+      @if (authService.isLoggedIn || candidateAuthService.isLoggedIn) {
+        <nav class="app-nav">
+          @if (authService.isLoggedIn) {
+            <a class="nav-pill" routerLink="/questions" routerLinkActive="active">Preguntas</a>
+            <a class="nav-pill" routerLink="/question-banks" routerLinkActive="active">Bancos</a>
+            <a class="nav-pill" routerLink="/assessments" routerLinkActive="active">Assessments</a>
+            <a class="nav-pill" routerLink="/candidates" routerLinkActive="active">Candidatos</a>
+            <a class="nav-pill" routerLink="/reports" routerLinkActive="active">Reportes</a>
+            @if (authService.isAdmin) {
+              <a class="nav-pill" routerLink="/admin/users" routerLinkActive="active">Usuarios</a>
+            }
+          } @else if (candidateAuthService.isLoggedIn) {
+            <a class="nav-pill" routerLink="/practice" routerLinkActive="active">Practicar</a>
+            <a class="nav-pill" routerLink="/practice/history" routerLinkActive="active">Mi historial</a>
+          }
+        </nav>
+      }
     </header>
     <main>
       <router-outlet />

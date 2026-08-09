@@ -55,30 +55,32 @@
     <p class="form-error">{{ error }}</p>
   }
 
-  <table>
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>Correo</th>
-        <th>Rol</th>
-        <th>Estado</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (user of users; track user.id) {
+  <div class="table-responsive">
+    <table>
+      <thead>
         <tr>
-          <td>{{ user.name }}</td>
-          <td>{{ user.email }}</td>
-          <td>{{ user.role === 'ADMIN' ? 'Administrador' : 'Reclutador' }}</td>
-          <td>
-            @if (user.status === 'ACTIVE') {
-              <span class="badge badge-easy">Activo</span>
-            } @else {
-              <span class="badge badge-medium">Pendiente de activación</span>
-            }
-          </td>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Rol</th>
+          <th>Estado</th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (user of users; track user.id) {
+          <tr>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role === 'ADMIN' ? 'Administrador' : 'Reclutador' }}</td>
+            <td>
+              @if (user.status === 'ACTIVE') {
+                <span class="badge badge-easy">Activo</span>
+              } @else {
+                <span class="badge badge-medium">Pendiente de activación</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 </section>
