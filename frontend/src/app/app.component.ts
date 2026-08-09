@@ -4,11 +4,12 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { AuthService } from './core/auth.service';
 import { CandidateAuthService } from './core/candidate-auth.service';
 import { ThemeService } from './core/theme.service';
+import { OnboardingTourComponent } from './shared/onboarding-tour.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, OnboardingTourComponent],
   template: `
     <header class="app-header">
       <hgroup>
@@ -49,6 +50,7 @@ import { ThemeService } from './core/theme.service';
     <main>
       <router-outlet />
     </main>
+    <app-onboarding-tour />
   `,
 })
 export class AppComponent {
