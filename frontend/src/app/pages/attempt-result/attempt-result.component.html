@@ -11,6 +11,14 @@
       <h2>Resultado — {{ result.assessmentName }}</h2>
       <p>Candidato: {{ result.candidateName }}</p>
       <h1 style="font-size: 3rem">{{ result.score }} / {{ result.maxScore }}</h1>
+      @if (result.level) {
+        <p>
+          Nivel alcanzado:
+          <span class="badge" [class]="'badge-level-' + result.level.toLowerCase()">
+            {{ result.level }}
+          </span>
+        </p>
+      }
     </article>
 
     <table>

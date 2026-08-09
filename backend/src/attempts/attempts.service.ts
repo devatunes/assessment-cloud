@@ -4,11 +4,13 @@ import { Repository } from 'typeorm';
 import { Attempt, AttemptStatus } from './entities/attempt.entity';
 import { AttemptAnswer } from './entities/attempt-answer.entity';
 import { Assessment } from '../assessments/entities/assessment.entity';
+import { Invitation, InvitationStatus } from '../invitations/entities/invitation.entity';
 import { Question, QuestionType } from '../questions/entities/question.entity';
 import { CreateAttemptDto } from './dto/create-attempt.dto';
 import { SubmitAnswerDto } from './dto/submit-answer.dto';
 import { ExecutorService } from '../executor/executor.service';
 import { AttemptResult, AttemptWithQuestions, SanitizedQuestion } from './attempts.types';
+import { computeLevel } from '../assessments/level.util';
 
 @Injectable()
 export class AttemptsService {
@@ -19,6 +21,8 @@ export class AttemptsService {
     private readonly answerRepository: Repository<AttemptAnswer>,
     @InjectRepository(Assessment)
     private readonly assessmentRepository: Repository<Assessment>,
+    @InjectRepository(Invitation)
+    private readonly invitationRepository: Repository<Invitation>,
     private readonly executorService: ExecutorService,
   ) {}
 
@@ -193,6 +197,14 @@ export class AttemptsService {
     attempt.finishedAt = new Date();
     await this.attemptRepository.save(attempt);
 
+    // Si este attempt vino de una invitación oficial, la marca COMPLETED.
+    // Acoplamiento a nivel de entidad, no de módulo (ver AttemptsModule):
+    // no todo attempt tiene invitación (los de práctica no la tienen).
+    await this.invitationRepository.update(
+      { attemptId: attempt.id },
+      { status: InvitationStatus.COMPLETED, completedAt: new Date() },
+    );
+
     return this.buildResultView(attempt, assessment);
   }
 
@@ -271,6 +283,11 @@ export class AttemptsService {
     const answers = await this.answerRepository.find({ where: { attemptId: attempt.id } });
     const answersByQuestionId = new Map(answers.map((a) => [a.questionId, a]));
 
+    const scorePercentage =
+      attempt.score !== null && attempt.maxScore > 0
+        ? (attempt.score / attempt.maxScore) * 100
+        : 0;
+
     return {
       id: attempt.id,
       assessmentId: assessment.id,
@@ -279,6 +296,7 @@ export class AttemptsService {
       status: attempt.status,
       score: attempt.score,
       maxScore: attempt.maxScore,
+      level: attempt.score !== null ? computeLevel(scorePercentage, assessment.levelThresholds) : null,
       startedAt: attempt.startedAt,
       finishedAt: attempt.finishedAt,
       breakdown: assessment.questions.map((aq) => {

@@ -1,0 +1,33 @@
+<section style="max-width: 480px; margin: 2rem auto">
+  @if (loading || starting) {
+    <p aria-busy="true">Cargando...</p>
+  }
+  @if (error) {
+    <p style="color:#b91c1c">{{ error }}</p>
+  }
+
+  @if (invitation && invitation.status === 'EXPIRED') {
+    <article>
+      <h2>Esta invitación expiró</h2>
+      <p>Contacta al reclutador que te la envió para solicitar un nuevo link.</p>
+    </article>
+  }
+
+  @if (invitation && invitation.status === 'PENDING' && !starting) {
+    <article>
+      <h2>{{ invitation.assessmentName }}</h2>
+      @if (invitation.assessmentDescription) {
+        <p>{{ invitation.assessmentDescription }}</p>
+      }
+
+      <label>
+        Tu nombre
+        <input type="text" [(ngModel)]="candidateName" name="candidateName" placeholder="Nombre completo" />
+      </label>
+
+      <button (click)="start()" [disabled]="starting">
+        {{ starting ? 'Iniciando...' : 'Comenzar assessment' }}
+      </button>
+    </article>
+  }
+</section>

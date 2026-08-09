@@ -1,0 +1,86 @@
+<section>
+  <a routerLink="/assessments">&larr; Volver a assessments</a>
+
+  @if (loading) {
+    <p aria-busy="true">Cargando...</p>
+  }
+  @if (error) {
+    <p style="color:#b91c1c">{{ error }}</p>
+  }
+
+  @if (assessment) {
+    <h2>Invitar candidatos — {{ assessment.name }}</h2>
+
+    <article>
+      <h3>Generar nueva invitación</h3>
+      <div class="grid">
+        <label>
+          Nombre (opcional)
+          <input type="text" [(ngModel)]="candidateName" name="candidateName" placeholder="Se puede dejar vacío" />
+        </label>
+        <label>
+          Correo (opcional)
+          <input type="email" [(ngModel)]="candidateEmail" name="candidateEmail" />
+        </label>
+        <label>
+          Expira en (días, opcional)
+          <input type="number" [(ngModel)]="expiresInDays" name="expiresInDays" min="1" />
+        </label>
+      </div>
+      <button (click)="createInvitation()" [disabled]="creating">
+        {{ creating ? 'Generando...' : 'Generar link de invitación' }}
+      </button>
+
+      @if (lastCreatedLink) {
+        <div style="margin-top: 1rem">
+          <p><strong>Copia y envía este link al candidato:</strong></p>
+          <div class="grid">
+            <input type="text" [value]="lastCreatedLink" readonly />
+            <button class="secondary" (click)="copyLink(lastCreatedLink)">
+              {{ copied ? '¡Copiado!' : 'Copiar' }}
+            </button>
+          </div>
+        </div>
+      }
+    </article>
+
+    <h3>Invitaciones enviadas ({{ invitations.length }})</h3>
+    @if (invitations.length === 0) {
+      <p>Todavía no hay invitaciones para este assessment.</p>
+    }
+    <table>
+      <thead>
+        <tr>
+          <th>Candidato</th>
+          <th>Estado</th>
+          <th>Link</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (invitation of invitations; track invitation.id) {
+          <tr>
+            <td>{{ invitation.candidateName || invitation.candidateEmail || '—' }}</td>
+            <td>
+              <span
+                class="badge"
+                [class.badge-code]="invitation.status === 'PENDING'"
+                [class.badge-easy]="invitation.status === 'COMPLETED'"
+                [class.badge-medium]="invitation.status === 'STARTED'"
+                [class.badge-hard]="invitation.status === 'EXPIRED'"
+              >
+                {{ invitation.status }}
+              </span>
+            </td>
+            <td>
+              @if (invitation.status === 'PENDING') {
+                <button class="secondary" (click)="copyLink(buildLink(invitation.token))">
+                  Copiar link
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

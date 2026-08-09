@@ -1,5 +1,38 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayMinSize, IsArray, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+import { AssessmentVisibility } from '../entities/assessment.entity';
+
+export class LevelThresholdsDto {
+  @ApiPropertyOptional({ minimum: 0, maximum: 100 })
+  @IsOptional()
+  @Min(0)
+  @Max(100)
+  junior?: number;
+
+  @ApiPropertyOptional({ minimum: 0, maximum: 100 })
+  @IsOptional()
+  @Min(0)
+  @Max(100)
+  semisenior?: number;
+
+  @ApiPropertyOptional({ minimum: 0, maximum: 100 })
+  @IsOptional()
+  @Min(0)
+  @Max(100)
+  senior?: number;
+}
 
 export class CreateAssessmentDto {
   @ApiProperty()
@@ -11,6 +44,25 @@ export class CreateAssessmentDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @ApiPropertyOptional({
+    enum: AssessmentVisibility,
+    description:
+      'OFFICIAL (default): requiere invitación. PRACTICE: simulacro público en el catálogo de candidatos.',
+  })
+  @IsOptional()
+  @IsEnum(AssessmentVisibility)
+  visibility?: AssessmentVisibility;
+
+  @ApiPropertyOptional({
+    type: LevelThresholdsDto,
+    description:
+      'Score % mínimo para cada nivel (junior/semisenior/senior). Sin configurar = sin nivel calculado.',
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => LevelThresholdsDto)
+  levelThresholds?: LevelThresholdsDto;
 
   @ApiProperty({
     type: [String],

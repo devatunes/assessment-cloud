@@ -31,6 +31,12 @@ export class Question {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  // Solo columna (sin @ManyToOne): nada navega esta relación, y así se evita
+  // un eager-load innecesario. Todo query la usa como filtro explícito de
+  // tenant — ver QuestionsService.
+  @Column({ name: 'organization_id' })
+  organizationId: string;
+
   @Column()
   title: string;
 

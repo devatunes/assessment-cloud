@@ -7,9 +7,13 @@ describe('AssessmentsService', () => {
   let questionRepository: any;
   let queryBuilder: any;
 
+  const ORG_A = 'org-a';
+  const ORG_B = 'org-b';
+
   beforeEach(() => {
     queryBuilder = {
       where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
       getMany: jest.fn(),
     };
     questionRepository = {
@@ -28,7 +32,7 @@ describe('AssessmentsService', () => {
     queryBuilder.getMany.mockResolvedValue([{ id: 'q1' }]); // solo 1 de las 2 pedidas
 
     await expect(
-      service.create({ name: 'Test', questionIds: ['q1', 'q2'] }),
+      service.create(ORG_A, { name: 'Test', questionIds: ['q1', 'q2'] }),
     ).rejects.toBeInstanceOf(BadRequestException);
 
     expect(assessmentRepository.save).not.toHaveBeenCalled();
@@ -37,10 +41,27 @@ describe('AssessmentsService', () => {
   it('crea el assessment cuando todas las preguntas existen', async () => {
     queryBuilder.getMany.mockResolvedValue([{ id: 'q1' }, { id: 'q2' }]);
 
-    const result = await service.create({ name: 'Test', questionIds: ['q1', 'q2'] });
+    const result = await service.create(ORG_A, { name: 'Test', questionIds: ['q1', 'q2'] });
 
     expect(assessmentRepository.save).toHaveBeenCalled();
-    expect(assessmentRepository.findOne).toHaveBeenCalled();
+    expect(assessmentRepository.findOne).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'assessment-1', organizationId: ORG_A } }),
+    );
     expect(result.id).toBe('assessment-1');
+  });
+
+  it('filtra las preguntas por organización: no permite anexar preguntas de otra org (fuga cross-tenant)', async () => {
+    // Simula que la pregunta "q2" existe pero pertenece a ORG_B: la query
+    // (con el organizationId de ORG_A) solo devuelve "q1".
+    queryBuilder.getMany.mockResolvedValue([{ id: 'q1' }]);
+
+    await expect(
+      service.create(ORG_A, { name: 'Test', questionIds: ['q1', 'q2'] }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      expect.stringContaining('organization_id'),
+      { organizationId: ORG_A },
+    );
   });
 });

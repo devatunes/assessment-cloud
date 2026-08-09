@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Assessment } from './models';
+import { Assessment, AssessmentLevelThresholds, AssessmentVisibility } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class AssessmentsService {
@@ -17,7 +17,13 @@ export class AssessmentsService {
     return this.http.get<Assessment>(`${this.baseUrl}/${id}`);
   }
 
-  create(payload: { name: string; description?: string; questionIds: string[] }): Observable<Assessment> {
+  create(payload: {
+    name: string;
+    description?: string;
+    questionIds: string[];
+    visibility?: AssessmentVisibility;
+    levelThresholds?: AssessmentLevelThresholds;
+  }): Observable<Assessment> {
     return this.http.post<Assessment>(this.baseUrl, payload);
   }
 }

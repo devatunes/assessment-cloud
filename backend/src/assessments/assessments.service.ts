@@ -15,15 +15,16 @@ export class AssessmentsService {
     private readonly questionRepository: Repository<Question>,
   ) {}
 
-  findAll(): Promise<Assessment[]> {
+  findAll(organizationId: string): Promise<Assessment[]> {
     return this.assessmentRepository.find({
+      where: { organizationId },
       order: { createdAt: 'DESC' },
     });
   }
 
-  async findOne(id: string): Promise<Assessment> {
+  async findOne(organizationId: string, id: string): Promise<Assessment> {
     const assessment = await this.assessmentRepository.findOne({
-      where: { id },
+      where: { id, organizationId },
       relations: { questions: { question: { options: true } } },
       order: { questions: { position: 'ASC' } },
     });
@@ -35,10 +36,14 @@ export class AssessmentsService {
     return assessment;
   }
 
-  async create(dto: CreateAssessmentDto): Promise<Assessment> {
+  async create(organizationId: string, dto: CreateAssessmentDto): Promise<Assessment> {
+    // Filtro por organization_id: sin esto, un reclutador podría anexar a su
+    // assessment el id de una pregunta de OTRA organización si lo adivina o
+    // lo obtiene de otro lado (fuga cross-tenant ya identificada en revisión).
     const foundQuestions = await this.questionRepository
       .createQueryBuilder('question')
       .where('question.id IN (:...ids)', { ids: dto.questionIds })
+      .andWhere('question.organization_id = :organizationId', { organizationId })
       .getMany();
 
     if (foundQuestions.length !== dto.questionIds.length) {
@@ -48,8 +53,11 @@ export class AssessmentsService {
     }
 
     const assessment = this.assessmentRepository.create({
+      organizationId,
       name: dto.name,
       description: dto.description ?? null,
+      visibility: dto.visibility,
+      levelThresholds: dto.levelThresholds ?? null,
       questions: dto.questionIds.map((questionId, position) =>
         Object.assign(new AssessmentQuestion(), { questionId, position }),
       ),
@@ -57,6 +65,6 @@ export class AssessmentsService {
 
     const saved = await this.assessmentRepository.save(assessment);
 
-    return this.findOne(saved.id);
+    return this.findOne(organizationId, saved.id);
   }
 }

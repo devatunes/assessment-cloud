@@ -1,9 +1,20 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'questions', pathMatch: 'full' },
   {
+    path: 'login',
+    loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./pages/register/register.component').then((m) => m.RegisterComponent),
+  },
+  {
     path: 'questions',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/question-library/question-library.component').then(
         (m) => m.QuestionLibraryComponent,
@@ -11,6 +22,7 @@ export const routes: Routes = [
   },
   {
     path: 'assessments',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/assessment-list/assessment-list.component').then(
         (m) => m.AssessmentListComponent,
@@ -18,16 +30,25 @@ export const routes: Routes = [
   },
   {
     path: 'assessments/new',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/assessment-create/assessment-create.component').then(
         (m) => m.AssessmentCreateComponent,
       ),
   },
   {
-    path: 'assessments/:id/start',
+    path: 'assessments/:id/invite',
+    canActivate: [authGuard],
     loadComponent: () =>
-      import('./pages/attempt-start/attempt-start.component').then(
-        (m) => m.AttemptStartComponent,
+      import('./pages/assessment-invite/assessment-invite.component').then(
+        (m) => m.AssessmentInviteComponent,
+      ),
+  },
+  {
+    path: 'invite/:token',
+    loadComponent: () =>
+      import('./pages/invite-landing/invite-landing.component').then(
+        (m) => m.InviteLandingComponent,
       ),
   },
   {

@@ -36,6 +36,10 @@ body {
 .badge-mc { background: #e0e7ff; color: #3730a3; }
 .badge-code { background: #dbeafe; color: #1e40af; }
 
+.badge-level-junior { background: #e0e7ff; color: #3730a3; font-size: 1rem; padding: 0.3rem 0.75rem; }
+.badge-level-semisenior { background: #fef3c7; color: #92400e; font-size: 1rem; padding: 0.3rem 0.75rem; }
+.badge-level-senior { background: #d1fae5; color: #065f46; font-size: 1rem; padding: 0.3rem 0.75rem; }
+
 .test-case-result {
   border: 1px solid var(--pico-muted-border-color);
   border-radius: 0.5rem;

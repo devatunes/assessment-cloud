@@ -14,6 +14,37 @@
     <textarea [(ngModel)]="description" name="description" rows="2"></textarea>
   </label>
 
+  <fieldset>
+    <legend>Tipo de assessment</legend>
+    <label>
+      <input type="radio" name="visibility" value="OFFICIAL" [(ngModel)]="visibility" />
+      Oficial (requiere invitación por link)
+    </label>
+    <label>
+      <input type="radio" name="visibility" value="PRACTICE" [(ngModel)]="visibility" />
+      Simulacro (público, cualquier candidato registrado puede practicarlo)
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Niveles (opcional)</legend>
+    <p><small>% mínimo de score para cada nivel. Déjalos vacíos si no quieres clasificar el resultado.</small></p>
+    <div class="grid">
+      <label>
+        Junior (%)
+        <input type="number" min="0" max="100" [(ngModel)]="levelJunior" name="levelJunior" />
+      </label>
+      <label>
+        Semisenior (%)
+        <input type="number" min="0" max="100" [(ngModel)]="levelSemisenior" name="levelSemisenior" />
+      </label>
+      <label>
+        Senior (%)
+        <input type="number" min="0" max="100" [(ngModel)]="levelSenior" name="levelSenior" />
+      </label>
+    </div>
+  </fieldset>
+
   <h3>Selecciona preguntas ({{ selectedIds.length }} seleccionadas)</h3>
 
   @if (loading) {
