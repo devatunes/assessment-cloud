@@ -21,6 +21,22 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'question-banks',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/question-bank-list/question-bank-list.component').then(
+        (m) => m.QuestionBankListComponent,
+      ),
+  },
+  {
+    path: 'question-banks/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/question-bank-detail/question-bank-detail.component').then(
+        (m) => m.QuestionBankDetailComponent,
+      ),
+  },
+  {
     path: 'assessments',
     canActivate: [authGuard],
     loadComponent: () =>

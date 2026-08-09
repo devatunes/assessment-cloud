@@ -45,7 +45,34 @@
     </div>
   </fieldset>
 
+  <label>
+    Tiempo límite (minutos, opcional)
+    <input type="number" min="1" [(ngModel)]="timeLimitMinutes" name="timeLimitMinutes" placeholder="Sin límite" />
+  </label>
+
   <h3>Selecciona preguntas ({{ selectedIds.length }} seleccionadas)</h3>
+
+  @if (banks.length > 0) {
+    <div class="grid">
+      <label>
+        Importar desde un banco de preguntas
+        <select [(ngModel)]="selectedBankId" name="selectedBankId">
+          <option value="">Elige un banco...</option>
+          @for (bank of banks; track bank.id) {
+            <option [value]="bank.id">{{ bank.name }} ({{ bank.questionCount }})</option>
+          }
+        </select>
+      </label>
+      <button
+        type="button"
+        class="secondary"
+        (click)="importFromBank()"
+        [disabled]="!selectedBankId || importingBank"
+      >
+        {{ importingBank ? 'Importando...' : 'Agregar todas las preguntas del banco' }}
+      </button>
+    </div>
+  }
 
   @if (loading) {
     <p aria-busy="true">Cargando preguntas...</p>
@@ -71,7 +98,7 @@
             />
           </td>
           <td>{{ question.title }}</td>
-          <td>{{ question.category }}</td>
+          <td>{{ categoryLabels[question.category] }}</td>
           <td>
             <app-difficulty-badge [difficulty]="question.difficulty" [type]="question.type" />
           </td>

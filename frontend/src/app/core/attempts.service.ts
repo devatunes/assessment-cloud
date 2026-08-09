@@ -44,4 +44,13 @@ export class AttemptsService {
   getResult(attemptId: string): Observable<AttemptResult> {
     return this.http.get<AttemptResult>(`${this.baseUrl}/${attemptId}/result`);
   }
+
+  // Encuesta breve del candidato sobre la plataforma (no sobre el contenido
+  // del assessment), mostrada junto al resultado final.
+  submitFeedback(
+    attemptId: string,
+    payload: { rating: number; comment?: string },
+  ): Observable<{ saved: true }> {
+    return this.http.post<{ saved: true }>(`${this.baseUrl}/${attemptId}/feedback`, payload);
+  }
 }

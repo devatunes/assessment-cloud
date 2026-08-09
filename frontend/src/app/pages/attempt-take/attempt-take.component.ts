@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AttemptsService } from '../../core/attempts.service';
@@ -17,7 +17,7 @@ import { CodeEditorComponent } from '../../shared/code-editor.component';
   imports: [CommonModule, FormsModule, DifficultyBadgeComponent, CodeEditorComponent],
   templateUrl: './attempt-take.component.html',
 })
-export class AttemptTakeComponent implements OnInit {
+export class AttemptTakeComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly attemptsService = inject(AttemptsService);
@@ -35,6 +35,13 @@ export class AttemptTakeComponent implements OnInit {
   saving = false;
   finishing = false;
 
+  // Cuenta regresiva visual; el corte real ya lo aplica el servidor (ver
+  // AttemptsService.assertNotExpired en el backend) — esto es solo para que
+  // el candidato vea cuánto le queda y se auto-envíe al llegar a cero.
+  remainingSeconds: number | null = null;
+  private timerHandle: ReturnType<typeof setInterval> | null = null;
+  private autoFinishTriggered = false;
+
   get currentQuestion(): SanitizedQuestion | null {
     return this.attempt?.questions[this.currentIndex] ?? null;
   }
@@ -46,6 +53,18 @@ export class AttemptTakeComponent implements OnInit {
   get currentRunResult(): RunResult | null {
     const q = this.currentQuestion;
     return q ? (this.runResultByQuestion[q.id] ?? null) : null;
+  }
+
+  get remainingTimeLabel(): string {
+    if (this.remainingSeconds === null) return '';
+    const clamped = Math.max(0, this.remainingSeconds);
+    const minutes = Math.floor(clamped / 60);
+    const seconds = clamped % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  get timeIsRunningOut(): boolean {
+    return this.remainingSeconds !== null && this.remainingSeconds <= 60;
   }
 
   ngOnInit(): void {
@@ -65,12 +84,35 @@ export class AttemptTakeComponent implements OnInit {
           }
         }
         this.loading = false;
+        this.startTimerIfNeeded(attempt);
       },
       error: () => {
         this.error = 'No se pudo cargar el intento';
         this.loading = false;
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.timerHandle) clearInterval(this.timerHandle);
+  }
+
+  private startTimerIfNeeded(attempt: AttemptWithQuestions): void {
+    if (!attempt.deadline) return;
+
+    const deadlineMs = new Date(attempt.deadline).getTime();
+    const tick = () => {
+      this.remainingSeconds = Math.round((deadlineMs - Date.now()) / 1000);
+
+      if (this.remainingSeconds <= 0 && !this.autoFinishTriggered) {
+        this.autoFinishTriggered = true;
+        if (this.timerHandle) clearInterval(this.timerHandle);
+        this.finish();
+      }
+    };
+
+    tick();
+    this.timerHandle = setInterval(tick, 1000);
   }
 
   selectOption(questionId: string, optionId: string): void {

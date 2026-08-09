@@ -3,11 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Attempt, AttemptStatus } from './entities/attempt.entity';
 import { AttemptAnswer } from './entities/attempt-answer.entity';
+import { AttemptFeedback } from './entities/attempt-feedback.entity';
 import { Assessment } from '../assessments/entities/assessment.entity';
 import { Invitation, InvitationStatus } from '../invitations/entities/invitation.entity';
 import { Question, QuestionType } from '../questions/entities/question.entity';
 import { CreateAttemptDto } from './dto/create-attempt.dto';
 import { SubmitAnswerDto } from './dto/submit-answer.dto';
+import { SubmitFeedbackDto } from './dto/submit-feedback.dto';
 import { ExecutorService } from '../executor/executor.service';
 import { AttemptResult, AttemptWithQuestions, SanitizedQuestion } from './attempts.types';
 import { computeLevel } from '../assessments/level.util';
@@ -19,12 +21,47 @@ export class AttemptsService {
     private readonly attemptRepository: Repository<Attempt>,
     @InjectRepository(AttemptAnswer)
     private readonly answerRepository: Repository<AttemptAnswer>,
+    @InjectRepository(AttemptFeedback)
+    private readonly feedbackRepository: Repository<AttemptFeedback>,
     @InjectRepository(Assessment)
     private readonly assessmentRepository: Repository<Assessment>,
     @InjectRepository(Invitation)
     private readonly invitationRepository: Repository<Invitation>,
     private readonly executorService: ExecutorService,
   ) {}
+
+  // Encuesta breve al candidato (rating 1-5 + comentario opcional) sobre la
+  // EXPERIENCIA CON LA PLATAFORMA, no con el contenido del assessment — solo
+  // tiene sentido una vez el candidato ya vio su resultado. Upsert: si ya
+  // había enviado una, la reemplaza en vez de fallar.
+  async submitFeedback(attemptId: string, dto: SubmitFeedbackDto): Promise<{ saved: true }> {
+    const attempt = await this.attemptRepository.findOne({ where: { id: attemptId } });
+
+    if (!attempt) {
+      throw new NotFoundException(`Intento ${attemptId} no encontrado`);
+    }
+    if (attempt.status !== AttemptStatus.COMPLETED) {
+      throw new BadRequestException('Solo se puede dejar feedback después de finalizar');
+    }
+
+    const existing = await this.feedbackRepository.findOne({ where: { attemptId } });
+
+    if (existing) {
+      existing.rating = dto.rating;
+      existing.comment = dto.comment ?? null;
+      await this.feedbackRepository.save(existing);
+    } else {
+      await this.feedbackRepository.save(
+        this.feedbackRepository.create({
+          attemptId,
+          rating: dto.rating,
+          comment: dto.comment ?? null,
+        }),
+      );
+    }
+
+    return { saved: true };
+  }
 
   async create(dto: CreateAttemptDto): Promise<AttemptWithQuestions> {
     const assessment = await this.assessmentRepository.findOne({
@@ -324,6 +361,7 @@ export class AttemptsService {
           type: aq.question.type,
           isCorrect: answer?.isCorrect ?? false,
           points: answer?.points ?? 0,
+          explanation: aq.question.explanation,
         };
       }),
     };

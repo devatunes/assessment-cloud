@@ -4,6 +4,7 @@ import { AttemptsService } from './attempts.service';
 import { CreateAttemptDto } from './dto/create-attempt.dto';
 import { SubmitAnswerDto } from './dto/submit-answer.dto';
 import { RunCodeDto } from './dto/run-code.dto';
+import { SubmitFeedbackDto } from './dto/submit-feedback.dto';
 
 // Endpoints que usa el candidato para resolver un assessment. Las preguntas
 // que devuelven estos endpoints están sanitizadas (sin isCorrect, sin test
@@ -59,5 +60,13 @@ export class AttemptsController {
   })
   getResult(@Param('id') id: string) {
     return this.attemptsService.getResult(id);
+  }
+
+  @Post(':id/feedback')
+  @ApiOperation({
+    summary: 'Encuesta breve del candidato sobre la plataforma (rating 1-5 + comentario)',
+  })
+  submitFeedback(@Param('id') id: string, @Body() dto: SubmitFeedbackDto) {
+    return this.attemptsService.submitFeedback(id, dto);
   }
 }

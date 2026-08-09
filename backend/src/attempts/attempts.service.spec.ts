@@ -46,6 +46,7 @@ describe('AttemptsService', () => {
   let service: AttemptsService;
   let attemptRepository: any;
   let answerRepository: any;
+  let feedbackRepository: any;
   let assessmentRepository: any;
   let invitationRepository: any;
   let executorService: any;
@@ -62,6 +63,11 @@ describe('AttemptsService', () => {
       save: jest.fn((a: unknown) => Promise.resolve(a)),
       create: jest.fn((a: unknown) => a),
     };
+    feedbackRepository = {
+      findOne: jest.fn().mockResolvedValue(null),
+      save: jest.fn((a: unknown) => Promise.resolve(a)),
+      create: jest.fn((a: unknown) => a),
+    };
     assessmentRepository = { findOne: jest.fn() };
     invitationRepository = { update: jest.fn().mockResolvedValue({ affected: 0 }) };
     executorService = { run: jest.fn() };
@@ -69,6 +75,7 @@ describe('AttemptsService', () => {
     service = new AttemptsService(
       attemptRepository,
       answerRepository,
+      feedbackRepository,
       assessmentRepository,
       invitationRepository,
       executorService,

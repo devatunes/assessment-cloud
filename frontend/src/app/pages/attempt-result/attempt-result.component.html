@@ -42,8 +42,60 @@
               }
             </td>
           </tr>
+          @if (item.explanation) {
+            <tr>
+              <td colspan="3">
+                <small><strong>¿Por qué?</strong> {{ item.explanation }}</small>
+              </td>
+            </tr>
+          }
         }
       </tbody>
     </table>
+
+    <article>
+      @if (feedbackSubmitted) {
+        <p>✅ ¡Gracias por tu retroalimentación!</p>
+      } @else {
+        <h3>¿Cómo fue tu experiencia con la plataforma?</h3>
+        <p>
+          <small>Esta encuesta es sobre la plataforma, no afecta tu resultado ni es
+          obligatoria.</small>
+        </p>
+        <fieldset role="group" aria-label="Calificación de 1 a 5">
+          @for (star of [1, 2, 3, 4, 5]; track star) {
+            <label>
+              <input
+                type="radio"
+                name="feedback-rating"
+                [value]="star"
+                [ngModel]="feedbackRating"
+                (ngModelChange)="feedbackRating = $event"
+              />
+              {{ star }}
+            </label>
+          }
+        </fieldset>
+        <label>
+          Comentarios (opcional)
+          <textarea
+            [(ngModel)]="feedbackComment"
+            rows="3"
+            placeholder="¿Algo que quieras contarnos?"
+          ></textarea>
+        </label>
+        @if (feedbackError) {
+          <p style="color:#b91c1c">{{ feedbackError }}</p>
+        }
+        <button
+          type="button"
+          [disabled]="!feedbackRating || submittingFeedback"
+          [attr.aria-busy]="submittingFeedback ? 'true' : null"
+          (click)="submitFeedback()"
+        >
+          Enviar encuesta
+        </button>
+      }
+    </article>
   }
 </section>
