@@ -106,6 +106,22 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'assessments/:id/report',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/assessment-report/assessment-report.component').then(
+        (m) => m.AssessmentReportComponent,
+      ),
+  },
+  {
+    path: 'reports',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/reports-overview/reports-overview.component').then(
+        (m) => m.ReportsOverviewComponent,
+      ),
+  },
+  {
     path: 'invite/:token',
     loadComponent: () =>
       import('./pages/invite-landing/invite-landing.component').then(

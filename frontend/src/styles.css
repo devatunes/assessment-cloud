@@ -52,6 +52,65 @@ body {
 .badge-level-semisenior { background: #fef3c7; color: #92400e; font-size: 1rem; padding: 0.3rem 0.75rem; }
 .badge-level-senior { background: #d1fae5; color: #065f46; font-size: 1rem; padding: 0.3rem 0.75rem; }
 
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 14rem) 1fr 4rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bar-label {
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar-track {
+  background: var(--pico-muted-border-color);
+  border-radius: 0.25rem;
+  height: 0.9rem;
+  overflow: hidden;
+}
+
+.bar-fill {
+  background: var(--pico-primary);
+  height: 100%;
+  border-radius: 0.25rem;
+  transition: width 0.3s ease;
+}
+
+.bar-value {
+  font-size: 0.85rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.report-summary-card {
+  text-align: center;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.report-summary-card strong {
+  display: block;
+  font-size: 1.75rem;
+}
+
 .test-case-result {
   border: 1px solid var(--pico-muted-border-color);
   border-radius: 0.5rem;
