@@ -318,4 +318,46 @@ describe('Invitations (e2e)', () => {
 
     expect(startRes.body.candidateName).toBe('Anónimo de siempre');
   });
+
+  it('crea una invitación con track/especialidad y permite reasignarlos después', async () => {
+    const auth = `Bearer ${orgToken}`;
+
+    const questionRes = await request(httpServer)
+      .post('/questions')
+      .set('Authorization', auth)
+      .send({
+        title: 'Pregunta track',
+        statement: 'x',
+        category: 'BACKEND',
+        difficulty: 'EASY',
+        type: 'MULTIPLE_CHOICE',
+        options: [
+          { text: 'a', isCorrect: true },
+          { text: 'b', isCorrect: false },
+        ],
+      })
+      .expect(201);
+
+    const assessmentRes = await request(httpServer)
+      .post('/assessments')
+      .set('Authorization', auth)
+      .send({ name: 'Assessment con track', questionIds: [questionRes.body.id] })
+      .expect(201);
+
+    const invitationRes = await request(httpServer)
+      .post(`/assessments/${assessmentRes.body.id}/invitations`)
+      .set('Authorization', auth)
+      .send({ candidateEmail: 'track@example.com', track: 'DEVELOPER', specialty: 'Backend' })
+      .expect(201);
+    expect(invitationRes.body.track).toBe('DEVELOPER');
+    expect(invitationRes.body.specialty).toBe('Backend');
+
+    const updateRes = await request(httpServer)
+      .patch(`/assessments/${assessmentRes.body.id}/invitations/${invitationRes.body.id}`)
+      .set('Authorization', auth)
+      .send({ track: 'QA', specialty: 'Automation' })
+      .expect(200);
+    expect(updateRes.body.track).toBe('QA');
+    expect(updateRes.body.specialty).toBe('Automation');
+  });
 });

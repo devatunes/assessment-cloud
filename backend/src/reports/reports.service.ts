@@ -10,6 +10,8 @@ import { computeLevel, CandidateLevel } from '../assessments/level.util';
 import {
   AssessmentOverviewEntry,
   AssessmentReport,
+  CandidateHistoryEntry,
+  CandidateHistoryGroup,
   CandidateReportRow,
   CategoryOverviewEntry,
   LevelDistributionEntry,
@@ -246,5 +248,82 @@ export class ReportsService {
     }));
 
     return { assessments: assessmentEntries, categoryBreakdown };
+  }
+
+  // Historial de candidatos a través de TODOS los assessments oficiales y
+  // años de la organización, agrupado por correo (identidad del candidato
+  // entre convocatorias distintas — no requiere que tenga cuenta propia).
+  // Filtros opcionales por track/especialidad/año para "asignarlos por
+  // grupos" según lo pedido.
+  async getCandidatesHistory(
+    organizationId: string,
+    filters: { track?: string; specialty?: string; year?: number },
+  ): Promise<CandidateHistoryGroup[]> {
+    const invitations = await this.invitationRepository.find({
+      where: { organizationId },
+      order: { createdAt: 'DESC' },
+    });
+
+    const withEmail = invitations.filter((inv) => !!inv.candidateEmail);
+    if (withEmail.length === 0) return [];
+
+    const assessmentIds = [...new Set(withEmail.map((inv) => inv.assessmentId))];
+    const assessments = await this.assessmentRepository.find({ where: { id: In(assessmentIds) } });
+    const assessmentById = new Map(assessments.map((a) => [a.id, a]));
+
+    const attemptIds = withEmail
+      .filter((inv): inv is Invitation & { attemptId: string } => !!inv.attemptId)
+      .map((inv) => inv.attemptId);
+    const attempts = attemptIds.length
+      ? await this.attemptRepository.find({ where: { id: In(attemptIds) } })
+      : [];
+    const attemptById = new Map(attempts.map((a) => [a.id, a]));
+
+    const groups = new Map<string, CandidateHistoryGroup>();
+
+    for (const inv of withEmail) {
+      const year = inv.createdAt.getFullYear();
+      if (filters.track && inv.track !== filters.track) continue;
+      if (filters.year && year !== filters.year) continue;
+      if (
+        filters.specialty &&
+        (inv.specialty ?? '').toLowerCase() !== filters.specialty.toLowerCase()
+      ) {
+        continue;
+      }
+
+      const assessment = assessmentById.get(inv.assessmentId);
+      const attempt = inv.attemptId ? attemptById.get(inv.attemptId) : undefined;
+      const isScored = attempt?.status === AttemptStatus.COMPLETED && attempt.score !== null;
+      const scorePercentage =
+        isScored && attempt!.maxScore > 0 ? (attempt!.score! / attempt!.maxScore) * 100 : null;
+
+      const email = inv.candidateEmail!.toLowerCase();
+      let group = groups.get(email);
+      if (!group) {
+        // Como se itera en orden DESC por fecha de creación, el primer
+        // registro de cada correo ya trae el nombre más reciente.
+        group = { email: inv.candidateEmail!, name: inv.candidateName ?? '', entries: [] };
+        groups.set(email, group);
+      }
+
+      const entry: CandidateHistoryEntry = {
+        invitationId: inv.id,
+        assessmentId: inv.assessmentId,
+        assessmentName: assessment?.name ?? '',
+        year,
+        track: inv.track,
+        specialty: inv.specialty,
+        status: inv.status,
+        score: attempt?.score ?? null,
+        maxScore: attempt?.maxScore ?? null,
+        scorePercentage,
+        level: isScored ? computeLevel(scorePercentage ?? 0, assessment?.levelThresholds ?? null) : null,
+        completedAt: inv.completedAt ? inv.completedAt.toISOString() : null,
+      };
+      group.entries.push(entry);
+    }
+
+    return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name));
   }
 }

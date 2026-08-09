@@ -27,6 +27,38 @@
           <input type="number" [(ngModel)]="expiresInDays" name="expiresInDays" min="1" />
         </label>
       </div>
+      <div class="grid">
+        <label>
+          Track (opcional)
+          <select [(ngModel)]="track" name="track">
+            <option value="">Sin especificar</option>
+            @for (t of tracks; track t) {
+              <option [value]="t">{{ trackLabels[t] }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Especialidad (opcional)
+          <input
+            type="text"
+            [(ngModel)]="specialty"
+            name="specialty"
+            placeholder="Backend, Frontend, Cloud, Automation..."
+            list="specialty-suggestions"
+          />
+          <datalist id="specialty-suggestions">
+            <option value="Backend"></option>
+            <option value="Frontend"></option>
+            <option value="Fullstack"></option>
+            <option value="Cloud"></option>
+            <option value="Mobile"></option>
+            <option value="Automation"></option>
+            <option value="Manual"></option>
+            <option value="Performance"></option>
+            <option value="Security"></option>
+          </datalist>
+        </label>
+      </div>
       <button (click)="createInvitation()" [disabled]="creating">
         {{ creating ? 'Generando...' : 'Generar link de invitación' }}
       </button>
@@ -53,6 +85,7 @@
         <tr>
           <th>Candidato</th>
           <th>Estado</th>
+          <th>Clasificación</th>
           <th>Link</th>
         </tr>
       </thead>
@@ -70,6 +103,41 @@
               >
                 {{ invitation.status }}
               </span>
+            </td>
+            <td>
+              @if (editingId === invitation.id) {
+                <div class="grid" style="min-width: 20rem">
+                  <select [(ngModel)]="editTrack" [ngModelOptions]="{ standalone: true }">
+                    <option value="">Sin track</option>
+                    @for (t of tracks; track t) {
+                      <option [value]="t">{{ trackLabels[t] }}</option>
+                    }
+                  </select>
+                  <input
+                    type="text"
+                    [(ngModel)]="editSpecialty"
+                    [ngModelOptions]="{ standalone: true }"
+                    placeholder="Especialidad"
+                    list="specialty-suggestions"
+                  />
+                  <div>
+                    <button (click)="saveEdit(invitation)" [disabled]="savingEdit">Guardar</button>
+                    <button class="secondary" (click)="cancelEdit()">Cancelar</button>
+                  </div>
+                </div>
+              } @else {
+                @if (invitation.track || invitation.specialty) {
+                  @if (invitation.track) {
+                    <span class="badge badge-mc">{{ trackLabels[invitation.track] }}</span>
+                  }
+                  @if (invitation.specialty) {
+                    <span class="badge badge-code">{{ invitation.specialty }}</span>
+                  }
+                } @else {
+                  <small>Sin clasificar</small>
+                }
+                <button class="secondary" (click)="startEdit(invitation)">Editar</button>
+              }
             </td>
             <td>
               @if (invitation.status === 'PENDING') {

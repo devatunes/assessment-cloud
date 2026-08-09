@@ -7,6 +7,15 @@ export enum InvitationStatus {
   EXPIRED = 'EXPIRED',
 }
 
+// Track amplio del candidato invitado (a qué tipo de puesto se evalúa). La
+// especialidad dentro del track (Backend, Frontend, Cloud, Automation...) es
+// texto libre a propósito, ver la migración que agrega estas columnas.
+export enum InvitationTrack {
+  DEVELOPER = 'DEVELOPER',
+  QA = 'QA',
+  OTHER = 'OTHER',
+}
+
 @Entity('invitation')
 export class Invitation {
   @PrimaryGeneratedColumn('uuid')
@@ -46,6 +55,12 @@ export class Invitation {
 
   @Column({ name: 'completed_at', type: 'timestamptz', nullable: true })
   completedAt: Date | null;
+
+  @Column({ type: 'enum', enum: InvitationTrack, nullable: true })
+  track: InvitationTrack | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  specialty: string | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

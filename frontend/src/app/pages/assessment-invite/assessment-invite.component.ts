@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AssessmentsService } from '../../core/assessments.service';
 import { InvitationsService } from '../../core/invitations.service';
-import { Assessment, Invitation } from '../../core/models';
+import { Assessment, INVITATION_TRACK_LABELS, Invitation, InvitationTrack } from '../../core/models';
 
 @Component({
   selector: 'app-assessment-invite',
@@ -17,6 +17,9 @@ export class AssessmentInviteComponent implements OnInit {
   private readonly assessmentsService = inject(AssessmentsService);
   private readonly invitationsService = inject(InvitationsService);
 
+  readonly tracks = Object.keys(INVITATION_TRACK_LABELS) as InvitationTrack[];
+  readonly trackLabels = INVITATION_TRACK_LABELS;
+
   assessment: Assessment | null = null;
   invitations: Invitation[] = [];
   loading = false;
@@ -25,9 +28,17 @@ export class AssessmentInviteComponent implements OnInit {
   candidateName = '';
   candidateEmail = '';
   expiresInDays: number | null = null;
+  track: InvitationTrack | '' = '';
+  specialty = '';
   creating = false;
   lastCreatedLink: string | null = null;
   copied = false;
+
+  // Edición de track/especialidad de una invitación ya generada.
+  editingId: string | null = null;
+  editTrack: InvitationTrack | '' = '';
+  editSpecialty = '';
+  savingEdit = false;
 
   private assessmentId = '';
 
@@ -75,6 +86,8 @@ export class AssessmentInviteComponent implements OnInit {
         candidateName: this.candidateName || undefined,
         candidateEmail: this.candidateEmail || undefined,
         expiresInDays: this.expiresInDays || undefined,
+        track: this.track || undefined,
+        specialty: this.specialty || undefined,
       })
       .subscribe({
         next: (invitation) => {
@@ -83,6 +96,8 @@ export class AssessmentInviteComponent implements OnInit {
           this.candidateName = '';
           this.candidateEmail = '';
           this.expiresInDays = null;
+          this.track = '';
+          this.specialty = '';
           this.loadInvitations();
         },
         error: () => {
@@ -97,5 +112,35 @@ export class AssessmentInviteComponent implements OnInit {
       this.copied = true;
       setTimeout(() => (this.copied = false), 2000);
     });
+  }
+
+  startEdit(invitation: Invitation): void {
+    this.editingId = invitation.id;
+    this.editTrack = invitation.track ?? '';
+    this.editSpecialty = invitation.specialty ?? '';
+  }
+
+  cancelEdit(): void {
+    this.editingId = null;
+  }
+
+  saveEdit(invitation: Invitation): void {
+    this.savingEdit = true;
+    this.invitationsService
+      .updateClassification(this.assessmentId, invitation.id, {
+        track: this.editTrack || undefined,
+        specialty: this.editSpecialty || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.savingEdit = false;
+          this.editingId = null;
+          this.loadInvitations();
+        },
+        error: () => {
+          this.savingEdit = false;
+          this.error = 'No se pudo actualizar la clasificación';
+        },
+      });
   }
 }
