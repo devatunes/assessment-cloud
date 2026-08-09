@@ -76,6 +76,68 @@
       }
     </article>
 
+    <article>
+      <h3>Importar candidatos por CSV</h3>
+      <p>
+        <small>
+          Archivo .csv con encabezado <code>nombre,email,track,especialidad</code> (track y
+          especialidad opcionales; track debe ser {{ tracks.join('/') }} o se deja sin clasificar).
+        </small>
+      </p>
+      <input type="file" accept=".csv,text/csv" (change)="onCsvSelected($event)" />
+
+      @if (csvError) {
+        <p class="form-error">{{ csvError }}</p>
+      }
+
+      @if (csvResult) {
+        <p class="text-success">
+          {{ csvResult.created.length }} invitación(es) creada(s).
+          @if (csvResult.failed.length > 0) {
+            {{ csvResult.failed.length }} fila(s) fallida(s).
+          }
+        </p>
+        @if (csvResult.failed.length > 0) {
+          <ul>
+            @for (failure of csvResult.failed; track failure.row) {
+              <li>Fila {{ failure.row }} ({{ failure.email || 'sin correo' }}): {{ failure.error }}</li>
+            }
+          </ul>
+        }
+      }
+
+      @if (csvRows.length > 0) {
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Track</th>
+                <th>Especialidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of csvRows; track $index) {
+                <tr>
+                  <td>{{ row.candidateName || '—' }}</td>
+                  <td>{{ row.candidateEmail || '—' }}</td>
+                  <td>{{ row.track ? trackLabels[row.track] : '—' }}</td>
+                  <td>{{ row.specialty || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="header-actions">
+          <button (click)="importCsv()" [disabled]="importingCsv">
+            {{ importingCsv ? 'Importando...' : 'Importar ' + csvRows.length + ' candidato(s)' }}
+          </button>
+          <button class="secondary" (click)="clearCsv()">Cancelar</button>
+        </div>
+      }
+    </article>
+
     <h3>Invitaciones enviadas ({{ invitations.length }})</h3>
     @if (invitations.length === 0) {
       <p>Todavía no hay invitaciones para este assessment.</p>

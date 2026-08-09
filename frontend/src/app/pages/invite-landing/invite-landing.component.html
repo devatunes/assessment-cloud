@@ -20,23 +20,80 @@
         <p>{{ invitation.assessmentDescription }}</p>
       }
 
-      <label>
-        Tu nombre
-        <input type="text" [(ngModel)]="candidateName" name="candidateName" placeholder="Nombre completo" />
-      </label>
-
-      @if (candidateAuthService.isLoggedIn) {
-        <p>
-          <small>
-            Sesión iniciada como {{ candidateAuthService.currentCandidate()?.name }}: este resultado
-            también quedará en tu historial de candidato.
-          </small>
-        </p>
+      @if (gateError) {
+        <p class="form-error">{{ gateError }}</p>
       }
 
-      <button (click)="start()" [disabled]="starting">
-        {{ starting ? 'Iniciando...' : 'Comenzar assessment' }}
-      </button>
+      @if (step === 'email') {
+        <p><small>Para empezar, primero identifícate con tu correo.</small></p>
+        <label>
+          Correo
+          <input
+            type="email"
+            [(ngModel)]="gateEmail"
+            name="gateEmail"
+            required
+            (keyup.enter)="submitEmail()"
+          />
+        </label>
+        <button (click)="submitEmail()" [disabled]="checkingEmail">
+          {{ checkingEmail ? 'Verificando...' : 'Continuar' }}
+        </button>
+      }
+
+      @if (step === 'login') {
+        <p><small>Ya tienes una cuenta con <strong>{{ gateEmail }}</strong> — inicia sesión para continuar.</small></p>
+        <label>
+          Contraseña
+          <input
+            type="password"
+            [(ngModel)]="gatePassword"
+            name="gatePassword"
+            required
+            (keyup.enter)="loginAndStart()"
+          />
+        </label>
+        <button (click)="loginAndStart()" [disabled]="starting">
+          {{ starting ? 'Ingresando...' : 'Iniciar sesión y empezar' }}
+        </button>
+        <p><a href="#" (click)="backToEmail(); $event.preventDefault()">Usar otro correo</a></p>
+      }
+
+      @if (step === 'register') {
+        <p><small><strong>{{ gateEmail }}</strong> todavía no tiene cuenta — créala para continuar (tu resultado quedará en tu historial).</small></p>
+        <label>
+          Tu nombre
+          <input type="text" [(ngModel)]="candidateName" name="registerName" required />
+        </label>
+        <label>
+          Contraseña (mínimo 8 caracteres)
+          <input type="password" [(ngModel)]="gatePassword" name="gatePassword" required minlength="8" />
+        </label>
+        <button (click)="registerAndStart()" [disabled]="starting">
+          {{ starting ? 'Creando cuenta...' : 'Crear cuenta y empezar' }}
+        </button>
+        <p><a href="#" (click)="backToEmail(); $event.preventDefault()">Usar otro correo</a></p>
+      }
+
+      @if (step === 'ready') {
+        <label>
+          Tu nombre
+          <input type="text" [(ngModel)]="candidateName" name="candidateName" placeholder="Nombre completo" />
+        </label>
+
+        @if (candidateAuthService.isLoggedIn) {
+          <p>
+            <small>
+              Sesión iniciada como {{ candidateAuthService.currentCandidate()?.name }}: este resultado
+              también quedará en tu historial de candidato.
+            </small>
+          </p>
+        }
+
+        <button (click)="start()" [disabled]="starting">
+          {{ starting ? 'Iniciando...' : 'Comenzar assessment' }}
+        </button>
+      }
     </article>
   }
 </section>

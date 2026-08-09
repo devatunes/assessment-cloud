@@ -1,0 +1,141 @@
+@if (formError) {
+  <p class="form-error">{{ formError }}</p>
+}
+@if (serverError) {
+  <p class="form-error">{{ serverError }}</p>
+}
+<form (ngSubmit)="submit()">
+  <label>
+    Título
+    <input type="text" [(ngModel)]="form.title" name="title" required />
+  </label>
+  <label>
+    Enunciado
+    <textarea [(ngModel)]="form.statement" name="statement" required rows="2"></textarea>
+  </label>
+  <div class="grid">
+    <label>
+      Categoría
+      <select [(ngModel)]="form.category" name="category">
+        @for (cat of categories; track cat) {
+          <option [value]="cat">{{ categoryLabels[cat] }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      Dificultad
+      <select [(ngModel)]="form.difficulty" name="difficulty">
+        <option value="EASY">EASY</option>
+        <option value="MEDIUM">MEDIUM</option>
+        <option value="HARD">HARD</option>
+      </select>
+    </label>
+    <label>
+      Tipo
+      <select [(ngModel)]="form.type" name="type">
+        <option value="MULTIPLE_CHOICE">Selección múltiple</option>
+        <option value="CODE">Código</option>
+      </select>
+    </label>
+  </div>
+
+  @if (form.type === 'MULTIPLE_CHOICE') {
+    <fieldset>
+      <legend>Opciones</legend>
+      @for (option of form.options; track $index) {
+        <div class="grid">
+          <input
+            type="text"
+            [(ngModel)]="option.text"
+            [ngModelOptions]="{ standalone: true }"
+            [attr.name]="'option-' + $index"
+            placeholder="Texto de la opción"
+          />
+          <label>
+            <input
+              type="checkbox"
+              [(ngModel)]="option.isCorrect"
+              [ngModelOptions]="{ standalone: true }"
+              [attr.name]="'correct-' + $index"
+            />
+            Correcta
+          </label>
+          <button type="button" class="secondary" (click)="removeOption($index)">Quitar</button>
+        </div>
+      }
+      <button type="button" class="secondary" (click)="addOption()">+ Agregar opción</button>
+    </fieldset>
+  } @else {
+    <label>
+      Template de código inicial
+      <textarea [(ngModel)]="form.codeTemplate" name="codeTemplate" rows="4"></textarea>
+    </label>
+
+    <fieldset>
+      <legend>Test cases</legend>
+      <p>
+        <small>
+          El input se escribe en formato JSON: <code>[1,2,3]</code>, <code>"texto"</code>, <code>5</code>.
+          El output esperado se compara como texto plano contra la salida del programa.
+          Los ocultos solo se usan al calificar, nunca se muestran al candidato.
+        </small>
+      </p>
+      @for (testCase of form.testCases; track $index) {
+        <div class="grid">
+          <input
+            type="text"
+            [(ngModel)]="testCase.input"
+            [ngModelOptions]="{ standalone: true }"
+            [attr.name]="'tc-input-' + $index"
+            placeholder="Input (JSON), ej: [1,2,3]"
+          />
+          <input
+            type="text"
+            [(ngModel)]="testCase.expectedOutput"
+            [ngModelOptions]="{ standalone: true }"
+            [attr.name]="'tc-output-' + $index"
+            placeholder="Output esperado"
+          />
+          <label>
+            <input
+              type="checkbox"
+              [(ngModel)]="testCase.hidden"
+              [ngModelOptions]="{ standalone: true }"
+              [attr.name]="'tc-hidden-' + $index"
+            />
+            Oculto
+          </label>
+          <button type="button" class="secondary" (click)="removeTestCase($index)">Quitar</button>
+        </div>
+      }
+      <button type="button" class="secondary" (click)="addTestCase()">+ Agregar test case</button>
+    </fieldset>
+  }
+
+  <label>
+    Explicación de la respuesta correcta (opcional)
+    <textarea
+      [(ngModel)]="form.explanation"
+      name="explanation"
+      rows="2"
+      placeholder="Por qué esta es la respuesta correcta (y las demás no) — se muestra al candidato al finalizar"
+    ></textarea>
+  </label>
+
+  <label>
+    <input
+      type="checkbox"
+      [ngModel]="form.visibility === 'PUBLIC'"
+      (ngModelChange)="form.visibility = $event ? 'PUBLIC' : 'PRIVATE'"
+      name="visibility"
+    />
+    Compartir en el catálogo público (otras organizaciones podrán usarla, de solo lectura)
+  </label>
+
+  <div class="header-actions">
+    <button type="submit" [disabled]="saving">{{ saving ? savingLabel : submitLabel }}</button>
+    @if (showCancel) {
+      <button type="button" class="secondary" (click)="cancel()">Cancelar</button>
+    }
+  </div>
+</form>

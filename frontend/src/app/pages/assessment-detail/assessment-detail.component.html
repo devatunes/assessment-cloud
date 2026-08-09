@@ -1,0 +1,186 @@
+<section>
+  @if (loading) {
+    <p aria-busy="true">Cargando assessment...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+
+  @if (assessment) {
+    <div class="app-header">
+      <hgroup>
+        <h2>{{ assessment.name }}</h2>
+        <p>{{ assessment.description || 'Sin descripción' }}</p>
+      </hgroup>
+      <a routerLink="/assessments">← Volver a assessments</a>
+    </div>
+
+    <p>
+      @if (assessment.visibility === 'PRACTICE') {
+        <span class="badge badge-code">Simulacro (acceso libre)</span>
+      } @else {
+        <span class="badge badge-mc">Oficial (requiere invitación)</span>
+      }
+      @if (assessment.timeLimitMinutes) {
+        <span class="badge badge-easy">{{ assessment.timeLimitMinutes }} min</span>
+      }
+      @if (assessment.levelThresholds?.junior) {
+        <span class="badge badge-level-junior">Junior ≥ {{ assessment.levelThresholds?.junior }}%</span>
+      }
+      @if (assessment.levelThresholds?.semisenior) {
+        <span class="badge badge-level-semisenior">Semisenior ≥ {{ assessment.levelThresholds?.semisenior }}%</span>
+      }
+      @if (assessment.levelThresholds?.senior) {
+        <span class="badge badge-level-senior">Senior ≥ {{ assessment.levelThresholds?.senior }}%</span>
+      }
+    </p>
+
+    @if (assessment.visibility === 'OFFICIAL') {
+      <div class="header-actions">
+        <a role="button" [routerLink]="['/assessments', assessmentId, 'invite']">Invitaciones</a>
+        <a role="button" class="secondary" [routerLink]="['/assessments', assessmentId, 'report']">Reporte</a>
+      </div>
+    }
+
+    <button class="secondary" (click)="toggleEditForm()">
+      {{ showEditForm ? 'Cancelar edición' : 'Editar configuración' }}
+    </button>
+
+    @if (showEditForm) {
+      <article>
+        @if (editError) {
+          <p class="form-error">{{ editError }}</p>
+        }
+        <form (ngSubmit)="saveEdit()">
+          <label>
+            Nombre
+            <input type="text" [(ngModel)]="editForm.name" name="editName" required />
+          </label>
+          <label>
+            Descripción
+            <textarea [(ngModel)]="editForm.description" name="editDescription" rows="2"></textarea>
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              [ngModel]="editForm.visibility === 'PRACTICE'"
+              (ngModelChange)="editForm.visibility = $event ? 'PRACTICE' : 'OFFICIAL'"
+              name="editVisibility"
+            />
+            Simulacro (acceso libre para practicar, en vez de oficial con invitación)
+          </label>
+          <div class="grid">
+            <label>
+              Nivel Junior (score % mínimo)
+              <input type="number" min="0" max="100" [(ngModel)]="editForm.levelJunior" name="editLevelJunior" />
+            </label>
+            <label>
+              Nivel Semisenior (score % mínimo)
+              <input type="number" min="0" max="100" [(ngModel)]="editForm.levelSemisenior" name="editLevelSemisenior" />
+            </label>
+            <label>
+              Nivel Senior (score % mínimo)
+              <input type="number" min="0" max="100" [(ngModel)]="editForm.levelSenior" name="editLevelSenior" />
+            </label>
+          </div>
+          <label>
+            Tiempo límite (minutos, vacío = sin límite)
+            <input type="number" min="1" [(ngModel)]="editForm.timeLimitMinutes" name="editTimeLimit" />
+          </label>
+          <button type="submit" [disabled]="savingEdit">
+            {{ savingEdit ? 'Guardando...' : 'Guardar cambios' }}
+          </button>
+        </form>
+      </article>
+    }
+
+    <div class="app-header">
+      <h3>Preguntas ({{ assessment.questions?.length ?? 0 }})</h3>
+      <button (click)="toggleAddPicker()">
+        {{ showAddPicker ? 'Cancelar' : '+ Agregar preguntas' }}
+      </button>
+    </div>
+
+    @if (showAddPicker) {
+      <article>
+        @if (addError) {
+          <p class="form-error">{{ addError }}</p>
+        }
+        @if (loadingAvailable) {
+          <p aria-busy="true">Cargando preguntas disponibles...</p>
+        }
+        @if (!loadingAvailable && availableQuestions.length === 0) {
+          <p>No hay más preguntas disponibles para agregar.</p>
+        }
+        @if (!loadingAvailable && availableQuestions.length > 0) {
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Título</th>
+                  <th>Categoría</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (question of availableQuestions; track question.id) {
+                  <tr>
+                    <td>
+                      <input
+                        type="checkbox"
+                        [checked]="selectedToAdd.has(question.id)"
+                        (change)="toggleSelected(question.id)"
+                      />
+                    </td>
+                    <td>{{ question.title }}</td>
+                    <td>{{ categoryLabels[question.category] }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <button [disabled]="adding || selectedToAdd.size === 0" (click)="confirmAdd()">
+            {{ adding ? 'Agregando...' : 'Agregar seleccionadas (' + selectedToAdd.size + ')' }}
+          </button>
+        }
+      </article>
+    }
+
+    @if (!assessment.questions || assessment.questions.length === 0) {
+      <p>Este assessment todavía no tiene preguntas.</p>
+    }
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Categoría</th>
+            <th>Etiquetas</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of assessment.questions; track item.questionId) {
+            <tr>
+              <td>{{ item.question.title }}</td>
+              <td>{{ categoryLabels[item.question.category] }}</td>
+              <td>
+                <app-difficulty-badge [difficulty]="item.question.difficulty" [type]="item.question.type" />
+              </td>
+              <td>
+                <button
+                  class="secondary"
+                  (click)="removeQuestion(item.questionId)"
+                  [disabled]="removingQuestionId === item.questionId"
+                >
+                  {{ removingQuestionId === item.questionId ? 'Quitando...' : 'Quitar' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

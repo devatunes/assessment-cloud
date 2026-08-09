@@ -27,4 +27,18 @@ export class AssessmentsService {
   }): Observable<Assessment> {
     return this.http.post<Assessment>(this.baseUrl, payload);
   }
+
+  update(
+    id: string,
+    payload: Partial<{
+      name: string;
+      description: string;
+      questionIds: string[];
+      visibility: AssessmentVisibility;
+      levelThresholds: AssessmentLevelThresholds;
+      timeLimitMinutes: number;
+    }>,
+  ): Observable<Assessment> {
+    return this.http.put<Assessment>(`${this.baseUrl}/${id}`, payload);
+  }
 }

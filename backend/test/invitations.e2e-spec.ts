@@ -360,4 +360,52 @@ describe('Invitations (e2e)', () => {
     expect(updateRes.body.track).toBe('QA');
     expect(updateRes.body.specialty).toBe('Automation');
   });
+
+  it('importación masiva: crea las filas válidas y reporta las inválidas sin abortar el resto', async () => {
+    const auth = `Bearer ${orgToken}`;
+
+    const questionRes = await request(httpServer)
+      .post('/questions')
+      .set('Authorization', auth)
+      .send({
+        title: 'Pregunta bulk',
+        statement: 'x',
+        category: 'BACKEND',
+        difficulty: 'EASY',
+        type: 'MULTIPLE_CHOICE',
+        options: [
+          { text: 'a', isCorrect: true },
+          { text: 'b', isCorrect: false },
+        ],
+      })
+      .expect(201);
+
+    const assessmentRes = await request(httpServer)
+      .post('/assessments')
+      .set('Authorization', auth)
+      .send({ name: 'Assessment bulk', questionIds: [questionRes.body.id] })
+      .expect(201);
+
+    const bulkRes = await request(httpServer)
+      .post(`/assessments/${assessmentRes.body.id}/invitations/bulk`)
+      .set('Authorization', auth)
+      .send({
+        invitations: [
+          { candidateName: 'Uno', candidateEmail: 'uno@example.com', track: 'DEVELOPER', specialty: 'Backend' },
+          { candidateName: 'Dos', candidateEmail: 'dos@example.com', track: 'QA' },
+          { candidateName: 'Inválido', candidateEmail: 'no-es-un-correo' },
+        ],
+      })
+      .expect(201);
+
+    expect(bulkRes.body.created).toHaveLength(2);
+    expect(bulkRes.body.failed).toHaveLength(1);
+    expect(bulkRes.body.failed[0].row).toBe(3);
+
+    const listRes = await request(httpServer)
+      .get(`/assessments/${assessmentRes.body.id}/invitations`)
+      .set('Authorization', auth)
+      .expect(200);
+    expect(listRes.body).toHaveLength(2);
+  });
 });

@@ -143,12 +143,35 @@ export interface Invitation {
   createdAt: string;
 }
 
+// Fila cruda parseada de un CSV (ver assessment-invite). El formato es más
+// laxo que al crear una invitación individual: el email se valida recién en
+// el servidor, fila por fila, para no tumbar todo el lote por un error de
+// tipeo en una sola fila.
+export interface BulkInvitationRow {
+  candidateName?: string;
+  candidateEmail?: string;
+  track?: InvitationTrack;
+  specialty?: string;
+}
+
+export interface BulkInvitationFailure {
+  row: number;
+  email?: string;
+  error: string;
+}
+
+export interface BulkInvitationResult {
+  created: Invitation[];
+  failed: BulkInvitationFailure[];
+}
+
 export interface InvitationPublicView {
   status: InvitationStatus;
   assessmentId: string;
   assessmentName: string;
   assessmentDescription: string | null;
   candidateName: string | null;
+  candidateEmail: string | null;
   attemptId: string | null;
 }
 

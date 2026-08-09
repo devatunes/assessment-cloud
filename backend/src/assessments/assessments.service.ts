@@ -6,6 +6,7 @@ import { AssessmentQuestion } from './entities/assessment-question.entity';
 import { Question } from '../questions/entities/question.entity';
 import { ContentVisibility } from '../question-banks/entities/question-bank.entity';
 import { CreateAssessmentDto } from './dto/create-assessment.dto';
+import { UpdateAssessmentDto } from './dto/update-assessment.dto';
 
 @Injectable()
 export class AssessmentsService {
@@ -14,6 +15,8 @@ export class AssessmentsService {
     private readonly assessmentRepository: Repository<Assessment>,
     @InjectRepository(Question)
     private readonly questionRepository: Repository<Question>,
+    @InjectRepository(AssessmentQuestion)
+    private readonly assessmentQuestionRepository: Repository<AssessmentQuestion>,
   ) {}
 
   findAll(organizationId: string): Promise<Assessment[]> {
@@ -38,24 +41,7 @@ export class AssessmentsService {
   }
 
   async create(organizationId: string, dto: CreateAssessmentDto): Promise<Assessment> {
-    // Filtro por organization_id O visibility=PUBLIC: un assessment puede
-    // usar preguntas propias o públicas de otra organización (de solo
-    // lectura), pero NUNCA una pregunta privada ajena (fuga cross-tenant ya
-    // identificada en revisión).
-    const foundQuestions = await this.questionRepository
-      .createQueryBuilder('question')
-      .where('question.id IN (:...ids)', { ids: dto.questionIds })
-      .andWhere('(question.organization_id = :organizationId OR question.visibility = :public)', {
-        organizationId,
-        public: ContentVisibility.PUBLIC,
-      })
-      .getMany();
-
-    if (foundQuestions.length !== dto.questionIds.length) {
-      throw new BadRequestException(
-        'Una o más preguntas seleccionadas no existen en la biblioteca',
-      );
-    }
+    await this.assertQuestionsUsable(organizationId, dto.questionIds);
 
     const assessment = this.assessmentRepository.create({
       organizationId,
@@ -72,5 +58,57 @@ export class AssessmentsService {
     const saved = await this.assessmentRepository.save(assessment);
 
     return this.findOne(organizationId, saved.id);
+  }
+
+  async update(organizationId: string, id: string, dto: UpdateAssessmentDto): Promise<Assessment> {
+    // findOne ya scopea por organizationId (los assessments, a diferencia de
+    // preguntas/bancos, no tienen un concepto de "público" cross-org): si no
+    // es de esta organización, simplemente no se encuentra.
+    const assessment = await this.findOne(organizationId, id);
+
+    Object.assign(assessment, {
+      name: dto.name ?? assessment.name,
+      description: dto.description ?? assessment.description,
+      visibility: dto.visibility ?? assessment.visibility,
+      levelThresholds: dto.levelThresholds ?? assessment.levelThresholds,
+      timeLimitMinutes: dto.timeLimitMinutes ?? assessment.timeLimitMinutes,
+    });
+
+    if (dto.questionIds) {
+      await this.assertQuestionsUsable(organizationId, dto.questionIds);
+
+      // Igual que QuestionsService.update() con las opciones: borrar-y-recrear
+      // explícito. assessment_id es parte de la PK compuesta de
+      // assessment_question (no puede quedar NULL), así que el
+      // orphanedRowAction del cascade no sirve aquí.
+      await this.assessmentQuestionRepository.delete({ assessmentId: id });
+      assessment.questions = dto.questionIds.map((questionId, position) =>
+        Object.assign(new AssessmentQuestion(), { questionId, position }),
+      );
+    }
+
+    await this.assessmentRepository.save(assessment);
+
+    return this.findOne(organizationId, id);
+  }
+
+  // Un assessment puede usar preguntas propias o públicas de otra
+  // organización (de solo lectura), pero NUNCA una pregunta privada ajena
+  // (fuga cross-tenant ya identificada en revisión).
+  private async assertQuestionsUsable(organizationId: string, questionIds: string[]): Promise<void> {
+    const foundQuestions = await this.questionRepository
+      .createQueryBuilder('question')
+      .where('question.id IN (:...ids)', { ids: questionIds })
+      .andWhere('(question.organization_id = :organizationId OR question.visibility = :public)', {
+        organizationId,
+        public: ContentVisibility.PUBLIC,
+      })
+      .getMany();
+
+    if (foundQuestions.length !== questionIds.length) {
+      throw new BadRequestException(
+        'Una o más preguntas seleccionadas no existen en la biblioteca',
+      );
+    }
   }
 }

@@ -7,139 +7,11 @@
   @if (showCreateForm) {
     <article>
       <h3>Nueva pregunta</h3>
-      @if (createError) {
-        <p class="form-error">{{ createError }}</p>
-      }
-      <form (ngSubmit)="submitNewQuestion()">
-        <label>
-          Título
-          <input type="text" [(ngModel)]="newQuestion.title" name="title" required />
-        </label>
-        <label>
-          Enunciado
-          <textarea [(ngModel)]="newQuestion.statement" name="statement" required rows="2"></textarea>
-        </label>
-        <div class="grid">
-          <label>
-            Categoría
-            <select [(ngModel)]="newQuestion.category" name="category">
-              @for (cat of categories; track cat) {
-                <option [value]="cat">{{ categoryLabels[cat] }}</option>
-              }
-            </select>
-          </label>
-          <label>
-            Dificultad
-            <select [(ngModel)]="newQuestion.difficulty" name="difficulty">
-              <option value="EASY">EASY</option>
-              <option value="MEDIUM">MEDIUM</option>
-              <option value="HARD">HARD</option>
-            </select>
-          </label>
-          <label>
-            Tipo
-            <select [(ngModel)]="newQuestion.type" name="type">
-              <option value="MULTIPLE_CHOICE">Selección múltiple</option>
-              <option value="CODE">Código</option>
-            </select>
-          </label>
-        </div>
-
-        @if (newQuestion.type === 'MULTIPLE_CHOICE') {
-          <fieldset>
-            <legend>Opciones</legend>
-            @for (option of newQuestion.options; track $index) {
-              <div class="grid">
-                <input
-                  type="text"
-                  [(ngModel)]="option.text"
-                  [ngModelOptions]="{ standalone: true }"
-                  [attr.name]="'option-' + $index"
-                  placeholder="Texto de la opción"
-                />
-                <label>
-                  <input
-                    type="checkbox"
-                    [(ngModel)]="option.isCorrect"
-                    [ngModelOptions]="{ standalone: true }"
-                    [attr.name]="'correct-' + $index"
-                  />
-                  Correcta
-                </label>
-                <button type="button" class="secondary" (click)="removeOption($index)">Quitar</button>
-              </div>
-            }
-            <button type="button" class="secondary" (click)="addOption()">+ Agregar opción</button>
-          </fieldset>
-        } @else {
-          <label>
-            Template de código inicial
-            <textarea [(ngModel)]="newQuestion.codeTemplate" name="codeTemplate" rows="4"></textarea>
-          </label>
-
-          <fieldset>
-            <legend>Test cases</legend>
-            <p>
-              <small>
-                El input se escribe en formato JSON: <code>[1,2,3]</code>, <code>"texto"</code>, <code>5</code>.
-                El output esperado se compara como texto plano contra la salida del programa.
-                Los ocultos solo se usan al calificar, nunca se muestran al candidato.
-              </small>
-            </p>
-            @for (testCase of newQuestion.testCases; track $index) {
-              <div class="grid">
-                <input
-                  type="text"
-                  [(ngModel)]="testCase.input"
-                  [ngModelOptions]="{ standalone: true }"
-                  [attr.name]="'tc-input-' + $index"
-                  placeholder="Input (JSON), ej: [1,2,3]"
-                />
-                <input
-                  type="text"
-                  [(ngModel)]="testCase.expectedOutput"
-                  [ngModelOptions]="{ standalone: true }"
-                  [attr.name]="'tc-output-' + $index"
-                  placeholder="Output esperado"
-                />
-                <label>
-                  <input
-                    type="checkbox"
-                    [(ngModel)]="testCase.hidden"
-                    [ngModelOptions]="{ standalone: true }"
-                    [attr.name]="'tc-hidden-' + $index"
-                  />
-                  Oculto
-                </label>
-                <button type="button" class="secondary" (click)="removeTestCase($index)">Quitar</button>
-              </div>
-            }
-            <button type="button" class="secondary" (click)="addTestCase()">+ Agregar test case</button>
-          </fieldset>
-        }
-
-        <label>
-          Explicación de la respuesta correcta (opcional)
-          <textarea
-            [(ngModel)]="newQuestion.explanation"
-            name="explanation"
-            rows="2"
-            placeholder="Por qué esta es la respuesta correcta (y las demás no) — se muestra al candidato al finalizar"
-          ></textarea>
-        </label>
-
-        <label>
-          <input
-            type="checkbox"
-            [ngModel]="newQuestion.visibility === 'PUBLIC'"
-            (ngModelChange)="newQuestion.visibility = $event ? 'PUBLIC' : 'PRIVATE'"
-            name="visibility"
-          />
-          Compartir en el catálogo público (otras organizaciones podrán usarla, de solo lectura)
-        </label>
-
-        <button type="submit" [disabled]="creating">{{ creating ? 'Guardando...' : 'Guardar pregunta' }}</button>
-      </form>
+      <app-question-form
+        [saving]="creating"
+        [serverError]="createError"
+        (save)="createQuestion($event)"
+      />
     </article>
   }
 
@@ -200,7 +72,7 @@
       <tbody>
         @for (question of questions; track question.id) {
           <tr>
-            <td>{{ question.title }}</td>
+            <td><a [routerLink]="['/questions', question.id]">{{ question.title }}</a></td>
             <td>{{ categoryLabels[question.category] }}</td>
             <td>
               <app-difficulty-badge [difficulty]="question.difficulty" [type]="question.type" />

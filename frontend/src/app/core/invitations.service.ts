@@ -2,7 +2,14 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AttemptWithQuestions, Invitation, InvitationPublicView, InvitationTrack } from './models';
+import {
+  AttemptWithQuestions,
+  BulkInvitationResult,
+  BulkInvitationRow,
+  Invitation,
+  InvitationPublicView,
+  InvitationTrack,
+} from './models';
 
 @Injectable({ providedIn: 'root' })
 export class InvitationsService {
@@ -29,6 +36,16 @@ export class InvitationsService {
 
   listForAssessment(assessmentId: string): Observable<Invitation[]> {
     return this.http.get<Invitation[]>(`${this.apiUrl}/assessments/${assessmentId}/invitations`);
+  }
+
+  // Importación masiva desde un CSV parseado en el navegador (ver
+  // assessment-invite.component). Una fila mal formada no revierte el lote:
+  // el resultado trae por separado lo creado y lo fallido.
+  createBulk(assessmentId: string, rows: BulkInvitationRow[]): Observable<BulkInvitationResult> {
+    return this.http.post<BulkInvitationResult>(
+      `${this.apiUrl}/assessments/${assessmentId}/invitations/bulk`,
+      { invitations: rows },
+    );
   }
 
   // El track/especialidad se puede reasignar después de generada la invitación.

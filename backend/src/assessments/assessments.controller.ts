@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AssessmentsService } from './assessments.service';
 import { CreateAssessmentDto } from './dto/create-assessment.dto';
+import { UpdateAssessmentDto } from './dto/update-assessment.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -30,5 +31,15 @@ export class AssessmentsController {
   @ApiOperation({ summary: 'Crea un assessment a partir de preguntas de la biblioteca' })
   create(@Body() dto: CreateAssessmentDto, @CurrentUser() user: AuthenticatedUser) {
     return this.assessmentsService.create(user.organizationId, dto);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Actualiza un assessment existente (config y/o preguntas)' })
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateAssessmentDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.assessmentsService.update(user.organizationId, id, dto);
   }
 }

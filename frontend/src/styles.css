@@ -450,6 +450,35 @@ table tbody tr:hover {
   font-size: 0.85rem;
 }
 
+/* --- Modal de confirmación --- */
+
+.confirm-modal {
+  max-width: 420px;
+  width: 100%;
+  margin: 0;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.28);
+}
+
+.confirm-modal-dangerous {
+  border-color: #dc2626;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.confirm-btn-dangerous {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.confirm-btn-dangerous:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
 /* --- Editor de código / resultados de test cases --- */
 
 .test-case-result {
