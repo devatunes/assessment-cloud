@@ -1,24 +1,75 @@
 # Assessment Cloud
 
-MVP de una plataforma de evaluaciones técnicas (tipo HackerRank): un reclutador arma un
-assessment seleccionando preguntas de una biblioteca (opción múltiple o código), y un
-candidato lo resuelve desde una interfaz web, incluyendo un editor con ejecución real de
-código JavaScript y resultado Pass/Fail por caso de prueba.
+Plataforma de evaluaciones técnicas (tipo HackerRank): organizaciones que reclutan crean
+bancos de preguntas y assessments, invitan candidatos por link, y ven reportes con
+gráficas de los resultados. En paralelo, cualquier persona puede registrarse como
+candidato y practicar gratis en un catálogo público de simulacros, ganando insignias y
+viendo en qué nivel (Junior/Semisenior/Senior) queda según su puntaje.
 
 - **Código de la app** (backend + frontend + executor): este repositorio.
 - **Infraestructura como código**: [`app-iac`](../app-iac) (Terraform), módulos
   `modules/*/assessment`.
+- **Desplegado en AWS**: `https://dkdbmj2vpxalx.cloudfront.net`.
+
+## Dos sistemas de cuentas, completamente separados
+
+- **Staff de organización** (`Admin` / `Reclutador`): se registra creando una
+  organización nueva, invita compañeros de equipo, crea preguntas/bancos/assessments,
+  genera invitaciones y ve reportes. JWT con `audience: assessment-cloud-org`.
+- **Candidatos**: se registran solos, sin invitación, para practicar. Ven el catálogo
+  público de simulacros, su historial y sus insignias. JWT con
+  `audience: assessment-cloud-candidates` — un token de un sistema nunca es válido en
+  el otro, aunque compartan el mismo `JWT_SECRET`.
+- **Candidatos de assessments oficiales** (vía invitación) siguen siendo **anónimos**,
+  como en la kata original: no necesitan cuenta, solo el link con token.
 
 ## Funcionalidades
 
-- 📚 **Biblioteca de preguntas** — categoría, dificultad, tipo (opción múltiple / código), CRUD y filtros.
-- 📝 **Crear assessment** — selección de preguntas de la biblioteca, con orden.
+### Biblioteca y evaluaciones
+- 📚 **Biblioteca de preguntas** — categoría (cerrada: Backend/Frontend/Fullstack/
+  DevOps/QA/Data/Mobile/Otro), dificultad, tipo (opción múltiple / código), explicación
+  de la respuesta correcta (se muestra al candidato al finalizar).
+- 🌐 **Contenido público/privado** — cada pregunta y banco puede compartirse al catálogo
+  público (otras organizaciones lo usan de solo lectura) o quedar privado; "Copiar a mi
+  biblioteca" es la única forma de editar contenido ajeno.
+- 🗂️ **Bancos de preguntas** — agrupa preguntas reutilizables; al crear un assessment se
+  puede importar un banco completo de una vez.
+- 📝 **Crear assessment** — selección de preguntas, tipo **Oficial** (requiere
+  invitación) o **Simulacro** (público, sin invitación), tiempo límite opcional
+  (cuenta regresiva en el wizard, cortado también del lado del servidor), y umbrales de
+  nivel (% de score para Junior/Semisenior/Senior).
 - 👨‍💻 **Resolver assessment** — wizard pregunta a pregunta: radios para opción múltiple,
   editor de código (CodeMirror) para las de tipo código.
-- ▶️ **Ejecutar código** — botón "Ejecutar" corre el código del candidato contra los test
-  cases visibles y muestra input / esperado / obtenido / Pass-Fail por caso.
-- 🏆 **Resultado** — al finalizar, scoring autoritativo en el servidor (las preguntas de
-  código se re-ejecutan contra *todos* los test cases, incluidos los ocultos).
+- ▶️ **Ejecutar código** — botón "Ejecutar" corre el código contra los test cases
+  visibles; al finalizar se re-ejecuta contra *todos*, incluidos los ocultos.
+- 🏆 **Resultado** — score, nivel alcanzado, explicación por pregunta, y una encuesta
+  breve y opcional de satisfacción con la plataforma.
+
+### Candidatos y simulacros
+- 🆓 **Catálogo público de simulacros** — cualquier candidato registrado los practica sin
+  invitación; los resultados son privados y nunca aparecen en el reporte de una
+  organización.
+- 🔁 **Reintentos** — a diferencia de las invitaciones oficiales, un simulacro se puede
+  volver a intentar cuantas veces se quiera.
+- 🏅 **Insignias** — primer simulacro completado, rachas de 5/10 simulacros, puntaje
+  perfecto, y una por cada nivel alcanzado. Se otorgan una sola vez por candidato y se
+  muestran con un aviso al finalizar, además de una colección en "Mi historial".
+- 📜 **Historial** — todos los intentos de práctica con su score, nivel y fecha.
+
+### Organización
+- 👥 **Roles** — Admin (invita usuarios, ve todo) y Reclutador. Invitar a un compañero
+  genera un link de activación para copiar/enviar (sin envío de email real).
+- ✉️ **Invitaciones a candidatos oficiales** — link con token único, sin cuenta
+  requerida; retoma el mismo intento si se reabre a mitad o después de completado.
+- 📊 **Reportes** — por assessment: candidatos invitados/completados, tasa de
+  completitud, score promedio, distribución de niveles, tasa de acierto por pregunta
+  (para detectar preguntas mal calibradas), y export a CSV. Vista general: todos los
+  assessments oficiales comparados entre sí, agrupados por categoría de pregunta.
+- 🌓 **Modo claro/oscuro** en toda la app.
+- 🧭 **Tour guiado** — un recorrido breve la primera vez que se entra, distinto para
+  staff de organización y para candidatos.
+
+### Plataforma
 - 📄 **Swagger** — documentación interactiva de la API en `/docs`.
 - 🐳 **Docker** — `docker compose up --build` levanta Postgres + backend + frontend
   dockerizados de punta a punta (o solo `docker compose up -d db` para desarrollar con
@@ -41,6 +92,11 @@ flowchart TB
     Browser --> CF
     Browser --> APIGW
 ```
+
+La Lambda del backend es un único NestJS que expone, entre otros, estos módulos:
+`auth` (staff de organización), `candidate-auth` + `practice` (candidatos y
+simulacros, JWT con audience propia), `question-banks`, `badges`, `reports`,
+`invitations` — todo en el mismo proceso, sin infraestructura nueva por módulo.
 
 **Secuencia de "Ejecutar código":**
 
@@ -70,15 +126,23 @@ sequenceDiagram
 - **Executor en una Lambda separada, sin permisos.** El código del candidato corre en
   `child_process.spawnSync` con `env: {}`, timeout de 5s por caso y `maxBuffer` de 1MB.
   El rol IAM de esa Lambda solo tiene `AWSLambdaBasicExecutionRole` (logs): aunque el
-  código escapara del sandbox de Node, no hay nada que pueda tocar en AWS. Evolución
-  natural: contenedores efímeros tipo Firecracker/gVisor si se necesita soportar más
-  lenguajes o cargas más pesadas.
+  código escapara del sandbox de Node, no hay nada que pueda tocar en AWS.
+- **Dos audiences de JWT, un solo secreto.** Lo que aísla al staff de organización de
+  los candidatos es el claim `aud`, verificado por dos estrategias Passport distintas
+  (`jwt-org` / `jwt-candidate`) — no hace falta un secreto por sistema, pero sí que cada
+  guard valide su propia audience.
+- **Multi-tenant por `organizationId` explícito en cada query**, no solo por guard.
+  Contenido público/privado es una dimensión ortogonal: la propiedad (`organizationId`)
+  sigue gateando todas las mutaciones; `visibility` solo gatea lecturas cross-tenant.
+  Cubierto con un test e2e de regresión permanente.
+- **La práctica libre nunca se reporta a una organización.** Estructural, no un filtro
+  post-hoc: los intentos de simulacro tienen `candidateId` (nunca `organizationId` de
+  quien lo completó), y el endpoint de reporte de una organización rechaza con 400 si
+  el assessment es de tipo `PRACTICE`.
 - **RDS siempre encendida, sin apagado automático por inactividad.** A diferencia de
-  `contably` (que sí tiene ese patrón), esta app es de uso puntual — no vale la pena la
-  complejidad del scheduler para un recurso que se va a destruir en pocos días.
+  `contably` (que sí tiene ese patrón), esta app es de uso puntual.
 - **Solo JavaScript en el editor de código**, no Java. Simplifica drásticamente el
-  executor (sin JVM, sin cold starts de varios segundos) manteniendo el requisito
-  funcional del reto (ejecutar código, ver output, Pass/Fail).
+  executor manteniendo el requisito funcional del reto.
 
 ## Estructura del repo
 
@@ -88,6 +152,20 @@ assessment-cloud/
   package.json             # scripts de dev y deploy
   deploy-backend.sh / deploy-frontend.sh / deploy-executor.sh
   backend/                 # NestJS (API REST + Swagger) + Dockerfile
+    src/
+      auth/                # staff de organización (JWT audience "org")
+      candidate-auth/      # candidatos (JWT audience "candidates")
+      candidates/          # entidad + servicio de Candidate
+      practice/            # catálogo de simulacros, iniciar, historial, insignias
+      badges/              # catálogo de insignias + otorgamiento
+      questions/           # biblioteca de preguntas
+      question-banks/      # bancos reutilizables
+      assessments/         # crear/listar assessments + cómputo de nivel
+      attempts/            # resolver un intento, scoring, feedback
+      invitations/         # invitaciones a candidatos oficiales (anónimas)
+      reports/             # reporte por assessment + overview de organización
+      users/ organizations/# staff y organizaciones
+      migrations/          # migraciones SQL crudas, numeradas
   frontend/                # Angular 18 standalone + Dockerfile (nginx)
   executor/                # Lambda JS plano (runner.js + index.js)
 ```
@@ -104,9 +182,7 @@ docker compose up --build
 # Backend:  http://localhost:3000  (Swagger en /docs)
 ```
 
-Migraciones + seed corren solas al arrancar el contenedor del backend. El frontend se
-sirve con nginx y ya apunta a `http://localhost:3000` (publicado por el contenedor del
-backend), igual que en desarrollo sin Docker.
+Migraciones + seed corren solas al arrancar el contenedor del backend.
 
 ### Opción B — hot-reload para desarrollar
 
@@ -126,8 +202,10 @@ npm install
 npm start
 ```
 
-El seed inicial crea 8 preguntas (5 de opción múltiple, 3 de código) y un assessment de
-ejemplo ("Assessment de ejemplo — Fundamentos") listo para probar el flujo completo.
+El seed inicial crea preguntas de ejemplo bajo una "Organización por defecto". Para
+entrar a verla, configura `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` en `backend/.env`
+antes del primer arranque — si no, simplemente regístrate desde `/register` o
+`/candidato/registro` para crear tu propia cuenta.
 
 ## Tests
 
@@ -135,23 +213,26 @@ ejemplo ("Assessment de ejemplo — Fundamentos") listo para probar el flujo com
 # Runner del executor (4 casos: correcto, incorrecto, timeout, error de sintaxis)
 npm run test:executor
 
-# Unit tests del backend (scoring de attempts, dispatch local/lambda del executor,
-# validación de assessments) — no requieren base de datos
+# Unit tests del backend — no requieren base de datos
 npm run test:backend
 
-# E2E de flujo completo (biblioteca -> assessment -> intento -> resolver -> finalizar)
-# contra un Postgres real. Requiere `docker compose up -d db` corriendo primero;
-# usa su propia base "assessment_test", no toca los datos de desarrollo.
+# E2E de flujo completo contra un Postgres real (biblioteca -> assessment ->
+# invitación -> candidato anónimo lo resuelve; registro/login de organización y
+# de candidatos; catálogo de simulacros, insignias, historial; reportes con
+# gráficas y su CSV; multi-tenant y aislamiento entre los dos sistemas de JWT).
+# Requiere `docker compose up -d db` corriendo primero; usa su propia base
+# "assessment_test", no toca los datos de desarrollo.
 npm run test:backend:e2e
 
 # Los tres juntos
 npm test
 ```
 
-El e2e cubre explícitamente los bugs corregidos en revisión de código: input real en
-test cases (antes lo rechazaba el ValidationPipe), tope de 20 test cases por pregunta,
-opciones huérfanas al editar una pregunta, y el guard de `/attempts/:id/result` que
-impide finalizar un intento por navegación accidental a la URL.
+El e2e cubre, entre otras cosas: fuga cross-tenant entre organizaciones (regresión
+permanente), invitaciones oficiales de punta a punta (generar → aterrizar → retomar →
+completar), simulacros con insignias otorgadas correctamente en rachas y sin
+duplicarse, aislamiento de guards entre el JWT de organización y el de candidatos, y
+reportes bloqueando estructuralmente la práctica libre.
 
 ## Desplegar en AWS
 
@@ -162,8 +243,9 @@ Requisitos: AWS CLI configurado, Terraform, acceso al repo `app-iac`.
 cd backend && npm run package:lambda && cd ..
 cd executor && npm run package && cd ..
 
-# 2. Crear la infraestructura (RDS, Lambdas, API Gateway, S3, CloudFront)
-npm run deploy:iac        # terraform apply, solo los módulos de assessment
+# 2. Crear/actualizar la infraestructura (RDS, Lambdas, API Gateway, S3, CloudFront,
+#    secreto JWT generado por Terraform)
+npm run deploy:iac
 
 # 3. Desplegar código de las tres piezas
 npm run deploy:back       # actualiza la Lambda del backend
@@ -171,16 +253,24 @@ npm run deploy:executor   # actualiza la Lambda executor
 npm run deploy:front      # build Angular apuntando a la API real + sync a S3 + invalidación CloudFront
 ```
 
-Los outputs de Terraform (`assessment_api_url`, `assessment_cloudfront_domain_name`, etc.)
-quedan disponibles con `terraform output` desde `app-iac/`.
+`deploy-frontend.sh` genera `frontend/src/environments/environment.prod.ts` a partir
+del output real de Terraform antes de compilar (y lo restaura después) — así el build
+de producción (`ng build`, que usa `fileReplacements` en `angular.json`) siempre apunta
+a la API desplegada, sin tocar el `environment.ts` que usa el desarrollo local.
+
+Los outputs de Terraform (`assessment_api_url`, `assessment_cloudfront_domain_name`,
+`jwt_secret`, etc.) quedan disponibles con `terraform output` desde `app-iac/`.
 
 ## Qué haría con más tiempo
 
-- Autenticación para el rol reclutador (hoy los endpoints de administración están abiertos).
-- Soporte de Java en el executor (contenedor con JDK en vez de Lambda + `spawnSync`).
 - Sandbox más fuerte para el executor (vm2/isolated-vm o contenedores efímeros): hoy
-  `spawnSync` con `env: {}` y timeout es una mitigación razonable para una kata, pero no
-  aísla filesystem/red del proceso.
-- Tests unitarios del frontend (hoy la cobertura automatizada es solo backend + e2e).
+  `spawnSync` con `env: {}` y timeout es razonable, pero no aísla filesystem/red.
+- Soporte de otros lenguajes en el executor (Java, Python), no solo JavaScript.
+- Tests unitarios/e2e del frontend con un runner propio (hoy la verificación de UI se
+  hizo con Playwright ad-hoc durante el desarrollo, no como suite corrible en CI).
 - Mover la Lambda del backend a la VPC (Interface Endpoints) para cerrar por completo el
   acceso público a RDS.
+- Notificaciones por email reales (invitaciones y activación de cuenta hoy generan un
+  link para copiar/enviar manualmente, sin AWS SES).
+- Catálogo de insignias configurable desde el admin (hoy es un catálogo fijo en código,
+  deliberadamente simple para el alcance actual).

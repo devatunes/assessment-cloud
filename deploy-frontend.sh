@@ -7,7 +7,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONTEND_DIR="$SCRIPT_DIR/frontend"
 IAC_DIR="$(cd "$SCRIPT_DIR/../app-iac" && pwd)"
-ENV_FILE="$FRONTEND_DIR/src/environments/environment.ts"
+# environment.prod.ts (no environment.ts): el build de producción lo toma vía
+# fileReplacements en angular.json, así ng serve/test locales nunca se ven
+# afectados por este script.
+ENV_FILE="$FRONTEND_DIR/src/environments/environment.prod.ts"
 
 # ── colores ──────────────────────────────────────────────────────────────────
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
