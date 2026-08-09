@@ -4,6 +4,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -63,6 +64,14 @@ export class CreateAssessmentDto {
   @ValidateNested()
   @Type(() => LevelThresholdsDto)
   levelThresholds?: LevelThresholdsDto;
+
+  @ApiPropertyOptional({
+    description: 'Duración total del examen en minutos desde que el candidato inicia. Sin límite si se omite.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  timeLimitMinutes?: number;
 
   @ApiProperty({
     type: [String],

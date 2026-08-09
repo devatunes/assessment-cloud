@@ -108,7 +108,7 @@ describe('Assessment Cloud (e2e)', () => {
       .send({
         title: 'Demasiados casos',
         statement: 'x',
-        category: 'javascript',
+        category: 'FULLSTACK',
         difficulty: 'EASY',
         type: 'CODE',
         codeTemplate: 'function solution(n){return n;}',
@@ -125,7 +125,7 @@ describe('Assessment Cloud (e2e)', () => {
       .send({
         title: '¿2 + 2?',
         statement: 'Selecciona la respuesta correcta',
-        category: 'matemáticas',
+        category: 'BACKEND',
         difficulty: 'EASY',
         type: 'MULTIPLE_CHOICE',
         options: [
@@ -144,7 +144,7 @@ describe('Assessment Cloud (e2e)', () => {
       .send({
         title: 'Duplicar',
         statement: 'solution(n) retorna el doble de n',
-        category: 'javascript',
+        category: 'FULLSTACK',
         difficulty: 'EASY',
         type: 'CODE',
         codeTemplate: 'function solution(n) {\n  // tu código\n}\n',
@@ -289,7 +289,7 @@ describe('Assessment Cloud (e2e)', () => {
       .send({
         title: 'Pregunta privada de Org A',
         statement: 'x',
-        category: 'javascript',
+        category: 'FULLSTACK',
         difficulty: 'EASY',
         type: 'MULTIPLE_CHOICE',
         options: [

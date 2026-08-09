@@ -64,4 +64,12 @@ export class QuestionsController {
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.questionsService.remove(user.organizationId, id);
   }
+
+  @Post(':id/duplicate')
+  @ApiOperation({
+    summary: 'Copia una pregunta pública a tu biblioteca privada para poder editarla',
+  })
+  duplicate(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.questionsService.duplicate(user.organizationId, id);
+  }
 }

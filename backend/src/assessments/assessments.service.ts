@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Assessment } from './entities/assessment.entity';
 import { AssessmentQuestion } from './entities/assessment-question.entity';
 import { Question } from '../questions/entities/question.entity';
+import { ContentVisibility } from '../question-banks/entities/question-bank.entity';
 import { CreateAssessmentDto } from './dto/create-assessment.dto';
 
 @Injectable()
@@ -37,13 +38,17 @@ export class AssessmentsService {
   }
 
   async create(organizationId: string, dto: CreateAssessmentDto): Promise<Assessment> {
-    // Filtro por organization_id: sin esto, un reclutador podría anexar a su
-    // assessment el id de una pregunta de OTRA organización si lo adivina o
-    // lo obtiene de otro lado (fuga cross-tenant ya identificada en revisión).
+    // Filtro por organization_id O visibility=PUBLIC: un assessment puede
+    // usar preguntas propias o públicas de otra organización (de solo
+    // lectura), pero NUNCA una pregunta privada ajena (fuga cross-tenant ya
+    // identificada en revisión).
     const foundQuestions = await this.questionRepository
       .createQueryBuilder('question')
       .where('question.id IN (:...ids)', { ids: dto.questionIds })
-      .andWhere('question.organization_id = :organizationId', { organizationId })
+      .andWhere('(question.organization_id = :organizationId OR question.visibility = :public)', {
+        organizationId,
+        public: ContentVisibility.PUBLIC,
+      })
       .getMany();
 
     if (foundQuestions.length !== dto.questionIds.length) {
@@ -58,6 +63,7 @@ export class AssessmentsService {
       description: dto.description ?? null,
       visibility: dto.visibility,
       levelThresholds: dto.levelThresholds ?? null,
+      timeLimitMinutes: dto.timeLimitMinutes ?? null,
       questions: dto.questionIds.map((questionId, position) =>
         Object.assign(new AssessmentQuestion(), { questionId, position }),
       ),
