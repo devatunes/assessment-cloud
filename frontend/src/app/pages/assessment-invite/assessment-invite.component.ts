@@ -4,7 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AssessmentsService } from '../../core/assessments.service';
 import { InvitationsService } from '../../core/invitations.service';
-import { Assessment, INVITATION_TRACK_LABELS, Invitation, InvitationTrack } from '../../core/models';
+import {
+  Assessment,
+  BulkInvitationResult,
+  BulkInvitationRow,
+  INVITATION_TRACK_LABELS,
+  Invitation,
+  InvitationTrack,
+} from '../../core/models';
 
 @Component({
   selector: 'app-assessment-invite',
@@ -39,6 +46,13 @@ export class AssessmentInviteComponent implements OnInit {
   editTrack: InvitationTrack | '' = '';
   editSpecialty = '';
   savingEdit = false;
+
+  // Importación masiva por CSV: encabezado esperado "nombre,email,track,especialidad"
+  // (track y especialidad opcionales; track debe ser DEVELOPER/QA/OTHER o se ignora).
+  csvRows: BulkInvitationRow[] = [];
+  csvError: string | null = null;
+  csvResult: BulkInvitationResult | null = null;
+  importingCsv = false;
 
   private assessmentId = '';
 
@@ -142,5 +156,82 @@ export class AssessmentInviteComponent implements OnInit {
           this.error = 'No se pudo actualizar la clasificación';
         },
       });
+  }
+
+  onCsvSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // permite volver a elegir el mismo archivo después
+
+    if (!file) return;
+
+    this.csvResult = null;
+    const reader = new FileReader();
+    reader.onload = () => this.parseCsv(String(reader.result ?? ''));
+    reader.readAsText(file);
+  }
+
+  importCsv(): void {
+    if (this.csvRows.length === 0) return;
+
+    this.importingCsv = true;
+    this.csvError = null;
+
+    this.invitationsService.createBulk(this.assessmentId, this.csvRows).subscribe({
+      next: (result) => {
+        this.importingCsv = false;
+        this.csvResult = result;
+        this.csvRows = [];
+        this.loadInvitations();
+      },
+      error: () => {
+        this.importingCsv = false;
+        this.csvError = 'No se pudo importar el archivo';
+      },
+    });
+  }
+
+  clearCsv(): void {
+    this.csvRows = [];
+    this.csvError = null;
+    this.csvResult = null;
+  }
+
+  private parseCsv(text: string): void {
+    const lines = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    if (lines.length < 2) {
+      this.csvError = 'El archivo debe tener una fila de encabezado y al menos una fila de datos';
+      this.csvRows = [];
+      return;
+    }
+
+    const header = lines[0].split(',').map((h) => h.trim().toLowerCase());
+    const nameIdx = header.indexOf('nombre');
+    const emailIdx = header.indexOf('email');
+    const trackIdx = header.indexOf('track');
+    const specialtyIdx = header.indexOf('especialidad');
+
+    if (nameIdx === -1 && emailIdx === -1) {
+      this.csvError = 'El encabezado debe incluir al menos una columna "nombre" o "email"';
+      this.csvRows = [];
+      return;
+    }
+
+    this.csvError = null;
+    this.csvResult = null;
+    this.csvRows = lines.slice(1).map((line) => {
+      const cols = line.split(',').map((c) => c.trim());
+      const rawTrack = trackIdx >= 0 ? (cols[trackIdx]?.toUpperCase() as InvitationTrack) : undefined;
+      return {
+        candidateName: nameIdx >= 0 ? cols[nameIdx] || undefined : undefined,
+        candidateEmail: emailIdx >= 0 ? cols[emailIdx] || undefined : undefined,
+        track: rawTrack && this.tracks.includes(rawTrack) ? rawTrack : undefined,
+        specialty: specialtyIdx >= 0 ? cols[specialtyIdx] || undefined : undefined,
+      };
+    });
   }
 }

@@ -22,8 +22,20 @@ export class QuestionsService {
     return this.http.get<Question[]>(this.baseUrl, { params });
   }
 
+  get(id: string): Observable<Question> {
+    return this.http.get<Question>(`${this.baseUrl}/${id}`);
+  }
+
   create(payload: CreateQuestionPayload): Observable<Question> {
     return this.http.post<Question>(this.baseUrl, payload);
+  }
+
+  update(id: string, payload: CreateQuestionPayload): Observable<Question> {
+    return this.http.put<Question>(`${this.baseUrl}/${id}`, payload);
+  }
+
+  remove(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
   // Copia una pregunta pública de otra organización a la biblioteca propia,

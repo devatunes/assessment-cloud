@@ -22,6 +22,10 @@ export class CandidateAuthService {
     private readonly loginAttemptsService: LoginAttemptsService,
   ) {}
 
+  async findByEmail(email: string): Promise<Candidate | null> {
+    return this.candidatesService.findByEmail(email);
+  }
+
   async register(dto: RegisterCandidateDto) {
     const existing = await this.candidatesService.findByEmail(dto.email);
     if (existing) {

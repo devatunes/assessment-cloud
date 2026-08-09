@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { QuestionBanksService } from '../../core/question-banks.service';
 import { AuthService } from '../../core/auth.service';
+import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { ContentVisibility, QuestionBank } from '../../core/models';
 
 @Component({
@@ -15,6 +16,7 @@ import { ContentVisibility, QuestionBank } from '../../core/models';
 export class QuestionBankListComponent implements OnInit {
   private readonly banksService = inject(QuestionBanksService);
   private readonly authService = inject(AuthService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
 
   banks: QuestionBank[] = [];
   loading = false;
@@ -89,8 +91,14 @@ export class QuestionBankListComponent implements OnInit {
       });
   }
 
-  remove(bank: QuestionBank): void {
-    if (!confirm(`¿Eliminar el banco "${bank.name}"? Las preguntas en sí no se borran.`)) {
+  async remove(bank: QuestionBank): Promise<void> {
+    const confirmed = await this.confirmDialog.confirm({
+      title: 'Eliminar banco',
+      message: `¿Eliminar el banco "${bank.name}"? Las preguntas en sí no se borran.`,
+      confirmText: 'Eliminar',
+      isDangerous: true,
+    });
+    if (!confirmed) {
       return;
     }
 

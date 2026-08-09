@@ -26,6 +26,12 @@ export class CandidateAuthService {
     return this.currentCandidate() !== null;
   }
 
+  // Usado en la landing de invitación para decidir si mostrar login o
+  // registro antes de dejar empezar un assessment oficial.
+  checkEmail(email: string): Observable<{ exists: boolean }> {
+    return this.http.get<{ exists: boolean }>(`${this.baseUrl}/check-email`, { params: { email } });
+  }
+
   login(email: string, password: string): Observable<CandidateAuthResponse> {
     return this.http
       .post<CandidateAuthResponse>(`${this.baseUrl}/login`, { email, password })

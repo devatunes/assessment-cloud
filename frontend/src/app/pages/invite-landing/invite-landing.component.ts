@@ -6,12 +6,16 @@ import { InvitationsService } from '../../core/invitations.service';
 import { CandidateAuthService } from '../../core/candidate-auth.service';
 import { InvitationPublicView } from '../../core/models';
 
-// Landing pública del candidato invitado (reemplaza el viejo flujo abierto
-// de "Iniciar como candidato" desde una lista pública de assessments). El
-// token en la URL sigue siendo la única credencial NECESARIA — pero si el
-// visitante ya tiene una cuenta de candidato y está logueado, el intento
-// queda vinculado a esa cuenta también (ver candidate-auth.interceptor.ts,
-// que adjunta el Bearer automáticamente en esta ruta si existe).
+type GateStep = 'email' | 'login' | 'register' | 'ready';
+
+// Landing pública del candidato invitado. A diferencia de versiones
+// anteriores, empezar un assessment oficial NUEVO (status PENDING) ahora
+// exige identificarse: se pregunta el correo, y según si ya tiene cuenta de
+// candidato se pide login o registro — así el resultado siempre queda
+// vinculado a una cuenta e visible en su historial. Retomar un intento ya
+// STARTED/COMPLETED NO pasa por esta puerta (ver ngOnInit): exigir login de
+// nuevo en cada refresh de una página a mitad de examen sería una regresión
+// grave, y el backend ya soporta retomar sin auth (OptionalCandidateAuthGuard).
 @Component({
   selector: 'app-invite-landing',
   standalone: true,
@@ -31,6 +35,13 @@ export class InviteLandingComponent implements OnInit {
 
   candidateName = '';
 
+  // Puerta de identidad, solo para invitaciones PENDING sin sesión activa.
+  step: GateStep = 'ready';
+  gateEmail = '';
+  gatePassword = '';
+  checkingEmail = false;
+  gateError: string | null = null;
+
   private token = '';
 
   ngOnInit(): void {
@@ -43,9 +54,19 @@ export class InviteLandingComponent implements OnInit {
         this.candidateName = invitation.candidateName || '';
         this.loading = false;
 
-        // Ya en curso o completado: saltar directo, sin pedir el nombre de nuevo.
+        // Ya en curso o completado: retomar directo, sin pasar por la puerta.
         if (invitation.status === 'STARTED' || invitation.status === 'COMPLETED') {
           this.start();
+          return;
+        }
+
+        if (invitation.status === 'PENDING') {
+          if (this.candidateAuthService.isLoggedIn) {
+            this.step = 'ready';
+          } else {
+            this.step = 'email';
+            this.gateEmail = invitation.candidateEmail || '';
+          }
         }
       },
       error: (err) => {
@@ -54,6 +75,83 @@ export class InviteLandingComponent implements OnInit {
           err?.status === 404 ? 'Esta invitación no existe' : 'No se pudo cargar la invitación';
       },
     });
+  }
+
+  submitEmail(): void {
+    if (!this.gateEmail.trim()) {
+      this.gateError = 'Ingresa tu correo';
+      return;
+    }
+
+    this.gateError = null;
+    this.checkingEmail = true;
+
+    this.candidateAuthService.checkEmail(this.gateEmail).subscribe({
+      next: ({ exists }) => {
+        this.checkingEmail = false;
+        this.step = exists ? 'login' : 'register';
+      },
+      error: () => {
+        this.checkingEmail = false;
+        this.gateError = 'No se pudo verificar el correo';
+      },
+    });
+  }
+
+  backToEmail(): void {
+    this.step = 'email';
+    this.gatePassword = '';
+    this.gateError = null;
+  }
+
+  loginAndStart(): void {
+    if (!this.gatePassword) {
+      this.gateError = 'Ingresa tu contraseña';
+      return;
+    }
+
+    this.gateError = null;
+    this.starting = true;
+
+    this.candidateAuthService.login(this.gateEmail, this.gatePassword).subscribe({
+      next: (res) => {
+        this.candidateName = res.candidate.name;
+        this.step = 'ready';
+        this.start();
+      },
+      error: () => {
+        this.starting = false;
+        this.gateError = 'Correo o contraseña incorrectos';
+      },
+    });
+  }
+
+  registerAndStart(): void {
+    if (!this.candidateName.trim()) {
+      this.gateError = 'Ingresa tu nombre';
+      return;
+    }
+    if (!this.gatePassword || this.gatePassword.length < 8) {
+      this.gateError = 'La contraseña debe tener al menos 8 caracteres';
+      return;
+    }
+
+    this.gateError = null;
+    this.starting = true;
+
+    this.candidateAuthService
+      .register({ name: this.candidateName, email: this.gateEmail, password: this.gatePassword })
+      .subscribe({
+        next: () => {
+          this.step = 'ready';
+          this.start();
+        },
+        error: (err) => {
+          this.starting = false;
+          this.gateError =
+            err?.status === 409 ? 'Ya existe una cuenta con este correo' : 'No se pudo crear la cuenta';
+        },
+      });
   }
 
   start(): void {

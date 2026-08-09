@@ -1,13 +1,18 @@
 import { randomBytes } from 'crypto';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { isEmail } from 'class-validator';
 import { Repository } from 'typeorm';
 import { Invitation, InvitationStatus } from './entities/invitation.entity';
 import { Assessment, AssessmentVisibility } from '../assessments/entities/assessment.entity';
 import { AttemptsService } from '../attempts/attempts.service';
 import { AttemptWithQuestions } from '../attempts/attempts.types';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
+import { BulkInvitationRowDto } from './dto/bulk-create-invitations.dto';
 import { UpdateInvitationClassificationDto } from './dto/update-invitation-classification.dto';
+
+export type BulkInvitationFailure = { row: number; email?: string; error: string };
+export type BulkInvitationResult = { created: Invitation[]; failed: BulkInvitationFailure[] };
 
 @Injectable()
 export class InvitationsService {
@@ -55,6 +60,51 @@ export class InvitationsService {
         specialty: dto.specialty ?? null,
       }),
     );
+  }
+
+  // Importación masiva (CSV parseado en el frontend). A diferencia de
+  // CreateInvitationDto, BulkInvitationRowDto no exige @IsEmail: si lo
+  // hiciera, el ValidationPipe rechazaría el body ENTERO por una sola fila
+  // mal escrita antes de llegar acá. En cambio se valida el email a mano
+  // por fila (misma lógica que el decorador, vía isEmail() de
+  // class-validator) y se reporta esa fila como fallo sin tumbar las demás.
+  async createManyForAssessment(
+    organizationId: string,
+    createdByUserId: string,
+    assessmentId: string,
+    rows: BulkInvitationRowDto[],
+  ): Promise<BulkInvitationResult> {
+    const created: Invitation[] = [];
+    const failed: BulkInvitationFailure[] = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+
+      if (row.candidateEmail && !isEmail(row.candidateEmail)) {
+        failed.push({ row: i + 1, email: row.candidateEmail, error: 'Correo inválido' });
+        continue;
+      }
+
+      try {
+        const dto: CreateInvitationDto = {
+          candidateName: row.candidateName,
+          candidateEmail: row.candidateEmail,
+          track: row.track,
+          specialty: row.specialty,
+        };
+        created.push(
+          await this.createForAssessment(organizationId, createdByUserId, assessmentId, dto),
+        );
+      } catch (error) {
+        failed.push({
+          row: i + 1,
+          email: row.candidateEmail,
+          error: error instanceof Error ? error.message : 'Error desconocido',
+        });
+      }
+    }
+
+    return { created, failed };
   }
 
   // El track/especialidad puede reasignarse después de creada la invitación
@@ -124,6 +174,7 @@ export class InvitationsService {
       assessmentName: assessment?.name ?? '',
       assessmentDescription: assessment?.description ?? null,
       candidateName: invitation.candidateName,
+      candidateEmail: invitation.candidateEmail,
       attemptId: invitation.attemptId,
     };
   }

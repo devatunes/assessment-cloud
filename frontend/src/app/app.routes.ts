@@ -39,6 +39,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'questions/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/question-detail/question-detail.component').then(
+        (m) => m.QuestionDetailComponent,
+      ),
+  },
+  {
     path: 'admin/users',
     canActivate: [adminGuard],
     loadComponent: () =>
@@ -81,6 +89,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/assessment-create/assessment-create.component').then(
         (m) => m.AssessmentCreateComponent,
+      ),
+  },
+  {
+    path: 'assessments/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/assessment-detail/assessment-detail.component').then(
+        (m) => m.AssessmentDetailComponent,
       ),
   },
   {

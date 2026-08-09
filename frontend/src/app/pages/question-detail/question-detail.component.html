@@ -1,0 +1,105 @@
+<section>
+  <div class="app-header">
+    <hgroup>
+      <h2>{{ question?.title || 'Pregunta' }}</h2>
+      <p><a routerLink="/questions">&larr; Volver a la biblioteca</a></p>
+    </hgroup>
+    @if (question && !editing) {
+      <div class="header-actions">
+        @if (isOwn) {
+          <button (click)="toggleEdit()">Editar</button>
+          <button class="secondary" (click)="remove()" [disabled]="removing">
+            {{ removing ? 'Eliminando...' : 'Eliminar' }}
+          </button>
+        } @else {
+          <button (click)="duplicate()" [disabled]="duplicating">
+            {{ duplicating ? 'Copiando...' : 'Copiar a mi biblioteca' }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (loading) {
+    <p aria-busy="true">Cargando pregunta...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+
+  @if (question) {
+    @if (editing) {
+      <article>
+        <h3>Editar pregunta</h3>
+        <app-question-form
+          [initial]="question"
+          submitLabel="Guardar cambios"
+          [saving]="saving"
+          [serverError]="saveError"
+          [showCancel]="true"
+          (save)="saveEdit($event)"
+          (cancelled)="toggleEdit()"
+        />
+      </article>
+    } @else {
+      <article>
+        <p>
+          <app-difficulty-badge [difficulty]="question.difficulty" [type]="question.type" />
+          <span class="badge badge-mc">{{ categoryLabels[question.category] }}</span>
+          @if (question.visibility === 'PUBLIC') {
+            <span class="badge badge-code">Pública</span>
+          } @else {
+            <span class="badge badge-easy">Privada</span>
+          }
+        </p>
+
+        <h4>Enunciado</h4>
+        <p>{{ question.statement }}</p>
+
+        @if (question.type === 'MULTIPLE_CHOICE') {
+          <h4>Opciones</h4>
+          <ul>
+            @for (option of question.options; track option.id) {
+              <li>
+                {{ option.text }}
+                @if (option.isCorrect) {
+                  <strong class="text-success"> — correcta</strong>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <h4>Template de código</h4>
+          <pre><code>{{ question.codeTemplate }}</code></pre>
+
+          <h4>Test cases</h4>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Input</th>
+                  <th>Output esperado</th>
+                  <th>Oculto</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (testCase of question.testCases; track $index) {
+                  <tr>
+                    <td><code>{{ testCase.input | json }}</code></td>
+                    <td>{{ testCase.expectedOutput }}</td>
+                    <td>{{ testCase.hidden ? 'Sí' : 'No' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (question.explanation) {
+          <h4>Explicación</h4>
+          <p>{{ question.explanation }}</p>
+        }
+      </article>
+    }
+  }
+</section>

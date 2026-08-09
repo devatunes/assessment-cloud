@@ -5,6 +5,7 @@ describe('AssessmentsService', () => {
   let service: AssessmentsService;
   let assessmentRepository: any;
   let questionRepository: any;
+  let assessmentQuestionRepository: any;
   let queryBuilder: any;
 
   const ORG_A = 'org-a';
@@ -22,10 +23,13 @@ describe('AssessmentsService', () => {
     assessmentRepository = {
       create: jest.fn((a: unknown) => a),
       save: jest.fn().mockResolvedValue({ id: 'assessment-1' }),
-      findOne: jest.fn().mockResolvedValue({ id: 'assessment-1', questions: [] }),
+      findOne: jest.fn().mockResolvedValue({ id: 'assessment-1', name: 'Test', questions: [] }),
+    };
+    assessmentQuestionRepository = {
+      delete: jest.fn().mockResolvedValue(undefined),
     };
 
-    service = new AssessmentsService(assessmentRepository, questionRepository);
+    service = new AssessmentsService(assessmentRepository, questionRepository, assessmentQuestionRepository);
   });
 
   it('rechaza con BadRequestException si alguna pregunta seleccionada no existe', async () => {
@@ -63,5 +67,24 @@ describe('AssessmentsService', () => {
       expect.stringContaining('organization_id'),
       expect.objectContaining({ organizationId: ORG_A }),
     );
+  });
+
+  it('update() borra las filas de assessment_question viejas antes de recrearlas', async () => {
+    queryBuilder.getMany.mockResolvedValue([{ id: 'q1' }]);
+
+    await service.update(ORG_A, 'assessment-1', { questionIds: ['q1'] });
+
+    expect(assessmentQuestionRepository.delete).toHaveBeenCalledWith({ assessmentId: 'assessment-1' });
+    expect(assessmentRepository.save).toHaveBeenCalled();
+  });
+
+  it('update() rechaza con BadRequestException si las preguntas nuevas no son usables', async () => {
+    queryBuilder.getMany.mockResolvedValue([]); // ninguna existe/es usable
+
+    await expect(
+      service.update(ORG_A, 'assessment-1', { questionIds: ['q-ajena'] }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(assessmentQuestionRepository.delete).not.toHaveBeenCalled();
   });
 });

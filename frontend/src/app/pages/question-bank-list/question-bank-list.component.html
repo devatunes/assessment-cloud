@@ -57,7 +57,7 @@
       <tbody>
         @for (bank of banks; track bank.id) {
           <tr>
-            <td><a [routerLink]="['/question-banks', bank.id]">{{ bank.name }}</a></td>
+            <td>{{ bank.name }}</td>
             <td>{{ bank.description || '—' }}</td>
             <td>{{ bank.questionCount }}</td>
             <td>
@@ -72,6 +72,7 @@
               }
             </td>
             <td>
+              <a role="button" class="secondary" [routerLink]="['/question-banks', bank.id]">Abrir</a>
               @if (isOwn(bank)) {
                 <button
                   class="secondary"

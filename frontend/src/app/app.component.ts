@@ -5,11 +5,19 @@ import { AuthService } from './core/auth.service';
 import { CandidateAuthService } from './core/candidate-auth.service';
 import { ThemeService } from './core/theme.service';
 import { OnboardingTourComponent } from './shared/onboarding-tour.component';
+import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, OnboardingTourComponent],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    OnboardingTourComponent,
+    ConfirmDialogComponent,
+  ],
   template: `
     <header class="app-header">
       <div class="app-header-top">
@@ -72,6 +80,7 @@ import { OnboardingTourComponent } from './shared/onboarding-tour.component';
       <router-outlet />
     </main>
     <app-onboarding-tour />
+    <app-confirm-dialog />
   `,
 })
 export class AppComponent {
