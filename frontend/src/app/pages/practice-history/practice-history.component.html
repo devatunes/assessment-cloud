@@ -1,7 +1,7 @@
 <section>
   <div class="app-header">
     <h2>Mi historial de práctica</h2>
-    <a routerLink="/practica">← Volver al catálogo</a>
+    <a routerLink="/practice">← Volver al catálogo</a>
   </div>
 
   <article>
@@ -38,7 +38,8 @@
   <table>
     <thead>
       <tr>
-        <th>Simulacro</th>
+        <th>Nombre</th>
+        <th>Tipo</th>
         <th>Estado</th>
         <th>Score</th>
         <th>Nivel</th>
@@ -50,6 +51,15 @@
       @for (attempt of attempts; track attempt.id) {
         <tr>
           <td>{{ attempt.assessmentName }}</td>
+          <td>
+            @if (attempt.assessmentVisibility === 'OFFICIAL') {
+              <span class="badge badge-code" title="Prueba oficial de una organización, vinculada a tu cuenta">
+                Oficial
+              </span>
+            } @else {
+              <span class="badge badge-mc">Simulacro</span>
+            }
+          </td>
           <td>
             <span
               class="badge"

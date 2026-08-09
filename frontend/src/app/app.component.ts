@@ -28,14 +28,13 @@ import { OnboardingTourComponent } from './shared/onboarding-tour.component';
           <span>{{ authService.currentUser()?.name }}</span>
           <a href="#" (click)="logout($event)">Cerrar sesión</a>
         } @else if (candidateAuthService.isLoggedIn) {
-          <a routerLink="/practica" routerLinkActive="contrast">Practicar</a>
-          <a routerLink="/practica/historial" routerLinkActive="contrast">Mi historial</a>
+          <a routerLink="/practice" routerLinkActive="contrast">Practicar</a>
+          <a routerLink="/practice/history" routerLinkActive="contrast">Mi historial</a>
           <span>{{ candidateAuthService.currentCandidate()?.name }}</span>
           <a href="#" (click)="logoutCandidate($event)">Cerrar sesión</a>
         } @else {
           <a routerLink="/login" routerLinkActive="contrast">Iniciar sesión</a>
-          <a routerLink="/register" routerLinkActive="contrast">Crear organización</a>
-          <a routerLink="/candidato/login" routerLinkActive="contrast">Practicar (candidatos)</a>
+          <a routerLink="/register" routerLinkActive="contrast">Crear cuenta</a>
         }
         <button
           type="button"
@@ -68,6 +67,6 @@ export class AppComponent {
   logoutCandidate(event: Event): void {
     event.preventDefault();
     this.candidateAuthService.logout();
-    this.router.navigateByUrl('/candidato/login');
+    this.router.navigate(['/login'], { queryParams: { role: 'candidate' } });
   }
 }

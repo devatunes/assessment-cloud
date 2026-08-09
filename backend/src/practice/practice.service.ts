@@ -90,10 +90,12 @@ export class PracticeService {
   }
 
   // Privacidad estructural, no un filtro post-hoc: solo se listan attempts
-  // con candidateId propio. Los oficiales vía invitación nunca tienen
-  // candidateId (ver AttemptsService.create), así que jamás aparecen acá —
-  // y por el mismo motivo tampoco podrán aparecer en el reporte de una
-  // organización cuando se construya (Fase 6).
+  // con candidateId propio. Un intento OFICIAL solo tiene candidateId si el
+  // candidato estaba logueado al abrir la invitación (ver
+  // InvitationsController.start + OptionalCandidateAuthGuard) — en ese caso
+  // aparece acá igual que uno de práctica, distinguido por
+  // "assessmentVisibility", pero NUNCA dejará de aparecer también en el
+  // reporte de la organización dueña (ese reporte no filtra por candidateId).
   async myAttempts(candidateId: string) {
     const attempts = await this.attemptRepository.find({
       where: { candidateId },
@@ -117,6 +119,7 @@ export class PracticeService {
         id: attempt.id,
         assessmentId: attempt.assessmentId,
         assessmentName: assessment?.name ?? '',
+        assessmentVisibility: assessment?.visibility ?? AssessmentVisibility.PRACTICE,
         status: attempt.status,
         score: attempt.score,
         maxScore: attempt.maxScore,

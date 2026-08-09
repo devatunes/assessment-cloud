@@ -15,21 +15,7 @@ export const routes: Routes = [
       import('./pages/register/register.component').then((m) => m.RegisterComponent),
   },
   {
-    path: 'candidato/login',
-    loadComponent: () =>
-      import('./pages/candidate-login/candidate-login.component').then(
-        (m) => m.CandidateLoginComponent,
-      ),
-  },
-  {
-    path: 'candidato/registro',
-    loadComponent: () =>
-      import('./pages/candidate-register/candidate-register.component').then(
-        (m) => m.CandidateRegisterComponent,
-      ),
-  },
-  {
-    path: 'practica',
+    path: 'practice',
     canActivate: [candidateAuthGuard],
     loadComponent: () =>
       import('./pages/practice-catalog/practice-catalog.component').then(
@@ -37,7 +23,7 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'practica/historial',
+    path: 'practice/history',
     canActivate: [candidateAuthGuard],
     loadComponent: () =>
       import('./pages/practice-history/practice-history.component').then(

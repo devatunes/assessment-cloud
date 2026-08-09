@@ -25,6 +25,15 @@
         <input type="text" [(ngModel)]="candidateName" name="candidateName" placeholder="Nombre completo" />
       </label>
 
+      @if (candidateAuthService.isLoggedIn) {
+        <p>
+          <small>
+            Sesión iniciada como {{ candidateAuthService.currentCandidate()?.name }}: este resultado
+            también quedará en tu historial de candidato.
+          </small>
+        </p>
+      }
+
       <button (click)="start()" [disabled]="starting">
         {{ starting ? 'Iniciando...' : 'Comenzar assessment' }}
       </button>

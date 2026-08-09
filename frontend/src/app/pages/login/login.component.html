@@ -2,8 +2,21 @@
   <article>
     <hgroup>
       <h2>Iniciar sesión</h2>
-      <p>Acceso para reclutadores y administradores</p>
+      <p>Elige cómo quieres entrar</p>
     </hgroup>
+
+    <div class="grid role-toggle">
+      <button type="button" [class]="role === 'org' ? '' : 'secondary'" (click)="selectRole('org')">
+        Organización
+      </button>
+      <button
+        type="button"
+        [class]="role === 'candidate' ? '' : 'secondary'"
+        (click)="selectRole('candidate')"
+      >
+        Candidato
+      </button>
+    </div>
 
     @if (error) {
       <p style="color:#b91c1c">{{ error }}</p>
@@ -29,6 +42,6 @@
       </button>
     </form>
 
-    <p><small>¿No tienes cuenta? <a routerLink="/register">Crea tu organización</a></small></p>
+    <p><small>¿No tienes cuenta? <a routerLink="/register" [queryParams]="{ role }">Crear cuenta</a></small></p>
   </article>
 </section>
