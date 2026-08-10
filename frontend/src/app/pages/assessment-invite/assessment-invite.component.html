@@ -138,6 +138,81 @@
       }
     </article>
 
+    <article>
+      <div class="app-header">
+        <h3>Seleccionar de candidatos ya registrados</h3>
+        <button class="secondary" (click)="toggleCandidatePicker()">
+          {{ showCandidatePicker ? 'Cancelar' : 'Elegir de mi historial' }}
+        </button>
+      </div>
+
+      @if (showCandidatePicker) {
+        @if (candidateError) {
+          <p class="form-error">{{ candidateError }}</p>
+        }
+
+        @if (candidateResult) {
+          <p class="text-success">
+            {{ candidateResult.created.length }} invitación(es) creada(s).
+            @if (candidateResult.failed.length > 0) {
+              {{ candidateResult.failed.length }} fila(s) fallida(s).
+            }
+          </p>
+        }
+
+        @if (loadingCandidates) {
+          <p aria-busy="true">Cargando candidatos...</p>
+        }
+        @if (!loadingCandidates && availableCandidateGroups.length === 0) {
+          <p>No hay candidatos en tu historial que no estén ya invitados a este assessment.</p>
+        }
+
+        @if (!loadingCandidates && availableCandidateGroups.length > 0) {
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Nombre</th>
+                  <th>Correo</th>
+                  <th>Última clasificación</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (group of availableCandidateGroups; track group.email) {
+                  <tr>
+                    <td>
+                      <input
+                        type="checkbox"
+                        [checked]="selectedCandidateEmails.has(group.email)"
+                        (change)="toggleCandidateSelected(group.email)"
+                      />
+                    </td>
+                    <td>{{ group.name || '—' }}</td>
+                    <td>{{ group.email }}</td>
+                    <td>
+                      @if (group.entries[0].track) {
+                        <span class="badge badge-mc">{{ trackLabels[group.entries[0].track] }}</span>
+                      }
+                      @if (group.entries[0].specialty) {
+                        <span class="badge badge-code">{{ group.entries[0].specialty }}</span>
+                      }
+                      @if (!group.entries[0].track && !group.entries[0].specialty) {
+                        <small>Sin clasificar</small>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <button [disabled]="invitingSelected || selectedCandidateEmails.size === 0" (click)="inviteSelectedCandidates()">
+            {{ invitingSelected ? 'Invitando...' : 'Invitar seleccionados (' + selectedCandidateEmails.size + ')' }}
+          </button>
+        }
+      }
+    </article>
+
     <h3>Invitaciones enviadas ({{ invitations.length }})</h3>
     @if (invitations.length === 0) {
       <p>Todavía no hay invitaciones para este assessment.</p>

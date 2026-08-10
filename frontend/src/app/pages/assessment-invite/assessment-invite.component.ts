@@ -4,10 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AssessmentsService } from '../../core/assessments.service';
 import { InvitationsService } from '../../core/invitations.service';
+import { ReportsService } from '../../core/reports.service';
 import {
   Assessment,
   BulkInvitationResult,
   BulkInvitationRow,
+  CandidateHistoryGroup,
   INVITATION_TRACK_LABELS,
   Invitation,
   InvitationTrack,
@@ -24,6 +26,7 @@ export class AssessmentInviteComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly assessmentsService = inject(AssessmentsService);
   private readonly invitationsService = inject(InvitationsService);
+  private readonly reportsService = inject(ReportsService);
 
   readonly tracks = Object.keys(INVITATION_TRACK_LABELS) as InvitationTrack[];
   readonly trackLabels = INVITATION_TRACK_LABELS;
@@ -58,6 +61,18 @@ export class AssessmentInviteComponent implements OnInit {
   csvResult: BulkInvitationResult | null = null;
   importingCsv = false;
 
+  // Selección de candidatos que ya aparecen en el historial de la
+  // organización (/candidates), para invitarlos a este assessment sin
+  // volver a teclear nombre/correo — se les precarga su track/especialidad
+  // más reciente, editable en el próximo paso desde la tabla de invitaciones.
+  showCandidatePicker = false;
+  loadingCandidates = false;
+  candidateError: string | null = null;
+  candidateResult: BulkInvitationResult | null = null;
+  availableCandidateGroups: CandidateHistoryGroup[] = [];
+  selectedCandidateEmails = new Set<string>();
+  invitingSelected = false;
+
   private assessmentId = '';
 
   ngOnInit(): void {
@@ -76,7 +91,7 @@ export class AssessmentInviteComponent implements OnInit {
     });
   }
 
-  loadInvitations(): void {
+  loadInvitations(onComplete?: () => void): void {
     this.invitationsService
       .listForAssessment(this.assessmentId, { page: this.invitationsPage, pageSize: this.pageSize })
       .subscribe({
@@ -84,6 +99,7 @@ export class AssessmentInviteComponent implements OnInit {
           this.invitations = result.items;
           this.invitationsTotal = result.total;
           this.loading = false;
+          onComplete?.();
         },
         error: () => {
           this.error = 'No se pudieron cargar las invitaciones';
@@ -209,6 +225,81 @@ export class AssessmentInviteComponent implements OnInit {
     this.csvRows = [];
     this.csvError = null;
     this.csvResult = null;
+  }
+
+  toggleCandidatePicker(): void {
+    this.showCandidatePicker = !this.showCandidatePicker;
+    this.candidateError = null;
+    this.candidateResult = null;
+    this.selectedCandidateEmails.clear();
+
+    if (this.showCandidatePicker) {
+      this.loadAvailableCandidates();
+    }
+  }
+
+  toggleCandidateSelected(email: string): void {
+    if (this.selectedCandidateEmails.has(email)) {
+      this.selectedCandidateEmails.delete(email);
+    } else {
+      this.selectedCandidateEmails.add(email);
+    }
+  }
+
+  inviteSelectedCandidates(): void {
+    if (this.selectedCandidateEmails.size === 0) return;
+
+    const rows: BulkInvitationRow[] = this.availableCandidateGroups
+      .filter((group) => this.selectedCandidateEmails.has(group.email))
+      .map((group) => {
+        const latest = group.entries[0];
+        return {
+          candidateName: group.name || undefined,
+          candidateEmail: group.email,
+          track: latest?.track ?? undefined,
+          specialty: latest?.specialty ?? undefined,
+        };
+      });
+
+    this.invitingSelected = true;
+    this.candidateError = null;
+
+    this.invitationsService.createBulk(this.assessmentId, rows).subscribe({
+      next: (result) => {
+        this.invitingSelected = false;
+        this.candidateResult = result;
+        this.selectedCandidateEmails.clear();
+        this.invitationsPage = 1;
+        this.loadInvitations(() => this.loadAvailableCandidates());
+      },
+      error: () => {
+        this.invitingSelected = false;
+        this.candidateError = 'No se pudo invitar a los candidatos seleccionados';
+      },
+    });
+  }
+
+  private loadAvailableCandidates(): void {
+    this.loadingCandidates = true;
+
+    this.reportsService.getCandidatesHistory({ pageSize: 100 }).subscribe({
+      next: (result) => {
+        // No repetir candidatos que ya tienen invitación a ESTE assessment.
+        const alreadyInvited = new Set(
+          this.invitations
+            .map((inv) => (inv.candidateEmail ?? '').toLowerCase())
+            .filter((email) => email.length > 0),
+        );
+        this.availableCandidateGroups = result.items.filter(
+          (group) => !alreadyInvited.has(group.email.toLowerCase()),
+        );
+        this.loadingCandidates = false;
+      },
+      error: () => {
+        this.candidateError = 'No se pudieron cargar los candidatos registrados';
+        this.loadingCandidates = false;
+      },
+    });
   }
 
   private parseCsv(text: string): void {

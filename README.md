@@ -65,6 +65,8 @@ viendo en qué nivel (Junior/Semisenior/Senior) queda según su puntaje.
   completitud, score promedio, distribución de niveles, tasa de acierto por pregunta
   (para detectar preguntas mal calibradas), y export a CSV. Vista general: todos los
   assessments oficiales comparados entre sí, agrupados por categoría de pregunta.
+- 📄 **Paginación** en todas las listas (preguntas, bancos, assessments, invitaciones,
+  usuarios, historial de candidatos, catálogo e historial de simulacros).
 - 🌓 **Modo claro/oscuro** en toda la app.
 - 🧭 **Tour guiado** — un recorrido breve la primera vez que se entra, distinto para
   staff de organización y para candidatos.
@@ -74,6 +76,8 @@ viendo en qué nivel (Junior/Semisenior/Senior) queda según su puntaje.
 - 🐳 **Docker** — `docker compose up --build` levanta Postgres + backend + frontend
   dockerizados de punta a punta (o solo `docker compose up -d db` para desarrollar con
   hot-reload fuera de contenedor).
+- ✅ **CI en GitHub Actions** — cada PR a `staging`/`master` corre las pruebas unitarias
+  de backend y frontend (`.github/workflows/requirements.yml`).
 - ☁️ **Desplegado en AWS** — Lambda + API Gateway + RDS + S3/CloudFront.
 
 ## Arquitectura
@@ -215,6 +219,9 @@ npm run test:executor
 # Unit tests del backend — no requieren base de datos
 npm run test:backend
 
+# Unit tests del frontend (Jest)
+npm run test:frontend
+
 # E2E de flujo completo contra un Postgres real (biblioteca -> assessment ->
 # invitación -> candidato anónimo lo resuelve; registro/login de organización y
 # de candidatos; catálogo de simulacros, insignias, historial; reportes con
@@ -223,15 +230,20 @@ npm run test:backend
 # "assessment_test", no toca los datos de desarrollo.
 npm run test:backend:e2e
 
-# Los tres juntos
+# Todos juntos
 npm test
 ```
 
-El e2e cubre, entre otras cosas: fuga cross-tenant entre organizaciones (regresión
-permanente), invitaciones oficiales de punta a punta (generar → aterrizar → retomar →
-completar), simulacros con insignias otorgadas correctamente en rachas y sin
+El e2e de backend cubre, entre otras cosas: fuga cross-tenant entre organizaciones
+(regresión permanente), invitaciones oficiales de punta a punta (generar → aterrizar →
+retomar → completar), simulacros con insignias otorgadas correctamente en rachas y sin
 duplicarse, aislamiento de guards entre el JWT de organización y el de candidatos, y
 reportes bloqueando estructuralmente la práctica libre.
+
+La cobertura de tests unitarios es parcial en ambos lados (backend: los servicios más
+críticos; frontend: solo `PaginatorComponent`) y no hay todavía una suite de e2e de
+frontend corrible en CI — la verificación de UI durante el desarrollo se hizo con
+Playwright ad-hoc, sin quedar como suite versionada.
 
 ## Desplegar en AWS
 
@@ -265,8 +277,8 @@ Los outputs de Terraform (`assessment_api_url`, `assessment_cloudfront_domain_na
 - Sandbox más fuerte para el executor (vm2/isolated-vm o contenedores efímeros): hoy
   `spawnSync` con `env: {}` y timeout es razonable, pero no aísla filesystem/red.
 - Soporte de otros lenguajes en el executor (Java, Python), no solo JavaScript.
-- Tests unitarios/e2e del frontend con un runner propio (hoy la verificación de UI se
-  hizo con Playwright ad-hoc durante el desarrollo, no como suite corrible en CI).
+- Ampliar cobertura de tests unitarios (backend y frontend) y sumar una suite de e2e de
+  frontend corrible en CI, no solo scripts de Playwright ad-hoc.
 - Mover la Lambda del backend a la VPC (Interface Endpoints) para cerrar por completo el
   acceso público a RDS.
 - Notificaciones por email reales (invitaciones y activación de cuenta hoy generan un
