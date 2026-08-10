@@ -4,20 +4,25 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth.service';
 import { UsersService } from '../../core/users.service';
 import { OrgUser, UserRole } from '../../core/models';
+import { PaginatorComponent } from '../../shared/paginator.component';
 
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginatorComponent],
   templateUrl: './admin-users.component.html',
 })
 export class AdminUsersComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly usersService = inject(UsersService);
 
+  readonly pageSize = 20;
+
   users: OrgUser[] = [];
   loading = false;
   error: string | null = null;
+  page = 1;
+  total = 0;
 
   showInviteForm = false;
   inviteName = '';
@@ -34,9 +39,10 @@ export class AdminUsersComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    this.usersService.list().subscribe({
-      next: (users) => {
-        this.users = users;
+    this.usersService.list({ page: this.page, pageSize: this.pageSize }).subscribe({
+      next: (result) => {
+        this.users = result.items;
+        this.total = result.total;
         this.loading = false;
       },
       error: () => {
@@ -44,6 +50,11 @@ export class AdminUsersComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+    this.load();
   }
 
   toggleInviteForm(): void {

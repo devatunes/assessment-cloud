@@ -29,16 +29,22 @@ export class ReportsController {
   @ApiQuery({ name: 'track', required: false })
   @ApiQuery({ name: 'specialty', required: false })
   @ApiQuery({ name: 'year', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number })
   candidatesHistory(
     @CurrentUser() user: AuthenticatedUser,
     @Query('track') track?: string,
     @Query('specialty') specialty?: string,
     @Query('year') year?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
   ) {
     return this.reportsService.getCandidatesHistory(user.organizationId, {
       track,
       specialty,
       year: year ? Number(year) : undefined,
+      page: page ? Number(page) : undefined,
+      pageSize: pageSize ? Number(pageSize) : undefined,
     });
   }
 }

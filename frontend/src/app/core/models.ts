@@ -1,3 +1,11 @@
+// Forma estándar de cualquier endpoint de lista paginada del backend.
+export interface PaginatedResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 // --- Auth de organización (staff que recluta) ---
 
 export type UserRole = 'ADMIN' | 'RECRUITER';

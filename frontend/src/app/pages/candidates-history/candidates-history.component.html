@@ -10,7 +10,7 @@
     <div class="grid">
       <label>
         Track
-        <select [(ngModel)]="filterTrack" (change)="load()">
+        <select [(ngModel)]="filterTrack" (change)="onFilterChange()">
           <option value="">Todos</option>
           @for (t of tracks; track t) {
             <option [value]="t">{{ trackLabels[t] }}</option>
@@ -22,13 +22,13 @@
         <input
           type="text"
           [(ngModel)]="filterSpecialty"
-          (change)="load()"
+          (change)="onFilterChange()"
           placeholder="Backend, Frontend, Cloud..."
         />
       </label>
       <label>
         Año
-        <select [(ngModel)]="filterYear" (change)="load()">
+        <select [(ngModel)]="filterYear" (change)="onFilterChange()">
           <option [ngValue]="null">Todos</option>
           @for (year of availableYears; track year) {
             <option [ngValue]="year">{{ year }}</option>
@@ -111,4 +111,6 @@
       </div>
     </details>
   }
+
+  <app-paginator [page]="page" [pageSize]="pageSize" [total]="total" (pageChange)="onPageChange($event)" />
 </section>

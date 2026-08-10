@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AssessmentsService } from './assessments.service';
 import { CreateAssessmentDto } from './dto/create-assessment.dto';
 import { UpdateAssessmentDto } from './dto/update-assessment.dto';
+import { PaginationQueryDto } from '../common/pagination-query.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -17,8 +18,8 @@ export class AssessmentsController {
 
   @Get()
   @ApiOperation({ summary: 'Lista los assessments creados' })
-  findAll(@CurrentUser() user: AuthenticatedUser) {
-    return this.assessmentsService.findAll(user.organizationId);
+  findAll(@Query() query: PaginationQueryDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.assessmentsService.findAll(user.organizationId, query);
   }
 
   @Get(':id')

@@ -3,6 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ReportsService } from '../../core/reports.service';
 import { CandidateHistoryGroup, INVITATION_TRACK_LABELS, InvitationTrack } from '../../core/models';
+import { PaginatorComponent } from '../../shared/paginator.component';
 
 // Historial de candidatos de la organización a través de TODOS los
 // assessments oficiales y años (no de práctica: eso es privado del
@@ -11,7 +12,7 @@ import { CandidateHistoryGroup, INVITATION_TRACK_LABELS, InvitationTrack } from 
 @Component({
   selector: 'app-candidates-history',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginatorComponent],
   templateUrl: './candidates-history.component.html',
 })
 export class CandidatesHistoryComponent implements OnInit {
@@ -19,10 +20,13 @@ export class CandidatesHistoryComponent implements OnInit {
 
   readonly tracks = Object.keys(INVITATION_TRACK_LABELS) as InvitationTrack[];
   readonly trackLabels = INVITATION_TRACK_LABELS;
+  readonly pageSize = 20;
 
   groups: CandidateHistoryGroup[] = [];
   loading = false;
   error: string | null = null;
+  page = 1;
+  total = 0;
 
   filterTrack: InvitationTrack | '' = '';
   filterSpecialty = '';
@@ -49,10 +53,13 @@ export class CandidatesHistoryComponent implements OnInit {
         track: this.filterTrack || undefined,
         specialty: this.filterSpecialty || undefined,
         year: this.filterYear || undefined,
+        page: this.page,
+        pageSize: this.pageSize,
       })
       .subscribe({
-        next: (groups) => {
-          this.groups = groups;
+        next: (result) => {
+          this.groups = result.items;
+          this.total = result.total;
           this.loading = false;
         },
         error: () => {
@@ -62,10 +69,21 @@ export class CandidatesHistoryComponent implements OnInit {
       });
   }
 
+  onFilterChange(): void {
+    this.page = 1;
+    this.load();
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+    this.load();
+  }
+
   clearFilters(): void {
     this.filterTrack = '';
     this.filterSpecialty = '';
     this.filterYear = null;
+    this.page = 1;
     this.load();
   }
 }

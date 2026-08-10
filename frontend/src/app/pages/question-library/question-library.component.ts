@@ -15,11 +15,19 @@ import {
 } from '../../core/models';
 import { DifficultyBadgeComponent } from '../../shared/difficulty-badge.component';
 import { QuestionFormComponent } from '../../shared/question-form.component';
+import { PaginatorComponent } from '../../shared/paginator.component';
 
 @Component({
   selector: 'app-question-library',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DifficultyBadgeComponent, QuestionFormComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    DifficultyBadgeComponent,
+    QuestionFormComponent,
+    PaginatorComponent,
+  ],
   templateUrl: './question-library.component.html',
 })
 export class QuestionLibraryComponent implements OnInit {
@@ -29,11 +37,15 @@ export class QuestionLibraryComponent implements OnInit {
 
   readonly categories = Object.keys(QUESTION_CATEGORY_LABELS) as QuestionCategory[];
   readonly categoryLabels = QUESTION_CATEGORY_LABELS;
+  readonly pageSize = 20;
 
   questions: Question[] = [];
   loading = false;
   error: string | null = null;
   duplicatingId: string | null = null;
+
+  page = 1;
+  total = 0;
 
   filterCategory: QuestionCategory | '' = '';
   filterDifficulty: QuestionDifficulty | '' = '';
@@ -61,10 +73,13 @@ export class QuestionLibraryComponent implements OnInit {
         category: this.filterCategory || undefined,
         difficulty: this.filterDifficulty || undefined,
         type: this.filterType || undefined,
+        page: this.page,
+        pageSize: this.pageSize,
       })
       .subscribe({
-        next: (questions) => {
-          this.questions = questions;
+        next: (result) => {
+          this.questions = result.items;
+          this.total = result.total;
           this.loading = false;
         },
         error: () => {
@@ -74,10 +89,21 @@ export class QuestionLibraryComponent implements OnInit {
       });
   }
 
+  onFilterChange(): void {
+    this.page = 1;
+    this.load();
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+    this.load();
+  }
+
   clearFilters(): void {
     this.filterCategory = '';
     this.filterDifficulty = '';
     this.filterType = '';
+    this.page = 1;
     this.load();
   }
 

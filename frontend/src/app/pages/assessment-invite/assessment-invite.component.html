@@ -214,5 +214,12 @@
         </tbody>
       </table>
     </div>
+
+    <app-paginator
+      [page]="invitationsPage"
+      [pageSize]="pageSize"
+      [total]="invitationsTotal"
+      (pageChange)="onInvitationsPageChange($event)"
+    />
   }
 </section>

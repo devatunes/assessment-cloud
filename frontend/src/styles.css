@@ -337,6 +337,21 @@ a[role='button'] {
   border-radius: var(--pico-border-radius);
 }
 
+.paginator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.paginator-label {
+  font-size: 0.85rem;
+  color: var(--pico-muted-color);
+  white-space: nowrap;
+}
+
 table {
   border-radius: var(--pico-border-radius);
   overflow: hidden;

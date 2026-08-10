@@ -97,4 +97,6 @@
       </tbody>
     </table>
   </div>
+
+  <app-paginator [page]="page" [pageSize]="pageSize" [total]="total" (pageChange)="onPageChange($event)" />
 </section>

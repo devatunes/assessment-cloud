@@ -330,7 +330,7 @@ describe('Reports (e2e)', () => {
       .set('Authorization', auth)
       .expect(200);
 
-    const group = historyRes.body.find((g: any) => g.email === candidateEmail);
+    const group = historyRes.body.items.find((g: any) => g.email === candidateEmail);
     expect(group).toBeDefined();
     expect(group.entries).toHaveLength(2);
     expect(group.name).toBe('Candidato Historial');
@@ -342,7 +342,7 @@ describe('Reports (e2e)', () => {
       .get('/reports/candidates?track=QA')
       .set('Authorization', auth)
       .expect(200);
-    const filteredGroup = filteredRes.body.find((g: any) => g.email === candidateEmail);
+    const filteredGroup = filteredRes.body.items.find((g: any) => g.email === candidateEmail);
     expect(filteredGroup.entries).toHaveLength(1);
     expect(filteredGroup.entries[0].track).toBe('QA');
     expect(filteredGroup.entries[0].specialty).toBe('Automation');

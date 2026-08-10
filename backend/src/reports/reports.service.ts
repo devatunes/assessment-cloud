@@ -18,6 +18,7 @@ import {
   OrganizationOverview,
   QuestionStat,
 } from './reports.types';
+import { PaginatedResult, paginate } from '../common/paginated-result';
 
 @Injectable()
 export class ReportsService {
@@ -257,15 +258,18 @@ export class ReportsService {
   // grupos" según lo pedido.
   async getCandidatesHistory(
     organizationId: string,
-    filters: { track?: string; specialty?: string; year?: number },
-  ): Promise<CandidateHistoryGroup[]> {
+    filters: { track?: string; specialty?: string; year?: number; page?: number; pageSize?: number },
+  ): Promise<PaginatedResult<CandidateHistoryGroup>> {
+    const page = filters.page ?? 1;
+    const pageSize = filters.pageSize ?? 20;
+
     const invitations = await this.invitationRepository.find({
       where: { organizationId },
       order: { createdAt: 'DESC' },
     });
 
     const withEmail = invitations.filter((inv) => !!inv.candidateEmail);
-    if (withEmail.length === 0) return [];
+    if (withEmail.length === 0) return paginate([], 0, page, pageSize);
 
     const assessmentIds = [...new Set(withEmail.map((inv) => inv.assessmentId))];
     const assessments = await this.assessmentRepository.find({ where: { id: In(assessmentIds) } });
@@ -324,6 +328,10 @@ export class ReportsService {
       group.entries.push(entry);
     }
 
-    return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name));
+    const sorted = [...groups.values()].sort((a, b) => a.name.localeCompare(b.name));
+    const total = sorted.length;
+    const items = sorted.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
+
+    return paginate(items, total, page, pageSize);
   }
 }

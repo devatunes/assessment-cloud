@@ -1,16 +1,20 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Assessment, AssessmentLevelThresholds, AssessmentVisibility } from './models';
+import { Assessment, AssessmentLevelThresholds, AssessmentVisibility, PaginatedResult } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class AssessmentsService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/assessments`;
 
-  list(): Observable<Assessment[]> {
-    return this.http.get<Assessment[]>(this.baseUrl);
+  list(filters: { page?: number; pageSize?: number } = {}): Observable<PaginatedResult<Assessment>> {
+    let params = new HttpParams();
+    if (filters.page) params = params.set('page', filters.page);
+    if (filters.pageSize) params = params.set('pageSize', filters.pageSize);
+
+    return this.http.get<PaginatedResult<Assessment>>(this.baseUrl, { params });
   }
 
   get(id: string): Observable<Assessment> {
