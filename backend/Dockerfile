@@ -5,14 +5,14 @@
 # ver src/executor/executor.service.ts) con la misma estructura relativa
 # de carpetas que existe fuera de Docker.
 
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app/backend
 COPY backend/package.json backend/package-lock.json ./
 RUN npm ci
 COPY backend/ ./
 RUN npm run build
 
-FROM node:20-alpine AS runtime
+FROM node:24-alpine AS runtime
 ENV NODE_ENV=production
 WORKDIR /app/backend
 COPY backend/package.json backend/package-lock.json ./
