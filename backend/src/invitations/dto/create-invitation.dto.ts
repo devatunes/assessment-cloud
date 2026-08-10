@@ -1,5 +1,5 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 import { InvitationTrack } from '../entities/invitation.entity';
 
 export class CreateInvitationDto {
@@ -8,10 +8,12 @@ export class CreateInvitationDto {
   @IsString()
   candidateName?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
+  // Obligatorio: sin correo, la invitación nunca aparece en el historial de
+  // candidatos de la organización (se agrupa por email).
+  @ApiProperty()
   @IsEmail()
-  candidateEmail?: string;
+  @IsNotEmpty()
+  candidateEmail!: string;
 
   @ApiPropertyOptional({ description: 'Días hasta que el link expire. Sin valor = nunca expira.' })
   @IsOptional()

@@ -19,8 +19,8 @@
           <input type="text" [(ngModel)]="candidateName" name="candidateName" placeholder="Se puede dejar vacío" />
         </label>
         <label>
-          Correo (opcional)
-          <input type="email" [(ngModel)]="candidateEmail" name="candidateEmail" />
+          Correo
+          <input type="email" [(ngModel)]="candidateEmail" name="candidateEmail" required />
         </label>
         <label>
           Expira en (días, opcional)
@@ -59,7 +59,7 @@
           </datalist>
         </label>
       </div>
-      <button (click)="createInvitation()" [disabled]="creating">
+      <button (click)="createInvitation()" [disabled]="creating || !candidateEmail">
         {{ creating ? 'Generando...' : 'Generar link de invitación' }}
       </button>
 
@@ -80,8 +80,9 @@
       <h3>Importar candidatos por CSV</h3>
       <p>
         <small>
-          Archivo .csv con encabezado <code>nombre,email,track,especialidad</code> (track y
-          especialidad opcionales; track debe ser {{ tracks.join('/') }} o se deja sin clasificar).
+          Archivo .csv con encabezado <code>nombre,email,track,especialidad</code> (email
+          obligatorio; track y especialidad opcionales; track debe ser {{ tracks.join('/') }} o se
+          deja sin clasificar).
         </small>
       </p>
       <input type="file" accept=".csv,text/csv" (change)="onCsvSelected($event)" />

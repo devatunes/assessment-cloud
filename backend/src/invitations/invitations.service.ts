@@ -5,6 +5,7 @@ import { isEmail } from 'class-validator';
 import { Repository } from 'typeorm';
 import { Invitation, InvitationStatus } from './entities/invitation.entity';
 import { Assessment, AssessmentVisibility } from '../assessments/entities/assessment.entity';
+import { Candidate } from '../candidates/entities/candidate.entity';
 import { AttemptsService } from '../attempts/attempts.service';
 import { AttemptWithQuestions } from '../attempts/attempts.types';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
@@ -23,6 +24,8 @@ export class InvitationsService {
     private readonly invitationRepository: Repository<Invitation>,
     @InjectRepository(Assessment)
     private readonly assessmentRepository: Repository<Assessment>,
+    @InjectRepository(Candidate)
+    private readonly candidateRepository: Repository<Candidate>,
     private readonly attemptsService: AttemptsService,
   ) {}
 
@@ -82,7 +85,11 @@ export class InvitationsService {
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
 
-      if (row.candidateEmail && !isEmail(row.candidateEmail)) {
+      if (!row.candidateEmail) {
+        failed.push({ row: i + 1, email: row.candidateEmail, error: 'Correo requerido' });
+        continue;
+      }
+      if (!isEmail(row.candidateEmail)) {
         failed.push({ row: i + 1, email: row.candidateEmail, error: 'Correo inválido' });
         continue;
       }
@@ -209,6 +216,10 @@ export class InvitationsService {
       throw new BadRequestException('Esta invitación expiró');
     }
 
+    if (candidateId) {
+      await this.backfillCandidateEmail(invitation, candidateId);
+    }
+
     if (invitation.status === InvitationStatus.STARTED || invitation.status === InvitationStatus.COMPLETED) {
       return this.attemptsService.findOne(invitation.attemptId!);
     }
@@ -229,5 +240,20 @@ export class InvitationsService {
     await this.invitationRepository.save(invitation);
 
     return attempt;
+  }
+
+  // Si se invitó por link sin correo (candidateEmail null) pero quien lo abre
+  // ya tiene cuenta de candidato, completamos el dato desde su cuenta —
+  // si no, la invitación nunca aparece en el historial de la organización
+  // (reports.service.ts agrupa por candidateEmail).
+  private async backfillCandidateEmail(invitation: Invitation, candidateId: string): Promise<void> {
+    if (invitation.candidateEmail) return;
+
+    const candidate = await this.candidateRepository.findOne({ where: { id: candidateId } });
+    if (!candidate) return;
+
+    invitation.candidateEmail = candidate.email;
+    invitation.candidateName = invitation.candidateName ?? candidate.name;
+    await this.invitationRepository.save(invitation);
   }
 }
