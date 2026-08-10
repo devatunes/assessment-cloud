@@ -1,9 +1,5 @@
-name: PR checks
+name: Requirements
 
-# Corre al abrir (o actualizar) un PR contra staging o master. Por ahora
-# solo instala dependencias y corre las pruebas unitarias del backend — el
-# frontend todavía no tiene suite de tests, y las e2e del backend necesitan
-# una base de datos real, así que se agregan en un paso posterior aparte.
 on:
   pull_request:
     branches:
@@ -24,7 +20,7 @@ jobs:
       - name: Configurar Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
