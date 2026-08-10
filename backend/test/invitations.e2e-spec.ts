@@ -1,6 +1,9 @@
 import { Client } from 'pg';
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Invitation } from '../src/invitations/entities/invitation.entity';
 
 // Flujo de invitaciones oficiales de punta a punta: generar el link,
 // aterrizar sin sesión, iniciar, retomar a mitad de intento, y confirmar
@@ -16,6 +19,7 @@ describe('Invitations (e2e)', () => {
   const TEST_DB_NAME = 'assessment_test';
 
   let orgToken: string;
+  let invitationRepository: Repository<Invitation>;
 
   beforeAll(async () => {
     const adminClient = new Client({
@@ -59,6 +63,7 @@ describe('Invitations (e2e)', () => {
     app = await createApp();
     await app.init();
     httpServer = app.getHttpServer();
+    invitationRepository = app.get(getRepositoryToken(Invitation));
 
     const registerRes = await request(httpServer)
       .post('/auth/register-organization')
@@ -196,7 +201,7 @@ describe('Invitations (e2e)', () => {
     await request(httpServer)
       .post(`/assessments/${practiceAssessment.body.id}/invitations`)
       .set('Authorization', auth)
-      .send({})
+      .send({ candidateEmail: 'simulacro@example.com' })
       .expect(400);
   });
 
@@ -229,17 +234,28 @@ describe('Invitations (e2e)', () => {
       .send({ name: 'Assessment con candidato logueado', questionIds: [questionRes.body.id] })
       .expect(201);
 
-    const invitationRes = await request(httpServer)
-      .post(`/assessments/${assessmentRes.body.id}/invitations`)
-      .set('Authorization', auth)
-      .send({})
-      .expect(201);
+    // Simula una invitación LEGACY sin correo (candidateEmail ya es
+    // obligatorio en el endpoint público desde este fix, pero deben seguir
+    // resolviéndose bien las invitaciones creadas antes del cambio).
+    const orgTokenPayload = JSON.parse(Buffer.from(orgToken.split('.')[1], 'base64').toString());
+    const legacyInvitation = await invitationRepository.save(
+      invitationRepository.create({
+        organizationId: assessmentRes.body.organizationId,
+        assessmentId: assessmentRes.body.id,
+        candidateEmail: null,
+        createdByUserId: orgTokenPayload.sub,
+        token: `legacy-${Date.now()}`,
+      }),
+    );
+    const invitationRes = { body: legacyInvitation };
+    expect(invitationRes.body.candidateEmail).toBeNull();
 
+    const candidateEmail = `candidato-vinculado-${Date.now()}@example.com`;
     const candidateRes = await request(httpServer)
       .post('/candidate-auth/register')
       .send({
         name: 'Candidato Con Cuenta',
-        email: `candidato-vinculado-${Date.now()}@example.com`,
+        email: candidateEmail,
         password: 'password123',
       })
       .expect(201);
@@ -278,6 +294,21 @@ describe('Invitations (e2e)', () => {
       .set('Authorization', auth)
       .expect(200);
     expect(reportRes.body.completed).toBe(1);
+
+    // La invitación quedó backfillada con el correo de la cuenta del
+    // candidato, así que ahora sí aparece en el historial de candidatos.
+    const afterFinish = await request(httpServer)
+      .get(`/invitations/${invitationRes.body.token}`)
+      .expect(200);
+    expect(afterFinish.body.candidateEmail).toBe(candidateEmail);
+
+    const candidatesHistoryRes = await request(httpServer)
+      .get('/reports/candidates')
+      .set('Authorization', auth)
+      .expect(200);
+    expect(
+      candidatesHistoryRes.body.items.some((group: any) => group.email === candidateEmail),
+    ).toBe(true);
   });
 
   it('abrir una invitación sin token sigue funcionando igual (regresión: no exige cuenta de candidato)', async () => {
@@ -308,7 +339,7 @@ describe('Invitations (e2e)', () => {
     const invitationRes = await request(httpServer)
       .post(`/assessments/${assessmentRes.body.id}/invitations`)
       .set('Authorization', auth)
-      .send({})
+      .send({ candidateEmail: 'anonimo@example.com' })
       .expect(201);
 
     const startRes = await request(httpServer)
@@ -394,13 +425,17 @@ describe('Invitations (e2e)', () => {
           { candidateName: 'Uno', candidateEmail: 'uno@example.com', track: 'DEVELOPER', specialty: 'Backend' },
           { candidateName: 'Dos', candidateEmail: 'dos@example.com', track: 'QA' },
           { candidateName: 'Inválido', candidateEmail: 'no-es-un-correo' },
+          { candidateName: 'Sin correo' },
         ],
       })
       .expect(201);
 
     expect(bulkRes.body.created).toHaveLength(2);
-    expect(bulkRes.body.failed).toHaveLength(1);
+    expect(bulkRes.body.failed).toHaveLength(2);
     expect(bulkRes.body.failed[0].row).toBe(3);
+    expect(bulkRes.body.failed[0].error).toBe('Correo inválido');
+    expect(bulkRes.body.failed[1].row).toBe(4);
+    expect(bulkRes.body.failed[1].error).toBe('Correo requerido');
 
     const listRes = await request(httpServer)
       .get(`/assessments/${assessmentRes.body.id}/invitations`)

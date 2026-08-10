@@ -119,6 +119,12 @@ export class AssessmentInviteComponent implements OnInit {
 
   createInvitation(): void {
     this.error = null;
+
+    if (!this.candidateEmail) {
+      this.error = 'El correo del candidato es obligatorio';
+      return;
+    }
+
     this.creating = true;
     this.lastCreatedLink = null;
     this.copied = false;
