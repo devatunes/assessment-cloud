@@ -36,6 +36,15 @@ alternativa siempre que se explique la evolución, cubierto en
 | Swagger/OpenAPI | ✅ | [`/docs` en vivo](https://g9yvdux2rl.execute-api.us-east-1.amazonaws.com/docs) |
 | Despliegue en AWS | ✅ | Lambda + API Gateway + RDS + S3/CloudFront reales, no un free tier genérico |
 
+## Consideraciones de seguridad
+
+| Requisito | Cumple | Evidencia |
+|---|---|---|
+| No subir credenciales reales ni secretos a repos públicos | ✅ | Auditado manualmente: sin AWS keys, sin passwords reales, sin private keys en ningún archivo del repo. |
+| Usar datos simulados en todos los ejemplos | ✅ | Seed y `.env.example` usan `admin@example.com` / `changeme123` — nunca datos reales. |
+| Versionar el código en repositorios personales | ✅ | `github.com/devatunes/assessment-cloud` y `app-iac` — cuentas personales, no del banco. |
+| Usar `.gitignore` para excluir archivos sensibles | ✅ | `.env`, `*.local.env` y credenciales de deploy ignorados desde el primer commit — `backend/.env` real nunca se commiteó. |
+
 ## Entregables
 
 | Entregable | Dónde |
