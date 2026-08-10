@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -9,6 +9,7 @@ import {
   Invitation,
   InvitationPublicView,
   InvitationTrack,
+  PaginatedResult,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -34,8 +35,18 @@ export class InvitationsService {
     );
   }
 
-  listForAssessment(assessmentId: string): Observable<Invitation[]> {
-    return this.http.get<Invitation[]>(`${this.apiUrl}/assessments/${assessmentId}/invitations`);
+  listForAssessment(
+    assessmentId: string,
+    filters: { page?: number; pageSize?: number } = {},
+  ): Observable<PaginatedResult<Invitation>> {
+    let params = new HttpParams();
+    if (filters.page) params = params.set('page', filters.page);
+    if (filters.pageSize) params = params.set('pageSize', filters.pageSize);
+
+    return this.http.get<PaginatedResult<Invitation>>(
+      `${this.apiUrl}/assessments/${assessmentId}/invitations`,
+      { params },
+    );
   }
 
   // Importación masiva desde un CSV parseado en el navegador (ver

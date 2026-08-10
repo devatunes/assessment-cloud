@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InvitationsService } from './invitations.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { BulkCreateInvitationsDto } from './dto/bulk-create-invitations.dto';
 import { UpdateInvitationClassificationDto } from './dto/update-invitation-classification.dto';
+import { PaginationQueryDto } from '../common/pagination-query.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -34,8 +35,12 @@ export class AssessmentInvitationsController {
 
   @Get()
   @ApiOperation({ summary: 'Lista las invitaciones de un assessment con su estado' })
-  list(@Param('assessmentId') assessmentId: string, @CurrentUser() user: AuthenticatedUser) {
-    return this.invitationsService.listForAssessment(user.organizationId, assessmentId);
+  list(
+    @Param('assessmentId') assessmentId: string,
+    @Query() query: PaginationQueryDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.invitationsService.listForAssessment(user.organizationId, assessmentId, query);
   }
 
   @Post('bulk')

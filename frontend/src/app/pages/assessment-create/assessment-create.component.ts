@@ -48,9 +48,9 @@ export class AssessmentCreateComponent implements OnInit {
 
   ngOnInit(): void {
     this.loading = true;
-    this.questionsService.list({}).subscribe({
-      next: (questions) => {
-        this.questions = questions;
+    this.questionsService.list({ pageSize: 100 }).subscribe({
+      next: (result) => {
+        this.questions = result.items;
         this.loading = false;
       },
       error: () => {
@@ -59,8 +59,8 @@ export class AssessmentCreateComponent implements OnInit {
       },
     });
 
-    this.banksService.list().subscribe({
-      next: (banks) => (this.banks = banks),
+    this.banksService.list({ pageSize: 100 }).subscribe({
+      next: (result) => (this.banks = result.items),
       error: () => {
         // No bloqueamos la creación del assessment si esto falla; es solo un atajo.
       },

@@ -1,16 +1,20 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ContentVisibility, QuestionBank, QuestionBankDetail } from './models';
+import { ContentVisibility, PaginatedResult, QuestionBank, QuestionBankDetail } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class QuestionBanksService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/question-banks`;
 
-  list(): Observable<QuestionBank[]> {
-    return this.http.get<QuestionBank[]>(this.baseUrl);
+  list(filters: { page?: number; pageSize?: number } = {}): Observable<PaginatedResult<QuestionBank>> {
+    let params = new HttpParams();
+    if (filters.page) params = params.set('page', filters.page);
+    if (filters.pageSize) params = params.set('pageSize', filters.pageSize);
+
+    return this.http.get<PaginatedResult<QuestionBank>>(this.baseUrl, { params });
   }
 
   get(id: string): Observable<QuestionBankDetail> {

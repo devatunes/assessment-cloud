@@ -125,7 +125,7 @@ describe('Practice (e2e)', () => {
       .get('/practice/assessments')
       .set('Authorization', candidateAuth)
       .expect(200);
-    const catalogEntry = catalogRes.body.find((a: any) => a.id === assessmentRes.body.id);
+    const catalogEntry = catalogRes.body.items.find((a: any) => a.id === assessmentRes.body.id);
     expect(catalogEntry).toBeDefined();
     expect(catalogEntry.questionCount).toBe(1);
 
@@ -160,10 +160,10 @@ describe('Practice (e2e)', () => {
       .get('/practice/my-attempts')
       .set('Authorization', candidateAuth)
       .expect(200);
-    expect(historyRes.body).toHaveLength(1);
-    expect(historyRes.body[0].id).toBe(attemptId);
-    expect(historyRes.body[0].status).toBe('COMPLETED');
-    expect(historyRes.body[0].level).toBe('JUNIOR');
+    expect(historyRes.body.items).toHaveLength(1);
+    expect(historyRes.body.items[0].id).toBe(attemptId);
+    expect(historyRes.body.items[0].status).toBe('COMPLETED');
+    expect(historyRes.body.items[0].level).toBe('JUNIOR');
 
     // 8. Tras COMPLETED, un nuevo "start" arranca un intento NUEVO (a
     // diferencia de las invitaciones oficiales, la práctica sí permite reintentar)

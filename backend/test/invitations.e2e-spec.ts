@@ -266,10 +266,10 @@ describe('Invitations (e2e)', () => {
       .get('/practice/my-attempts')
       .set('Authorization', candidateAuth)
       .expect(200);
-    expect(historyRes.body).toHaveLength(1);
-    expect(historyRes.body[0].id).toBe(attemptId);
-    expect(historyRes.body[0].assessmentVisibility).toBe('OFFICIAL');
-    expect(historyRes.body[0].status).toBe('COMPLETED');
+    expect(historyRes.body.items).toHaveLength(1);
+    expect(historyRes.body.items[0].id).toBe(attemptId);
+    expect(historyRes.body.items[0].assessmentVisibility).toBe('OFFICIAL');
+    expect(historyRes.body.items[0].status).toBe('COMPLETED');
 
     // Y sigue apareciendo en el reporte de la organización (la vinculación
     // a la cuenta del candidato no le quita visibilidad al reclutador)
@@ -406,6 +406,6 @@ describe('Invitations (e2e)', () => {
       .get(`/assessments/${assessmentRes.body.id}/invitations`)
       .set('Authorization', auth)
       .expect(200);
-    expect(listRes.body).toHaveLength(2);
+    expect(listRes.body.items).toHaveLength(2);
   });
 });

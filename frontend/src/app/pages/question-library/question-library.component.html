@@ -19,7 +19,7 @@
     <div class="grid">
       <label>
         Categoría
-        <select [(ngModel)]="filterCategory" (change)="load()">
+        <select [(ngModel)]="filterCategory" (change)="onFilterChange()">
           <option value="">Todas</option>
           @for (cat of categories; track cat) {
             <option [value]="cat">{{ categoryLabels[cat] }}</option>
@@ -28,7 +28,7 @@
       </label>
       <label>
         Dificultad
-        <select [(ngModel)]="filterDifficulty" (change)="load()">
+        <select [(ngModel)]="filterDifficulty" (change)="onFilterChange()">
           <option value="">Todas</option>
           <option value="EASY">EASY</option>
           <option value="MEDIUM">MEDIUM</option>
@@ -37,7 +37,7 @@
       </label>
       <label>
         Tipo
-        <select [(ngModel)]="filterType" (change)="load()">
+        <select [(ngModel)]="filterType" (change)="onFilterChange()">
           <option value="">Todos</option>
           <option value="MULTIPLE_CHOICE">Selección múltiple</option>
           <option value="CODE">Código</option>
@@ -104,4 +104,6 @@
       </tbody>
     </table>
   </div>
+
+  <app-paginator [page]="page" [pageSize]="pageSize" [total]="total" (pageChange)="onPageChange($event)" />
 </section>

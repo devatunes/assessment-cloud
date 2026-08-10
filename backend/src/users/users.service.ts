@@ -4,6 +4,8 @@ import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { Repository } from 'typeorm';
 import { User, UserRole, UserStatus } from './entities/user.entity';
+import { PaginationQueryDto } from '../common/pagination-query.dto';
+import { PaginatedResult, paginate } from '../common/paginated-result';
 
 const ACTIVATION_TOKEN_TTL_HOURS = 72;
 const BCRYPT_ROUNDS = 10;
@@ -26,11 +28,18 @@ export class UsersService {
     return this.userRepository.findOne({ where: { id } });
   }
 
-  listByOrganization(organizationId: string): Promise<User[]> {
-    return this.userRepository.find({
+  async listByOrganization(organizationId: string, query: PaginationQueryDto): Promise<PaginatedResult<User>> {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+
+    const [items, total] = await this.userRepository.findAndCount({
       where: { organizationId },
       order: { createdAt: 'ASC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
+
+    return paginate(items, total, page, pageSize);
   }
 
   async createOrganizationAdmin(params: {

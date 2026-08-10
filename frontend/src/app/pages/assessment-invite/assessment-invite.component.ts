@@ -12,11 +12,12 @@ import {
   Invitation,
   InvitationTrack,
 } from '../../core/models';
+import { PaginatorComponent } from '../../shared/paginator.component';
 
 @Component({
   selector: 'app-assessment-invite',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, PaginatorComponent],
   templateUrl: './assessment-invite.component.html',
 })
 export class AssessmentInviteComponent implements OnInit {
@@ -26,11 +27,14 @@ export class AssessmentInviteComponent implements OnInit {
 
   readonly tracks = Object.keys(INVITATION_TRACK_LABELS) as InvitationTrack[];
   readonly trackLabels = INVITATION_TRACK_LABELS;
+  readonly pageSize = 20;
 
   assessment: Assessment | null = null;
   invitations: Invitation[] = [];
   loading = false;
   error: string | null = null;
+  invitationsPage = 1;
+  invitationsTotal = 0;
 
   candidateName = '';
   candidateEmail = '';
@@ -73,16 +77,24 @@ export class AssessmentInviteComponent implements OnInit {
   }
 
   loadInvitations(): void {
-    this.invitationsService.listForAssessment(this.assessmentId).subscribe({
-      next: (invitations) => {
-        this.invitations = invitations;
-        this.loading = false;
-      },
-      error: () => {
-        this.error = 'No se pudieron cargar las invitaciones';
-        this.loading = false;
-      },
-    });
+    this.invitationsService
+      .listForAssessment(this.assessmentId, { page: this.invitationsPage, pageSize: this.pageSize })
+      .subscribe({
+        next: (result) => {
+          this.invitations = result.items;
+          this.invitationsTotal = result.total;
+          this.loading = false;
+        },
+        error: () => {
+          this.error = 'No se pudieron cargar las invitaciones';
+          this.loading = false;
+        },
+      });
+  }
+
+  onInvitationsPageChange(page: number): void {
+    this.invitationsPage = page;
+    this.loadInvitations();
   }
 
   buildLink(token: string): string {
@@ -112,6 +124,7 @@ export class AssessmentInviteComponent implements OnInit {
           this.expiresInDays = null;
           this.track = '';
           this.specialty = '';
+          this.invitationsPage = 1;
           this.loadInvitations();
         },
         error: () => {
@@ -182,6 +195,7 @@ export class AssessmentInviteComponent implements OnInit {
         this.importingCsv = false;
         this.csvResult = result;
         this.csvRows = [];
+        this.invitationsPage = 1;
         this.loadInvitations();
       },
       error: () => {

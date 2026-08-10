@@ -6,6 +6,8 @@ import { QuestionBankItem } from './entities/question-bank-item.entity';
 import { CreateQuestionBankDto } from './dto/create-question-bank.dto';
 import { UpdateQuestionBankDto } from './dto/update-question-bank.dto';
 import { AddQuestionsToBankDto } from './dto/add-questions-to-bank.dto';
+import { QueryQuestionBanksDto } from './dto/query-question-banks.dto';
+import { PaginatedResult, paginate } from '../common/paginated-result';
 
 @Injectable()
 export class QuestionBanksService {
@@ -17,17 +19,30 @@ export class QuestionBanksService {
   ) {}
 
   // Bancos propios + PÚBLICOS de cualquier organización (de solo lectura).
-  async findAll(organizationId: string): Promise<Array<QuestionBank & { questionCount: number }>> {
-    const banks = await this.bankRepository
+  async findAll(
+    organizationId: string,
+    query: QueryQuestionBanksDto,
+  ): Promise<PaginatedResult<QuestionBank & { questionCount: number }>> {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+
+    const qb = this.bankRepository
       .createQueryBuilder('bank')
       .where('(bank.organization_id = :organizationId OR bank.visibility = :public)', {
         organizationId,
         public: ContentVisibility.PUBLIC,
       })
-      .orderBy('bank.createdAt', 'DESC')
+      .orderBy('bank.createdAt', 'DESC');
+
+    const total = await qb.getCount();
+
+    const banks = await qb
+      .clone()
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
       .getMany();
 
-    if (banks.length === 0) return [];
+    if (banks.length === 0) return paginate([], total, page, pageSize);
 
     const counts = await this.itemRepository
       .createQueryBuilder('item')
@@ -39,7 +54,9 @@ export class QuestionBanksService {
 
     const countByBankId = new Map(counts.map((c) => [c.bankId, Number(c.count)]));
 
-    return banks.map((bank) => ({ ...bank, questionCount: countByBankId.get(bank.id) ?? 0 }));
+    const items = banks.map((bank) => ({ ...bank, questionCount: countByBankId.get(bank.id) ?? 0 }));
+
+    return paginate(items, total, page, pageSize);
   }
 
   async findOne(organizationId: string, id: string): Promise<QuestionBank & { items: QuestionBankItem[] }> {

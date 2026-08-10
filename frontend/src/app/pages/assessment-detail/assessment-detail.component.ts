@@ -160,10 +160,10 @@ export class AssessmentDetailComponent implements OnInit {
 
   private loadAvailableQuestions(): void {
     this.loadingAvailable = true;
-    this.questionsService.list({}).subscribe({
-      next: (questions) => {
+    this.questionsService.list({ pageSize: 100 }).subscribe({
+      next: (result) => {
         const currentIds = new Set(this.assessment?.questions?.map((q) => q.questionId) ?? []);
-        this.availableQuestions = questions.filter((q) => !currentIds.has(q.id));
+        this.availableQuestions = result.items.filter((q) => !currentIds.has(q.id));
         this.loadingAvailable = false;
       },
       error: () => {

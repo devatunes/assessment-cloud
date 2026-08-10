@@ -6,11 +6,12 @@ import { QuestionBanksService } from '../../core/question-banks.service';
 import { AuthService } from '../../core/auth.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { ContentVisibility, QuestionBank } from '../../core/models';
+import { PaginatorComponent } from '../../shared/paginator.component';
 
 @Component({
   selector: 'app-question-bank-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, PaginatorComponent],
   templateUrl: './question-bank-list.component.html',
 })
 export class QuestionBankListComponent implements OnInit {
@@ -18,10 +19,14 @@ export class QuestionBankListComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly confirmDialog = inject(ConfirmDialogService);
 
+  readonly pageSize = 20;
+
   banks: QuestionBank[] = [];
   loading = false;
   error: string | null = null;
   removingId: string | null = null;
+  page = 1;
+  total = 0;
 
   showCreateForm = false;
   creating = false;
@@ -45,9 +50,10 @@ export class QuestionBankListComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    this.banksService.list().subscribe({
-      next: (banks) => {
-        this.banks = banks;
+    this.banksService.list({ page: this.page, pageSize: this.pageSize }).subscribe({
+      next: (result) => {
+        this.banks = result.items;
+        this.total = result.total;
         this.loading = false;
       },
       error: () => {
@@ -55,6 +61,11 @@ export class QuestionBankListComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+    this.load();
   }
 
   toggleCreateForm(): void {

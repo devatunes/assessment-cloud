@@ -2,7 +2,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { CreateQuestionPayload, Question, QuestionCategory, QuestionDifficulty, QuestionType } from './models';
+import {
+  CreateQuestionPayload,
+  PaginatedResult,
+  Question,
+  QuestionCategory,
+  QuestionDifficulty,
+  QuestionType,
+} from './models';
 
 @Injectable({ providedIn: 'root' })
 export class QuestionsService {
@@ -13,13 +20,17 @@ export class QuestionsService {
     category?: QuestionCategory;
     difficulty?: QuestionDifficulty;
     type?: QuestionType;
-  }): Observable<Question[]> {
+    page?: number;
+    pageSize?: number;
+  }): Observable<PaginatedResult<Question>> {
     let params = new HttpParams();
     if (filters.category) params = params.set('category', filters.category);
     if (filters.difficulty) params = params.set('difficulty', filters.difficulty);
     if (filters.type) params = params.set('type', filters.type);
+    if (filters.page) params = params.set('page', filters.page);
+    if (filters.pageSize) params = params.set('pageSize', filters.pageSize);
 
-    return this.http.get<Question[]>(this.baseUrl, { params });
+    return this.http.get<PaginatedResult<Question>>(this.baseUrl, { params });
   }
 
   get(id: string): Observable<Question> {

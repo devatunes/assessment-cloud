@@ -7,6 +7,8 @@ import { Question } from '../questions/entities/question.entity';
 import { ContentVisibility } from '../question-banks/entities/question-bank.entity';
 import { CreateAssessmentDto } from './dto/create-assessment.dto';
 import { UpdateAssessmentDto } from './dto/update-assessment.dto';
+import { PaginationQueryDto } from '../common/pagination-query.dto';
+import { PaginatedResult, paginate } from '../common/paginated-result';
 
 @Injectable()
 export class AssessmentsService {
@@ -19,11 +21,18 @@ export class AssessmentsService {
     private readonly assessmentQuestionRepository: Repository<AssessmentQuestion>,
   ) {}
 
-  findAll(organizationId: string): Promise<Assessment[]> {
-    return this.assessmentRepository.find({
+  async findAll(organizationId: string, query: PaginationQueryDto): Promise<PaginatedResult<Assessment>> {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+
+    const [items, total] = await this.assessmentRepository.findAndCount({
       where: { organizationId },
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
+
+    return paginate(items, total, page, pageSize);
   }
 
   async findOne(organizationId: string, id: string): Promise<Assessment> {

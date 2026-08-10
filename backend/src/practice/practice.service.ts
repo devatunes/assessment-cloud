@@ -9,6 +9,8 @@ import { AttemptWithQuestions } from '../attempts/attempts.types';
 import { computeLevel } from '../assessments/level.util';
 import { AuthenticatedCandidate } from '../candidate-auth/candidate-auth-user.interface';
 import { BadgesService } from '../badges/badges.service';
+import { PaginationQueryDto } from '../common/pagination-query.dto';
+import { PaginatedResult, paginate } from '../common/paginated-result';
 
 @Injectable()
 export class PracticeService {
@@ -29,13 +31,25 @@ export class PracticeService {
 
   // Catálogo GLOBAL: simulacros de CUALQUIER organización, visibles para
   // cualquier candidato registrado (decisión ya validada con el usuario).
-  async listCatalog() {
-    const assessments = await this.assessmentRepository.find({
+  async listCatalog(query: PaginationQueryDto): Promise<PaginatedResult<{
+    id: string;
+    name: string;
+    description: string | null;
+    timeLimitMinutes: number | null;
+    questionCount: number;
+    createdAt: Date;
+  }>> {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+
+    const [assessments, total] = await this.assessmentRepository.findAndCount({
       where: { visibility: AssessmentVisibility.PRACTICE },
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
 
-    if (assessments.length === 0) return [];
+    if (assessments.length === 0) return paginate([], total, page, pageSize);
 
     const counts = await this.assessmentQuestionRepository
       .createQueryBuilder('aq')
@@ -47,7 +61,7 @@ export class PracticeService {
 
     const countByAssessmentId = new Map(counts.map((c) => [c.assessmentId, Number(c.count)]));
 
-    return assessments.map((a) => ({
+    const items = assessments.map((a) => ({
       id: a.id,
       name: a.name,
       description: a.description,
@@ -55,6 +69,8 @@ export class PracticeService {
       questionCount: countByAssessmentId.get(a.id) ?? 0,
       createdAt: a.createdAt,
     }));
+
+    return paginate(items, total, page, pageSize);
   }
 
   // Si ya hay un intento IN_PROGRESS de este candidato sobre este simulacro,
@@ -96,19 +112,24 @@ export class PracticeService {
   // aparece acá igual que uno de práctica, distinguido por
   // "assessmentVisibility", pero NUNCA dejará de aparecer también en el
   // reporte de la organización dueña (ese reporte no filtra por candidateId).
-  async myAttempts(candidateId: string) {
-    const attempts = await this.attemptRepository.find({
+  async myAttempts(candidateId: string, query: PaginationQueryDto) {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+
+    const [attempts, total] = await this.attemptRepository.findAndCount({
       where: { candidateId },
       order: { startedAt: 'DESC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
 
-    if (attempts.length === 0) return [];
+    if (attempts.length === 0) return paginate([], total, page, pageSize);
 
     const assessmentIds = [...new Set(attempts.map((a) => a.assessmentId))];
     const assessments = await this.assessmentRepository.find({ where: { id: In(assessmentIds) } });
     const assessmentById = new Map(assessments.map((a) => [a.id, a]));
 
-    return attempts.map((attempt) => {
+    const items = attempts.map((attempt) => {
       const assessment = assessmentById.get(attempt.assessmentId);
       const scorePercentage =
         attempt.score !== null && attempt.maxScore > 0
@@ -131,5 +152,7 @@ export class PracticeService {
         finishedAt: attempt.finishedAt,
       };
     });
+
+    return paginate(items, total, page, pageSize);
   }
 }

@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { QuestionBanksService } from './question-banks.service';
 import { CreateQuestionBankDto } from './dto/create-question-bank.dto';
 import { UpdateQuestionBankDto } from './dto/update-question-bank.dto';
 import { AddQuestionsToBankDto } from './dto/add-questions-to-bank.dto';
+import { QueryQuestionBanksDto } from './dto/query-question-banks.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -18,8 +19,8 @@ export class QuestionBanksController {
 
   @Get()
   @ApiOperation({ summary: 'Lista los bancos de preguntas de la organización' })
-  findAll(@CurrentUser() user: AuthenticatedUser) {
-    return this.service.findAll(user.organizationId);
+  findAll(@Query() query: QueryQuestionBanksDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.service.findAll(user.organizationId, query);
   }
 
   @Get(':id')

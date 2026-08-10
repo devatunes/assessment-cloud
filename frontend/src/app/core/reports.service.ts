@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AssessmentReport, CandidateHistoryGroup, OrganizationOverview } from './models';
+import { AssessmentReport, CandidateHistoryGroup, OrganizationOverview, PaginatedResult } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class ReportsService {
@@ -21,13 +21,19 @@ export class ReportsService {
     track?: string;
     specialty?: string;
     year?: number;
-  }): Observable<CandidateHistoryGroup[]> {
+    page?: number;
+    pageSize?: number;
+  }): Observable<PaginatedResult<CandidateHistoryGroup>> {
     let params = new HttpParams();
     if (filters.track) params = params.set('track', filters.track);
     if (filters.specialty) params = params.set('specialty', filters.specialty);
     if (filters.year) params = params.set('year', filters.year);
+    if (filters.page) params = params.set('page', filters.page);
+    if (filters.pageSize) params = params.set('pageSize', filters.pageSize);
 
-    return this.http.get<CandidateHistoryGroup[]>(`${this.baseUrl}/reports/candidates`, { params });
+    return this.http.get<PaginatedResult<CandidateHistoryGroup>>(`${this.baseUrl}/reports/candidates`, {
+      params,
+    });
   }
 
   // El endpoint exige el Bearer del staff de organización, así que no se

@@ -325,6 +325,6 @@ describe('Assessment Cloud (e2e)', () => {
       .get('/questions')
       .set('Authorization', authed(orgBToken))
       .expect(200);
-    expect(orgBQuestions.body.find((q: any) => q.id === orgAQuestion.body.id)).toBeUndefined();
+    expect(orgBQuestions.body.items.find((q: any) => q.id === orgAQuestion.body.id)).toBeUndefined();
   });
 });

@@ -7,6 +7,7 @@ import { ContentVisibility } from '../question-banks/entities/question-bank.enti
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { QueryQuestionsDto } from './dto/query-questions.dto';
+import { PaginatedResult, paginate } from '../common/paginated-result';
 
 @Injectable()
 export class QuestionsService {
@@ -19,28 +20,55 @@ export class QuestionsService {
 
   // Biblioteca visible: las propias de la organización + las PÚBLICAS de
   // cualquier otra (de solo lectura, ver update/remove más abajo).
-  async findAll(organizationId: string, query: QueryQuestionsDto): Promise<Question[]> {
-    const qb = this.questionRepository
+  async findAll(organizationId: string, query: QueryQuestionsDto): Promise<PaginatedResult<Question>> {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+
+    const filtered = this.questionRepository
       .createQueryBuilder('question')
-      .leftJoinAndSelect('question.options', 'option')
       .where('(question.organization_id = :organizationId OR question.visibility = :public)', {
         organizationId,
         public: ContentVisibility.PUBLIC,
-      })
-      .orderBy('question.createdAt', 'DESC')
-      .addOrderBy('option.position', 'ASC');
+      });
 
     if (query.category) {
-      qb.andWhere('question.category = :category', { category: query.category });
+      filtered.andWhere('question.category = :category', { category: query.category });
     }
     if (query.difficulty) {
-      qb.andWhere('question.difficulty = :difficulty', { difficulty: query.difficulty });
+      filtered.andWhere('question.difficulty = :difficulty', { difficulty: query.difficulty });
     }
     if (query.type) {
-      qb.andWhere('question.type = :type', { type: query.type });
+      filtered.andWhere('question.type = :type', { type: query.type });
     }
 
-    return qb.getMany();
+    const total = await filtered.getCount();
+
+    // Paginar directo sobre un query con leftJoinAndSelect a "options" (una
+    // relación 1:N) rompería: skip/take se aplicarían a las filas SQL ya
+    // multiplicadas por cada opción, no a preguntas distintas. Por eso se
+    // pagina primero solo IDs, y se hace un segundo query con el join para
+    // esa página exacta.
+    const pageIds = await filtered
+      .clone()
+      .select('question.id')
+      .orderBy('question.createdAt', 'DESC')
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getMany();
+
+    if (pageIds.length === 0) {
+      return paginate<Question>([], total, page, pageSize);
+    }
+
+    const questions = await this.questionRepository
+      .createQueryBuilder('question')
+      .leftJoinAndSelect('question.options', 'option')
+      .where('question.id IN (:...ids)', { ids: pageIds.map((q) => q.id) })
+      .orderBy('question.createdAt', 'DESC')
+      .addOrderBy('option.position', 'ASC')
+      .getMany();
+
+    return paginate(questions, total, page, pageSize);
   }
 
   async findOne(organizationId: string, id: string): Promise<Question> {

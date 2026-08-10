@@ -10,6 +10,8 @@ import { AttemptWithQuestions } from '../attempts/attempts.types';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { BulkInvitationRowDto } from './dto/bulk-create-invitations.dto';
 import { UpdateInvitationClassificationDto } from './dto/update-invitation-classification.dto';
+import { PaginationQueryDto } from '../common/pagination-query.dto';
+import { PaginatedResult, paginate } from '../common/paginated-result';
 
 export type BulkInvitationFailure = { row: number; email?: string; error: string };
 export type BulkInvitationResult = { created: Invitation[]; failed: BulkInvitationFailure[] };
@@ -130,11 +132,22 @@ export class InvitationsService {
     return this.invitationRepository.save(invitation);
   }
 
-  async listForAssessment(organizationId: string, assessmentId: string): Promise<Invitation[]> {
-    return this.invitationRepository.find({
+  async listForAssessment(
+    organizationId: string,
+    assessmentId: string,
+    query: PaginationQueryDto,
+  ): Promise<PaginatedResult<Invitation>> {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+
+    const [items, total] = await this.invitationRepository.findAndCount({
       where: { organizationId, assessmentId },
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
+
+    return paginate(items, total, page, pageSize);
   }
 
   // Lectura pública (landing del candidato invitado). Aplica el flip
