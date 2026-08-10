@@ -7,9 +7,24 @@ candidato y practicar gratis en un catálogo público de simulacros, ganando ins
 viendo en qué nivel (Junior/Semisenior/Senior) queda según su puntaje.
 
 - **Código de la app** (backend + frontend + executor): este repositorio.
-- **Infraestructura como código**: [`app-iac`](../app-iac) (Terraform), módulos
+- **Infraestructura como código real**: [`app-iac`](../app-iac) (Terraform), módulos
   `modules/*/assessment`.
 - **Desplegado en AWS**: `https://dkdbmj2vpxalx.cloudfront.net`.
+- **Documentación extendida** en [`artifacts/`](artifacts/): arquitectura con
+  íconos reales de AWS, costos, guía de arranque local, y Terraform de
+  referencia para la arquitectura objetivo.
+
+## Índice
+
+- [Dos sistemas de cuentas, completamente separados](#dos-sistemas-de-cuentas-completamente-separados)
+- [Funcionalidades](#funcionalidades)
+- [Arquitectura](#arquitectura)
+- [Costos](#costos)
+- [Estructura del repo](#estructura-del-repo)
+- [Ejecutar en local](#ejecutar-en-local)
+- [Tests](#tests)
+- [Desplegar en AWS](#desplegar-en-aws)
+- [Qué haría con más tiempo](#qué-haría-con-más-tiempo)
 
 ## Dos sistemas de cuentas, completamente separados
 
@@ -87,12 +102,6 @@ arquitectura desplegada hoy contra el siguiente paso natural (VPC, RDS Proxy,
 read replica, executor en contenedor efímero), con el porqué de cada elección:
 [**`artifacts/ARCHITECTURE.md`**](artifacts/ARCHITECTURE.md).
 
-- 💰 **Costos** de ambos escenarios, con el porqué de cada salto de precio:
-  [`artifacts/COSTS.md`](artifacts/COSTS.md).
-- 🧱 **Terraform de referencia** para cuando se implemente la arquitectura
-  objetivo (no aplicado, no es la infraestructura real de este proyecto):
-  [`artifacts/terraform-target/`](artifacts/terraform-target/).
-
 La Lambda del backend es un único NestJS que expone, entre otros, estos módulos:
 `auth` (staff de organización), `candidate-auth` + `practice` (candidatos y
 simulacros, JWT con audience propia), `question-banks`, `badges`, `reports`,
@@ -142,6 +151,20 @@ sequenceDiagram
   justifica ese patrón acá.
 - **Solo JavaScript en el editor de código**, no Java. Simplifica drásticamente el
   executor manteniendo el requisito funcional del reto.
+
+## Costos
+
+| | Actual (desplegado hoy) | Objetivo (alto tráfico sostenido) |
+|---|---:|---:|
+| **Total mensual estimado** | ~$0–17/mes | ~$185/mes |
+
+Lo desplegado hoy está optimizado deliberadamente para uso puntual: escala
+a cero, sin NAT Gateway ni VPC. El objetivo agrega ALB, ECS Fargate (backend
++ pool del executor), RDS Proxy, Read Replica y VPC Interface Endpoints —
+capacidad siempre encendida, que solo se justifica con tráfico sostenido.
+
+Desglose recurso por recurso, con el porqué de cada salto de precio y un
+camino de adopción gradual: [**`artifacts/COSTS.md`**](artifacts/COSTS.md).
 
 ## Estructura del repo
 
@@ -216,15 +239,27 @@ a la API desplegada, sin tocar el `environment.ts` que usa el desarrollo local.
 Los outputs de Terraform (`assessment_api_url`, `assessment_cloudfront_domain_name`,
 `jwt_secret`, etc.) quedan disponibles con `terraform output` desde `app-iac/`.
 
+🧱 **Terraform de referencia para la arquitectura objetivo** (VPC, ALB, ECS
+Fargate, RDS Proxy, Read Replica) — validado pero no aplicado, no es la
+infraestructura real de este proyecto, es el punto de partida para cuando
+el tráfico lo justifique: [`artifacts/terraform-target/`](artifacts/terraform-target/).
+
 ## Qué haría con más tiempo
 
-- Sandbox más fuerte para el executor (vm2/isolated-vm o contenedores efímeros): hoy
-  `spawnSync` con `env: {}` y timeout es razonable, pero no aísla filesystem/red.
+Ya diseñados y con Terraform de referencia listo, pendientes solo de que el
+tráfico los justifique — ver [Arquitectura](#arquitectura) y [Costos](#costos):
+
+- **Sandbox más fuerte para el executor** — contenedor efímero por ejecución
+  (ECS Fargate, pool cálido) en vez de `spawnSync`, que no aísla filesystem/red
+  dentro de la misma Lambda.
+- **Cerrar el acceso público a RDS** — VPC con subnets privadas, RDS Proxy y
+  Read Replica, en vez de la instancia pública actual.
+
+Genuinamente sin explorar todavía:
+
 - Soporte de otros lenguajes en el executor (Java, Python), no solo JavaScript.
 - Ampliar cobertura de tests unitarios (backend y frontend) y sumar una suite de e2e de
   frontend corrible en CI, no solo scripts de Playwright ad-hoc.
-- Mover la Lambda del backend a la VPC (Interface Endpoints) para cerrar por completo el
-  acceso público a RDS.
 - Notificaciones por email reales (invitaciones y activación de cuenta hoy generan un
   link para copiar/enviar manualmente, sin AWS SES).
 - Catálogo de insignias configurable desde el admin (hoy es un catálogo fijo en código,
