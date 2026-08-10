@@ -24,7 +24,7 @@ frontend/src/environments/environment.prod.generated.ts
 
 # Presentaciones y notas de trabajo para la sustentación (no son parte del código)
 artifacts/*.pptx
-artifacts/diapositivas-actualizadas.md
+artifacts/SLIDES.md
 
 # Terraform (código de referencia, nunca se aplicó contra AWS)
 artifacts/terraform-target/.terraform/
