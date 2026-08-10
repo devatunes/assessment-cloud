@@ -82,30 +82,15 @@ viendo en qué nivel (Junior/Semisenior/Senior) queda según su puntaje.
 
 ## Arquitectura
 
-```mermaid
-flowchart TB
-    Browser["Navegador"]
-
-    subgraph AWS["AWS (us-east-1)"]
-        CF["CloudFront"] --> S3["S3 (Angular build)"]
-        APIGW["API Gateway HTTP v2"] --> Lambda["Lambda: assessment-backend<br/>(NestJS, fuera de VPC)"]
-        Lambda -->|TLS forzado, SG 5432 público| RDS["RDS PostgreSQL<br/>assessment-backend-postgres"]
-        Lambda -->|lambda:InvokeFunction| Executor["Lambda: assessment-backend-executor<br/>(rol sin permisos, sandbox de código JS)"]
-    end
-
-    Browser --> CF
-    Browser --> APIGW
-```
+Diagramas con los íconos reales de cada servicio de AWS, comparando la
+arquitectura desplegada hoy contra el siguiente paso natural (VPC, RDS Proxy,
+read replica, executor en contenedor efímero), con el porqué de cada elección:
+[**`artifacts/ARCHITECTURE.md`**](artifacts/ARCHITECTURE.md).
 
 La Lambda del backend es un único NestJS que expone, entre otros, estos módulos:
 `auth` (staff de organización), `candidate-auth` + `practice` (candidatos y
 simulacros, JWT con audience propia), `question-banks`, `badges`, `reports`,
 `invitations` — todo en el mismo proceso, sin infraestructura nueva por módulo.
-
-Diagramas con los íconos reales de cada servicio de AWS, comparando la
-arquitectura desplegada hoy contra el siguiente paso natural (VPC, RDS Proxy,
-read replica, executor en contenedor efímero):
-[**`artifacts/ARCHITECTURE.md`**](artifacts/ARCHITECTURE.md).
 
 **Secuencia de "Ejecutar código":**
 
