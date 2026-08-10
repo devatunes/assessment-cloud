@@ -35,16 +35,15 @@
       }
     </p>
 
-    @if (assessment.visibility === 'OFFICIAL') {
-      <div class="header-actions">
+    <div class="header-actions mt-1">
+      @if (assessment.visibility === 'OFFICIAL') {
         <a role="button" [routerLink]="['/assessments', assessmentId, 'invite']">Invitaciones</a>
         <a role="button" class="secondary" [routerLink]="['/assessments', assessmentId, 'report']">Reporte</a>
-      </div>
-    }
-
-    <button class="secondary" (click)="toggleEditForm()">
-      {{ showEditForm ? 'Cancelar edición' : 'Editar configuración' }}
-    </button>
+      }
+      <button class="secondary" (click)="toggleEditForm()">
+        {{ showEditForm ? 'Cancelar edición' : 'Editar configuración' }}
+      </button>
+    </div>
 
     @if (showEditForm) {
       <article>
