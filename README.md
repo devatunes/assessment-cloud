@@ -102,6 +102,11 @@ La Lambda del backend es un único NestJS que expone, entre otros, estos módulo
 simulacros, JWT con audience propia), `question-banks`, `badges`, `reports`,
 `invitations` — todo en el mismo proceso, sin infraestructura nueva por módulo.
 
+Diagramas con los íconos reales de cada servicio de AWS, comparando la
+arquitectura desplegada hoy contra el siguiente paso natural (VPC, RDS Proxy,
+read replica, executor en contenedor efímero):
+[**`artifacts/ARCHITECTURE.md`**](artifacts/ARCHITECTURE.md).
+
 **Secuencia de "Ejecutar código":**
 
 ```mermaid
@@ -175,64 +180,12 @@ assessment-cloud/
 
 ## Ejecutar en local
 
-Requisitos: Docker (y Node 24+/npm solo si vas a correr fuera de contenedor).
-
-### Opción A — todo dockerizado (bonus Docker)
-
-```bash
-docker compose up --build
-# Frontend: http://localhost:4200
-# Backend:  http://localhost:3000  (Swagger en /docs)
-```
-
-Migraciones + seed corren solas al arrancar el contenedor del backend.
-
-### Opción B — hot-reload para desarrollar
-
-```bash
-# 1. Solo la base de datos en Docker
-docker compose up -d db
-
-# 2. Backend (puerto 3000, migraciones + seed corren solas al arrancar)
-cd backend
-cp .env.example .env
-npm install
-npm run start:dev
-
-# 3. Frontend (puerto 4200), en otra terminal
-cd frontend
-npm install
-npm start
-```
-
-El seed inicial crea preguntas de ejemplo bajo una "Organización por defecto". Para
-entrar a verla, configura `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` en `backend/.env`
-antes del primer arranque — si no, simplemente regístrate desde `/register` o
-`/candidato/registro` para crear tu propia cuenta.
+Guía rápida y directa, paso a paso (Docker o hot-reload, requisitos, primer
+ingreso, tests, problemas comunes): [**`artifacts/LOCAL_SETUP.md`**](artifacts/LOCAL_SETUP.md).
 
 ## Tests
 
-```bash
-# Runner del executor (4 casos: correcto, incorrecto, timeout, error de sintaxis)
-npm run test:executor
-
-# Unit tests del backend — no requieren base de datos
-npm run test:backend
-
-# Unit tests del frontend (Jest)
-npm run test:frontend
-
-# E2E de flujo completo contra un Postgres real (biblioteca -> assessment ->
-# invitación -> candidato anónimo lo resuelve; registro/login de organización y
-# de candidatos; catálogo de simulacros, insignias, historial; reportes con
-# gráficas y su CSV; multi-tenant y aislamiento entre los dos sistemas de JWT).
-# Requiere `docker compose up -d db` corriendo primero; usa su propia base
-# "assessment_test", no toca los datos de desarrollo.
-npm run test:backend:e2e
-
-# Todos juntos
-npm test
-```
+Comandos para correrlos: [`artifacts/LOCAL_SETUP.md`](artifacts/LOCAL_SETUP.md#correr-los-tests).
 
 El e2e de backend cubre, entre otras cosas: fuga cross-tenant entre organizaciones
 (regresión permanente), invitaciones oficiales de punta a punta (generar → aterrizar →

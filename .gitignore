@@ -21,3 +21,6 @@ frontend/src/environments/environment.prod.generated.ts
 # Sistema
 .DS_Store
 *.log
+
+# Presentaciones (pesadas, no son parte del código)
+artifacts/*.pptx

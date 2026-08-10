@@ -31,7 +31,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NODE_ENV: production
+      # "development", no "production": este perfil usa el JWT_SECRET de
+      # desarrollo a propósito, y el guard de auth.module.ts rechaza esa
+      # combinación en NODE_ENV=production.
+      NODE_ENV: development
       PORT: 3000
       # "db" es el hostname interno del servicio de Postgres en esta red de Docker.
       DB_HOST: db

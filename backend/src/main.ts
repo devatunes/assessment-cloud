@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { createApp } from './bootstrap';
 import { runPendingMigrations } from './database/run-migrations';
 
