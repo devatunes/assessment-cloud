@@ -7,6 +7,10 @@ puntual y se vuelve sostenido — ahí el cálculo de costo/beneficio cambia, y
 pagar por capacidad siempre encendida sale más barato (y más rápido) que
 pagar por invocación.
 
+Costos exactos de ambos escenarios: [`COSTS.md`](COSTS.md). Terraform de
+referencia para implementar el objetivo cuando corresponda:
+[`terraform-target/`](terraform-target/).
+
 ## Actual — optimizada por costo
 
 ![Arquitectura actual](arch-current.png)
