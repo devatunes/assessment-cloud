@@ -100,6 +100,11 @@ export class AttemptsService {
     return this.buildSanitizedView(attempt, assessment);
   }
 
+  private async findAnswersByQuestionId(attemptId: string): Promise<Map<string, AttemptAnswer>> {
+    const answers = await this.answerRepository.find({ where: { attemptId } });
+    return new Map(answers.map((a) => [a.questionId, a]));
+  }
+
   async submitAnswer(
     attemptId: string,
     questionId: string,
@@ -323,21 +328,32 @@ export class AttemptsService {
     return new Date(attempt.startedAt.getTime() + assessment.timeLimitMinutes * 60 * 1000);
   }
 
-  private buildSanitizedView(attempt: Attempt, assessment: Assessment): AttemptWithQuestions {
-    const questions: SanitizedQuestion[] = assessment.questions.map((aq) => ({
-      id: aq.question.id,
-      title: aq.question.title,
-      statement: aq.question.statement,
-      category: aq.question.category,
-      difficulty: aq.question.difficulty,
-      type: aq.question.type,
-      position: aq.position,
-      codeTemplate: aq.question.codeTemplate,
-      visibleTestCases: (aq.question.testCases || [])
-        .filter((tc) => !tc.hidden)
-        .map((tc) => ({ input: tc.input, expectedOutput: tc.expectedOutput })),
-      options: (aq.question.options || []).map((o) => ({ id: o.id, text: o.text })),
-    }));
+  private async buildSanitizedView(
+    attempt: Attempt,
+    assessment: Assessment,
+  ): Promise<AttemptWithQuestions> {
+    const answersByQuestionId = await this.findAnswersByQuestionId(attempt.id);
+
+    const questions: SanitizedQuestion[] = assessment.questions.map((aq) => {
+      const answer = answersByQuestionId.get(aq.questionId);
+
+      return {
+        id: aq.question.id,
+        title: aq.question.title,
+        statement: aq.question.statement,
+        category: aq.question.category,
+        difficulty: aq.question.difficulty,
+        type: aq.question.type,
+        position: aq.position,
+        codeTemplate: aq.question.codeTemplate,
+        visibleTestCases: (aq.question.testCases || [])
+          .filter((tc) => !tc.hidden)
+          .map((tc) => ({ input: tc.input, expectedOutput: tc.expectedOutput })),
+        options: (aq.question.options || []).map((o) => ({ id: o.id, text: o.text })),
+        selectedOptionId: answer?.selectedOptionId ?? null,
+        submittedCode: answer?.submittedCode ?? null,
+      };
+    });
 
     return {
       id: attempt.id,

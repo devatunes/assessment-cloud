@@ -80,7 +80,11 @@ export class AttemptTakeComponent implements OnInit, OnDestroy {
         this.attempt = attempt;
         for (const q of attempt.questions) {
           if (q.type === 'CODE') {
-            this.codeByQuestion[q.id] = q.codeTemplate ?? '';
+            // Si ya había código guardado (retomando el intento), se
+            // restaura tal cual; si no, arranca del template en blanco.
+            this.codeByQuestion[q.id] = q.submittedCode ?? q.codeTemplate ?? '';
+          } else if (q.selectedOptionId) {
+            this.selectedOptionByQuestion[q.id] = q.selectedOptionId;
           }
         }
         this.loading = false;

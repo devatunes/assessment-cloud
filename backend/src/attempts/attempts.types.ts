@@ -15,6 +15,12 @@ export type SanitizedQuestion = {
   codeTemplate: string | null;
   visibleTestCases: Array<{ input: unknown; expectedOutput: string }>;
   options: Array<{ id: string; text: string }>;
+  // Lo que el candidato ya había respondido, para restaurar el formulario
+  // si recarga la página o retoma el intento en otra sesión/dispositivo —
+  // la respuesta ya cuenta para el puntaje aunque la pantalla la mostrara
+  // en blanco, pero eso confundía al candidato (parecía que se perdió).
+  selectedOptionId: string | null;
+  submittedCode: string | null;
 };
 
 export type AttemptWithQuestions = {

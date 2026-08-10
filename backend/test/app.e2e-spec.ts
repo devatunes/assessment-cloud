@@ -199,6 +199,14 @@ describe('Assessment Cloud (e2e)', () => {
     expect(runRes.body.allPassed).toBe(true);
     expect(runRes.body.results).toHaveLength(1); // solo el visible
 
+    // 7b. Retomar el intento (recargar la página / reabrir en otro momento)
+    // debe traer de vuelta lo ya respondido, no en blanco (bug corregido).
+    const resumedRes = await request(httpServer).get(`/attempts/${attemptId}`).expect(200);
+    const resumedMc = resumedRes.body.questions.find((q: any) => q.type === 'MULTIPLE_CHOICE');
+    const resumedCode = resumedRes.body.questions.find((q: any) => q.type === 'CODE');
+    expect(resumedMc.selectedOptionId).toBe(correctOptionId);
+    expect(resumedCode.submittedCode).toBe('function solution(n) { return String(n * 2); }');
+
     // 8. Finalizar: el score debe incluir el caso oculto (2/2) y el nivel SENIOR (100%)
     const finishRes = await request(httpServer)
       .post(`/attempts/${attemptId}/finish`)
