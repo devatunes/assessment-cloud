@@ -33,7 +33,7 @@ alternativa siempre que se explique la evolución, cubierto en
 | Bonus | Cumple | Evidencia |
 |---|---|---|
 | Docker | ✅ | `docker-compose.yml`, [`LOCAL_SETUP.md`](LOCAL_SETUP.md) |
-| Swagger/OpenAPI | ✅ | `/docs` en vivo |
+| Swagger/OpenAPI | ✅ | [`/docs` en vivo](https://g9yvdux2rl.execute-api.us-east-1.amazonaws.com/docs) |
 | Despliegue en AWS | ✅ | Lambda + API Gateway + RDS + S3/CloudFront reales, no un free tier genérico |
 
 ## Entregables
@@ -43,4 +43,4 @@ alternativa siempre que se explique la evolución, cubierto en
 | Código fuente | Este repositorio |
 | README | [`../README.md`](../README.md) |
 | Diagrama de arquitectura | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
-| Instrucciones de ejecución | [`LOCAL_SETUP.md`](LOCAL_SETUP.md) + plataforma ya desplegada en vivo |
+| Instrucciones de ejecución | [`LOCAL_SETUP.md`](LOCAL_SETUP.md) + plataforma ya [desplegada en vivo](https://dkdbmj2vpxalx.cloudfront.net) |
