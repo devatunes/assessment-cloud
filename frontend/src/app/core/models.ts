@@ -238,6 +238,9 @@ export interface SanitizedQuestion {
   codeTemplate: string | null;
   visibleTestCases: { input: unknown; expectedOutput: string }[];
   options: { id: string; text: string }[];
+  // Lo que el candidato ya había respondido (si retoma el intento).
+  selectedOptionId: string | null;
+  submittedCode: string | null;
 }
 
 export interface AttemptWithQuestions {
