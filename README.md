@@ -6,11 +6,6 @@ gráficas de los resultados. En paralelo, cualquier persona puede registrarse co
 candidato y practicar gratis en un catálogo público de simulacros, ganando insignias y
 viendo en qué nivel (Junior/Semisenior/Senior) queda según su puntaje.
 
-> **Nota de alcance, honesta:** el reto pide un MVP de unas horas. Esto se
-> construyó en varias sesiones como una plataforma real: multi-tenant, con
-> candidatos, reportes e insignias — más allá del alcance mínimo pedido, pero
-> vale decirlo con esas palabras porque es lo honesto.
-
 - **Código de la app** (backend + frontend + executor): este repositorio.
 - **Infraestructura como código real**: [`app-iac`](../app-iac) (Terraform), módulos
   `modules/*/assessment`.
