@@ -6,6 +6,11 @@ gráficas de los resultados. En paralelo, cualquier persona puede registrarse co
 candidato y practicar gratis en un catálogo público de simulacros, ganando insignias y
 viendo en qué nivel (Junior/Semisenior/Senior) queda según su puntaje.
 
+> **Nota de alcance, honesta:** el reto pide un MVP de unas horas. Esto se
+> construyó en varias sesiones como una plataforma real: multi-tenant, con
+> candidatos, reportes e insignias — más allá del alcance mínimo pedido, pero
+> vale decirlo con esas palabras porque es lo honesto.
+
 - **Código de la app** (backend + frontend + executor): este repositorio.
 - **Infraestructura como código real**: [`app-iac`](../app-iac) (Terraform), módulos
   `modules/*/assessment`.
@@ -14,8 +19,23 @@ viendo en qué nivel (Junior/Semisenior/Senior) queda según su puntaje.
   íconos reales de AWS, costos, guía de arranque local, y Terraform de
   referencia para la arquitectura objetivo.
 
+### ⭐ Bonus
+
+- ✅ **Docker** — `docker compose up --build` levanta todo (Postgres + backend +
+  frontend) de punta a punta. Ver [Ejecutar en local](#ejecutar-en-local).
+- ✅ **Swagger/OpenAPI** — documentación interactiva de la API en
+  [`/docs`](https://g9yvdux2rl.execute-api.us-east-1.amazonaws.com/docs).
+- ✅ **Desplegado en AWS** (no Free Tier genérico, sino Lambda + API Gateway +
+  RDS + S3/CloudFront reales) — en vivo en
+  [`dkdbmj2vpxalx.cloudfront.net`](https://dkdbmj2vpxalx.cloudfront.net).
+
+Checklist completo del enunciado (funcionalidades, stack, bonus,
+entregables) con evidencia punto por punto:
+[**`artifacts/COMPLIANCE.md`**](artifacts/COMPLIANCE.md).
+
 ## Índice
 
+- [⭐ Bonus](#-bonus)
 - [Dos sistemas de cuentas, completamente separados](#dos-sistemas-de-cuentas-completamente-separados)
 - [Funcionalidades](#funcionalidades)
 - [Arquitectura](#arquitectura)
@@ -124,6 +144,13 @@ sequenceDiagram
 
 ### Decisiones y trade-offs
 
+- **Node + NestJS sobre Java + Spring Boot** (el reto permitía cualquiera de los dos).
+  Comparte TypeScript con el frontend, y NestJS da estructura modular (decoradores,
+  DI, guards) sin el costo de cold-start de una JVM en Lambda.
+- **PostgreSQL** (el reto dejaba libre la elección de base de datos: H2, PostgreSQL,
+  MongoDB...). El dominio es fuertemente relacional (organización → usuarios →
+  assessments → intentos → respuestas) con integridad referencial y transacciones
+  reales — modelarlo en un documento NoSQL habría significado reimplementar eso a mano.
 - **Lambda del backend fuera de VPC.** Sin NAT ni VPC Interface Endpoints (~$7/mes c/u),
   la Lambda llega a RDS (público) y a la Lambda executor sin infraestructura de red
   adicional. Costo casi cero, apto para una cuenta con budget ajustado.
