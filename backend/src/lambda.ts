@@ -20,15 +20,19 @@ async function bootstrapServer() {
   return serverlessExpress({ app: app.getHttpAdapter().getInstance() });
 }
 
-// La RDS de esta app se deja siempre encendida (uso puntual de la kata,
-// sin scheduler de apagado por inactividad como en contably), así que el
-// handler no necesita el gate de "base de datos arrancando".
-export const handler: Handler = async (event, context, callback) => {
+// Handler de 2 parámetros a propósito: Node.js 24 en Lambda rechaza
+// cualquier handler con un tercer parámetro `callback`, aunque no se use.
+export const handler: Handler = async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
 
   if (!cachedServer) {
     cachedServer = await bootstrapServer();
   }
 
-  return cachedServer(event, context, callback);
+  const promiseHandler = cachedServer as unknown as (
+    event: unknown,
+    context: unknown,
+  ) => Promise<unknown>;
+
+  return promiseHandler(event, context);
 };

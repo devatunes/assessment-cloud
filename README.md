@@ -115,10 +115,9 @@ sequenceDiagram
 
 ### Decisiones y trade-offs
 
-- **Lambda del backend fuera de VPC.** Mismo patrón que la app hermana (`contably`) en
-  este mismo repo de IaC: sin NAT ni VPC Interface Endpoints (~$7/mes c/u), la Lambda
-  llega a RDS (público) y a la Lambda executor sin infraestructura de red adicional.
-  Costo casi cero, apto para una cuenta con budget ajustado.
+- **Lambda del backend fuera de VPC.** Sin NAT ni VPC Interface Endpoints (~$7/mes c/u),
+  la Lambda llega a RDS (público) y a la Lambda executor sin infraestructura de red
+  adicional. Costo casi cero, apto para una cuenta con budget ajustado.
 - **RDS `publicly_accessible=true` con el puerto 5432 abierto a `0.0.0.0/0`, endurecido
   con `rds.force_ssl=1`.** La seguridad real recae en usuario/contraseña (generada por
   Terraform) + TLS obligatorio, no en el security group. Evolución natural a producción:
@@ -139,8 +138,8 @@ sequenceDiagram
   post-hoc: los intentos de simulacro tienen `candidateId` (nunca `organizationId` de
   quien lo completó), y el endpoint de reporte de una organización rechaza con 400 si
   el assessment es de tipo `PRACTICE`.
-- **RDS siempre encendida, sin apagado automático por inactividad.** A diferencia de
-  `contably` (que sí tiene ese patrón), esta app es de uso puntual.
+- **RDS siempre encendida, sin apagado automático por inactividad.** Uso puntual, no
+  justifica ese patrón acá.
 - **Solo JavaScript en el editor de código**, no Java. Simplifica drásticamente el
   executor manteniendo el requisito funcional del reto.
 
