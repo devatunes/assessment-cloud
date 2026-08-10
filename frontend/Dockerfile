@@ -8,7 +8,11 @@ COPY package.json package-lock.json ./
 # macOS (chokidar/fsevents) que no calzan con `npm ci` en Linux/Alpine.
 RUN npm install
 COPY . .
-RUN npm run build
+# development, no production (default de angular.json): production usa
+# environment.prod.ts, que trae hardcodeada la URL real de AWS para el
+# flujo de deploy-frontend.sh — acá necesitamos environment.ts, que apunta
+# a http://localhost:3000 (el backend de este mismo docker-compose).
+RUN npm run build -- --configuration=development
 
 FROM nginx:1.27-alpine AS runtime
 COPY --from=builder /app/dist/browser /usr/share/nginx/html
