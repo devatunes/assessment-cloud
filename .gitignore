@@ -24,3 +24,6 @@ frontend/src/environments/environment.prod.generated.ts
 
 # Presentaciones (pesadas, no son parte del código)
 artifacts/*.pptx
+
+# Terraform (código de referencia, nunca se aplicó contra AWS)
+artifacts/terraform-target/.terraform/

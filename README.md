@@ -87,6 +87,12 @@ arquitectura desplegada hoy contra el siguiente paso natural (VPC, RDS Proxy,
 read replica, executor en contenedor efímero), con el porqué de cada elección:
 [**`artifacts/ARCHITECTURE.md`**](artifacts/ARCHITECTURE.md).
 
+- 💰 **Costos** de ambos escenarios, con el porqué de cada salto de precio:
+  [`artifacts/COSTS.md`](artifacts/COSTS.md).
+- 🧱 **Terraform de referencia** para cuando se implemente la arquitectura
+  objetivo (no aplicado, no es la infraestructura real de este proyecto):
+  [`artifacts/terraform-target/`](artifacts/terraform-target/).
+
 La Lambda del backend es un único NestJS que expone, entre otros, estos módulos:
 `auth` (staff de organización), `candidate-auth` + `practice` (candidatos y
 simulacros, JWT con audience propia), `question-banks`, `badges`, `reports`,
