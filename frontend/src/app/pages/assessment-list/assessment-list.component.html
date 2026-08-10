@@ -23,7 +23,9 @@
             <span class="badge badge-code">Simulacro</span>
           }
         </h3>
-        <p>{{ assessment.description }}</p>
+        @if (assessment.description) {
+          <p>{{ assessment.description }}</p>
+        }
         <a role="button" [routerLink]="['/assessments', assessment.id]">Abrir</a>
       </article>
     }

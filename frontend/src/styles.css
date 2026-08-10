@@ -160,6 +160,28 @@ header.app-header {
   flex-wrap: wrap;
 }
 
+/* ".app-header" dentro de una página (título/hgroup a la izquierda, acción
+   a la derecha) — distinto de "header.app-header" de arriba, que es solo la
+   barra superior de toda la app. */
+div.app-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+div.app-header:first-child {
+  margin-top: 0;
+}
+
+div.app-header hgroup p {
+  color: var(--pico-muted-color);
+  margin-bottom: 0;
+}
+
 .app-brand {
   display: flex;
   align-items: center;
