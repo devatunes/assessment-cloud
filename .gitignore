@@ -22,8 +22,9 @@ frontend/src/environments/environment.prod.generated.ts
 .DS_Store
 *.log
 
-# Presentaciones (pesadas, no son parte del código)
+# Presentaciones y notas de trabajo para la sustentación (no son parte del código)
 artifacts/*.pptx
+artifacts/diapositivas-actualizadas.md
 
 # Terraform (código de referencia, nunca se aplicó contra AWS)
 artifacts/terraform-target/.terraform/
