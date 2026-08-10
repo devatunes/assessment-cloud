@@ -172,7 +172,7 @@ assessment-cloud/
 
 ## Ejecutar en local
 
-Requisitos: Docker (y Node 20+/npm solo si vas a correr fuera de contenedor).
+Requisitos: Docker (y Node 24+/npm solo si vas a correr fuera de contenedor).
 
 ### Opción A — todo dockerizado (bonus Docker)
 

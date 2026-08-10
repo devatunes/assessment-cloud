@@ -1,7 +1,7 @@
 # Build multi-stage del frontend Angular: compila y sirve estático con nginx.
 # Contexto de build: ./frontend (ver docker-compose.yml).
 
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
 # npm install (no ci): el lockfile trae dependencias opcionales resueltas en
