@@ -15,7 +15,13 @@
   </label>
 
   <fieldset>
-    <legend>Tipo de assessment</legend>
+    <legend>
+      Tipo de assessment
+      <app-info-button
+        label="tipo de assessment"
+        text="Oficial: solo lo resuelve quien reciba una invitación tuya, y el resultado va a tu reporte. Simulacro: cualquier candidato registrado lo practica libremente cuando quiera, no aparece en tu reporte y se puede repetir."
+      />
+    </legend>
     <label>
       <input type="radio" name="visibility" value="OFFICIAL" [(ngModel)]="visibility" />
       Oficial (requiere invitación por link)

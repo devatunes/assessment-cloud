@@ -49,6 +49,10 @@
         <button (click)="runCode()" [disabled]="running">
           {{ running ? 'Ejecutando...' : 'Ejecutar' }}
         </button>
+        <app-info-button
+          label="ejecutar código"
+          text="Corre tu código de verdad (no es una simulación) contra los casos de prueba visibles. Al finalizar el assessment se vuelve a correr contra todos los casos, incluidos los que no ves aquí."
+        />
 
         @if (currentRunResult) {
           <div class="mt-1">

@@ -5,7 +5,13 @@
   </div>
 
   <article>
-    <h3>Mis insignias</h3>
+    <h3>
+      Mis insignias
+      <app-info-button
+        label="insignias"
+        text="Se ganan automáticamente por logros: tu primer simulacro completado, rachas de 5 o 10 simulacros, un puntaje perfecto, y una por cada nivel que alcances. Cada una se otorga una sola vez."
+      />
+    </h3>
     @if (loadingBadges) {
       <p aria-busy="true">Cargando insignias...</p>
     }

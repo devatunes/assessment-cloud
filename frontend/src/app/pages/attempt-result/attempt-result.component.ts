@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AttemptsService } from '../../core/attempts.service';
 import { AttemptResult, Badge } from '../../core/models';
+import { InfoButtonComponent } from '../../shared/info-button.component';
 
 @Component({
   selector: 'app-attempt-result',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, InfoButtonComponent],
   templateUrl: './attempt-result.component.html',
 })
 export class AttemptResultComponent implements OnInit {

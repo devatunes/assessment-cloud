@@ -6,6 +6,7 @@ import { AttemptsService } from '../../core/attempts.service';
 import { AttemptWithQuestions, RunResult, SanitizedQuestion } from '../../core/models';
 import { DifficultyBadgeComponent } from '../../shared/difficulty-badge.component';
 import { CodeEditorComponent } from '../../shared/code-editor.component';
+import { InfoButtonComponent } from '../../shared/info-button.component';
 
 // Wizard pregunta a pregunta. El código del candidato se guarda:
 //  - al presionar "Ejecutar" (el endpoint /run también persiste submittedCode)
@@ -14,7 +15,7 @@ import { CodeEditorComponent } from '../../shared/code-editor.component';
 @Component({
   selector: 'app-attempt-take',
   standalone: true,
-  imports: [CommonModule, FormsModule, DifficultyBadgeComponent, CodeEditorComponent],
+  imports: [CommonModule, FormsModule, DifficultyBadgeComponent, CodeEditorComponent, InfoButtonComponent],
   templateUrl: './attempt-take.component.html',
 })
 export class AttemptTakeComponent implements OnInit, OnDestroy {

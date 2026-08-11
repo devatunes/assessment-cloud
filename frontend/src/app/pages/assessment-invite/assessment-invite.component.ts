@@ -15,11 +15,12 @@ import {
   InvitationTrack,
 } from '../../core/models';
 import { PaginatorComponent } from '../../shared/paginator.component';
+import { InfoButtonComponent } from '../../shared/info-button.component';
 
 @Component({
   selector: 'app-assessment-invite',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PaginatorComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PaginatorComponent, InfoButtonComponent],
   templateUrl: './assessment-invite.component.html',
 })
 export class AssessmentInviteComponent implements OnInit {
