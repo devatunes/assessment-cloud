@@ -50,8 +50,9 @@ entregables) con evidencia punto por punto:
   público de simulacros, su historial y sus insignias. JWT con
   `audience: assessment-cloud-candidates` — un token de un sistema nunca es válido en
   el otro, aunque compartan el mismo `JWT_SECRET`.
-- **Candidatos de assessments oficiales** (vía invitación) siguen siendo **anónimos**,
-  como en la kata original: no necesitan cuenta, solo el link con token.
+- **Candidatos de assessments oficiales** (vía invitación) también pasan por este
+  sistema: antes de empezar se identifican con su correo (inician sesión o crean
+  cuenta ahí mismo) — así siempre queda registrado a quién se evaluó.
 
 ## Funcionalidades
 
@@ -89,8 +90,10 @@ entregables) con evidencia punto por punto:
 ### Organización
 - 👥 **Roles** — Admin (invita usuarios, ve todo) y Reclutador. Invitar a un compañero
   genera un link de activación para copiar/enviar (sin envío de email real).
-- ✉️ **Invitaciones a candidatos oficiales** — link con token único, sin cuenta
-  requerida; retoma el mismo intento si se reabre a mitad o después de completado.
+- ✉️ **Invitaciones a candidatos oficiales** — link con token único; el candidato
+  se identifica (login o cuenta nueva) antes de empezar, así el intento siempre
+  queda vinculado a quién fue evaluado. Retoma el mismo intento si se reabre a
+  mitad o después de completado, sin pedir login de nuevo en ese caso.
 - 📊 **Reportes** — por assessment: candidatos invitados/completados, tasa de
   completitud, score promedio, distribución de niveles, tasa de acierto por pregunta
   (para detectar preguntas mal calibradas), y export a CSV. Vista general: todos los
@@ -206,7 +209,7 @@ assessment-cloud/
       question-banks/      # bancos reutilizables
       assessments/         # crear/listar assessments + cómputo de nivel
       attempts/            # resolver un intento, scoring, feedback
-      invitations/         # invitaciones a candidatos oficiales (anónimas)
+      invitations/         # invitaciones a candidatos oficiales
       reports/             # reporte por assessment + overview de organización
       users/ organizations/# staff y organizaciones
       migrations/          # migraciones SQL crudas, numeradas
