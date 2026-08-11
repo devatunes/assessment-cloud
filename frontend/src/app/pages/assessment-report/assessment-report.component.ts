@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ReportsService } from '../../core/reports.service';
 import { AssessmentReport } from '../../core/models';
 import { BarChartComponent, BarChartItem } from '../../shared/bar-chart.component';
+import { InfoButtonComponent } from '../../shared/info-button.component';
 
 const LEVEL_LABELS: Record<string, string> = {
   JUNIOR: 'Junior',
@@ -14,7 +15,7 @@ const LEVEL_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-assessment-report',
   standalone: true,
-  imports: [CommonModule, RouterLink, BarChartComponent],
+  imports: [CommonModule, RouterLink, BarChartComponent, InfoButtonComponent],
   templateUrl: './assessment-report.component.html',
 })
 export class AssessmentReportComponent implements OnInit {

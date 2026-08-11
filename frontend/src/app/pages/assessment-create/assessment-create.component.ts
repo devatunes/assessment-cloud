@@ -7,11 +7,12 @@ import { AssessmentsService } from '../../core/assessments.service';
 import { QuestionBanksService } from '../../core/question-banks.service';
 import { AssessmentVisibility, QUESTION_CATEGORY_LABELS, Question, QuestionBank } from '../../core/models';
 import { DifficultyBadgeComponent } from '../../shared/difficulty-badge.component';
+import { InfoButtonComponent } from '../../shared/info-button.component';
 
 @Component({
   selector: 'app-assessment-create',
   standalone: true,
-  imports: [CommonModule, FormsModule, DifficultyBadgeComponent],
+  imports: [CommonModule, FormsModule, DifficultyBadgeComponent, InfoButtonComponent],
   templateUrl: './assessment-create.component.html',
 })
 export class AssessmentCreateComponent implements OnInit {

@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { PracticeService } from '../../core/practice.service';
 import { EarnedBadge, PracticeAttemptSummary } from '../../core/models';
 import { PaginatorComponent } from '../../shared/paginator.component';
+import { InfoButtonComponent } from '../../shared/info-button.component';
 
 @Component({
   selector: 'app-practice-history',
   standalone: true,
-  imports: [CommonModule, RouterLink, PaginatorComponent],
+  imports: [CommonModule, RouterLink, PaginatorComponent, InfoButtonComponent],
   templateUrl: './practice-history.component.html',
 })
 export class PracticeHistoryComponent implements OnInit {

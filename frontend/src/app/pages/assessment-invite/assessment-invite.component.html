@@ -141,7 +141,13 @@
 
     <article>
       <div class="app-header">
-        <h3>Seleccionar de candidatos ya registrados</h3>
+        <h3>
+          Seleccionar de candidatos ya registrados
+          <app-info-button
+            label="candidatos ya registrados"
+            text="Candidatos que ya invitaste antes a cualquier assessment tuyo. Selecciónalos para invitarlos a este también, sin volver a escribir su nombre y correo."
+          />
+        </h3>
         <button class="secondary" (click)="toggleCandidatePicker()">
           {{ showCandidatePicker ? 'Cancelar' : 'Elegir de mi historial' }}
         </button>

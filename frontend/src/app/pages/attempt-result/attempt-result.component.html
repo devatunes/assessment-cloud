@@ -32,6 +32,10 @@
           <span class="badge" [class]="'badge-level-' + result.level.toLowerCase()">
             {{ result.level }}
           </span>
+          <app-info-button
+            label="nivel alcanzado"
+            text="El nivel (Junior/Semisenior/Senior) se calcula según el % de score obtenido, comparado contra los umbrales que definió el reclutador al crear este assessment."
+          />
         </p>
       }
     </article>
