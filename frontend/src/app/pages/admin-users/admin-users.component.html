@@ -1,0 +1,88 @@
+<section>
+  <div class="app-header">
+    <h2>Usuarios de la organización</h2>
+    <button (click)="toggleInviteForm()">{{ showInviteForm ? 'Cancelar' : '+ Invitar usuario' }}</button>
+  </div>
+
+  @if (showInviteForm) {
+    <article>
+      <h3>Invitar un nuevo usuario</h3>
+      @if (inviteError) {
+        <p class="form-error">{{ inviteError }}</p>
+      }
+      <form (ngSubmit)="invite()">
+        <div class="grid">
+          <label>
+            Nombre
+            <input type="text" [(ngModel)]="inviteName" name="inviteName" required />
+          </label>
+          <label>
+            Correo
+            <input type="email" [(ngModel)]="inviteEmail" name="inviteEmail" required />
+          </label>
+          <label>
+            Rol
+            <select [(ngModel)]="inviteRole" name="inviteRole">
+              <option value="RECRUITER">Reclutador</option>
+              <option value="ADMIN">Administrador</option>
+            </select>
+          </label>
+        </div>
+        <button type="submit" [disabled]="inviting">
+          {{ inviting ? 'Invitando...' : 'Enviar invitación' }}
+        </button>
+      </form>
+
+      @if (lastActivationLink) {
+        <div class="mt-1">
+          <p><strong>Copia y envía este link para que active su cuenta:</strong></p>
+          <div class="grid">
+            <input type="text" [value]="lastActivationLink" readonly />
+            <button class="secondary" (click)="copyLink(lastActivationLink)">
+              {{ copied ? '¡Copiado!' : 'Copiar' }}
+            </button>
+          </div>
+          <p><small>No se envía correo automáticamente: comparte el link tú mismo.</small></p>
+        </div>
+      }
+    </article>
+  }
+
+  @if (loading) {
+    <p aria-busy="true">Cargando equipo...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Rol</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users; track user.id) {
+          <tr>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role === 'ADMIN' ? 'Administrador' : 'Reclutador' }}</td>
+            <td>
+              @if (user.status === 'ACTIVE') {
+                <span class="badge badge-easy">Activo</span>
+              } @else {
+                <span class="badge badge-medium">Pendiente de activación</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-paginator [page]="page" [pageSize]="pageSize" [total]="total" (pageChange)="onPageChange($event)" />
+</section>

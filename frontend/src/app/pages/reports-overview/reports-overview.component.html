@@ -1,0 +1,74 @@
+<section>
+  <h2>Reportes de la organización</h2>
+
+  @if (loading) {
+    <p aria-busy="true">Cargando dashboard...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+
+  @if (overview) {
+    @if (overview.assessments.length === 0) {
+      <p>Todavía no hay assessments oficiales con datos para reportar.</p>
+    }
+
+    @if (overview.assessments.length > 0) {
+      <article>
+        <h3>Score promedio por assessment</h3>
+        <app-bar-chart [items]="assessmentScoreChartItems" [maxValue]="100" />
+      </article>
+
+      <article>
+        <h3>Tasa de acierto por categoría</h3>
+        <p>
+          <small>
+            Agrupado por la categoría de cada pregunta, entre todos los assessments oficiales de la
+            organización.
+          </small>
+        </p>
+        <app-bar-chart [items]="categoryChartItems" [maxValue]="100" />
+      </article>
+
+      <article>
+        <h3>Assessments</h3>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Invitados</th>
+                <th>Completados</th>
+                <th>Tasa de completitud</th>
+                <th>Score promedio</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (a of overview.assessments; track a.assessmentId) {
+                <tr>
+                  <td>{{ a.assessmentName }}</td>
+                  <td>{{ a.totalInvitations }}</td>
+                  <td>{{ a.completed }}</td>
+                  <td>{{ a.completionRate | number: '1.0-0' }}%</td>
+                  <td>
+                    {{
+                      a.averageScorePercentage !== null
+                        ? (a.averageScorePercentage | number: '1.0-0') + '%'
+                        : '—'
+                    }}
+                  </td>
+                  <td>
+                    <a role="button" class="secondary" [routerLink]="['/assessments', a.assessmentId, 'report']">
+                      Ver reporte
+                    </a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+    }
+  }
+</section>

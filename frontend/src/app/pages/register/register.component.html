@@ -1,0 +1,69 @@
+<section class="auth-page">
+  <article>
+    <hgroup>
+      <h2>Crear cuenta</h2>
+      <p>
+        {{
+          role === 'org'
+            ? 'Serás el administrador de tu organización'
+            : 'Regístrate para practicar simulacros gratis'
+        }}
+      </p>
+    </hgroup>
+
+    <div class="grid role-toggle">
+      <button type="button" [class]="role === 'org' ? '' : 'secondary'" (click)="selectRole('org')">
+        Soy de una organización
+      </button>
+      <button
+        type="button"
+        [class]="role === 'candidate' ? '' : 'secondary'"
+        (click)="selectRole('candidate')"
+      >
+        Soy candidato
+      </button>
+    </div>
+
+    @if (error) {
+      <p class="form-error">{{ error }}</p>
+    }
+
+    <form (ngSubmit)="submit()">
+      @if (role === 'org') {
+        <label>
+          Nombre de la organización
+          <input type="text" name="organizationName" [(ngModel)]="organizationName" required />
+        </label>
+        <label>
+          Tu nombre
+          <input type="text" name="adminName" [(ngModel)]="adminName" required />
+        </label>
+      } @else {
+        <label>
+          Tu nombre
+          <input type="text" name="candidateName" [(ngModel)]="candidateName" required />
+        </label>
+      }
+      <label>
+        Correo
+        <input type="email" name="email" [(ngModel)]="email" required autocomplete="username" />
+      </label>
+      <label>
+        Contraseña (mínimo 8 caracteres)
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          required
+          minlength="8"
+          autocomplete="new-password"
+        />
+      </label>
+      <button type="submit" [disabled]="loading">
+        {{ loading ? 'Creando...' : 'Crear cuenta' }}
+      </button>
+    </form>
+
+    <p><small>¿Ya tienes cuenta? <a routerLink="/login" [queryParams]="{ role }">Inicia sesión</a></small></p>
+  </article>
+</section>

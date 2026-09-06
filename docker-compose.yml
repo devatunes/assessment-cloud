@@ -1,0 +1,74 @@
+# Entorno completo en Docker: Postgres + backend NestJS + frontend Angular.
+# `docker compose up -d db` levanta solo la base (flujo de desarrollo con
+# `npm run start:dev` / `npm start` en caliente). `docker compose up --build`
+# levanta los 3 servicios dockerizados de punta a punta.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: assessment-db
+    environment:
+      POSTGRES_DB: assessment
+      POSTGRES_USER: assessment
+      POSTGRES_PASSWORD: assessment_local_dev
+    ports:
+      # 5433 en el host para no chocar con un Postgres local existente
+      - "5433:5432"
+    volumes:
+      - assessment_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U assessment -d assessment"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      # Contexto = raíz del repo: el backend necesita copiar también
+      # ../executor (ver backend/Dockerfile y EXECUTOR_MODE=local).
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: assessment-backend
+    ports:
+      - "3000:3000"
+    environment:
+      # "development", no "production": este perfil usa el JWT_SECRET de
+      # desarrollo a propósito, y el guard de auth.module.ts rechaza esa
+      # combinación en NODE_ENV=production.
+      NODE_ENV: development
+      PORT: 3000
+      # "db" es el hostname interno del servicio de Postgres en esta red de Docker.
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: assessment
+      DB_PASSWORD: assessment_local_dev
+      DB_NAME: assessment
+      DB_SSL: "false"
+      DB_MIGRATIONS_RUN: "true"
+      CORS_ALLOWED_ORIGINS: http://localhost:4200
+      EXECUTOR_MODE: local
+      JWT_SECRET: assessment-cloud-secret-dev
+      JWT_EXPIRES_IN: 8h
+      JWT_ISSUER: assessment-cloud-api
+      JWT_AUDIENCE: assessment-cloud-org
+      CANDIDATE_JWT_AUDIENCE: assessment-cloud-candidates
+      AUTH_MAX_LOGIN_ATTEMPTS: 5
+      AUTH_LOGIN_WINDOW_MINUTES: 15
+      AUTH_LOGIN_LOCK_MINUTES: 15
+      SEED_ADMIN_EMAIL: admin@example.com
+      SEED_ADMIN_PASSWORD: changeme123
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: assessment-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  assessment_pgdata:

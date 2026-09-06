@@ -1,0 +1,41 @@
+<section>
+  <div class="app-header">
+    <hgroup>
+      <h2>Simulacros para practicar</h2>
+      <p>Hola, {{ candidateAuthService.currentCandidate()?.name }}</p>
+    </hgroup>
+    <a role="button" class="secondary" routerLink="/practice/history">Mi historial</a>
+  </div>
+
+  @if (loading) {
+    <p aria-busy="true">Cargando catálogo...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+  @if (!loading && catalog.length === 0) {
+    <p>Todavía no hay simulacros disponibles. Vuelve pronto.</p>
+  }
+
+  <div class="grid">
+    @for (entry of catalog; track entry.id) {
+      <article>
+        <h3>{{ entry.name }}</h3>
+        <p>{{ entry.description || 'Sin descripción' }}</p>
+        <p>
+          <small>
+            {{ entry.questionCount }} pregunta(s)
+            @if (entry.timeLimitMinutes) {
+              · {{ entry.timeLimitMinutes }} min
+            }
+          </small>
+        </p>
+        <button (click)="start(entry)" [disabled]="startingId === entry.id">
+          {{ startingId === entry.id ? 'Iniciando...' : 'Practicar' }}
+        </button>
+      </article>
+    }
+  </div>
+
+  <app-paginator [page]="page" [pageSize]="pageSize" [total]="total" (pageChange)="onPageChange($event)" />
+</section>

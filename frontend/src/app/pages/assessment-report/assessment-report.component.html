@@ -1,0 +1,120 @@
+<section>
+  @if (loading) {
+    <p aria-busy="true">Cargando reporte...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+
+  @if (report) {
+    <div class="app-header">
+      <hgroup>
+        <h2>Reporte — {{ report.assessmentName }}</h2>
+      </hgroup>
+      <div class="header-actions">
+        <a routerLink="/assessments">← Volver</a>
+        <button class="secondary" (click)="exportCsv()" [disabled]="exporting">
+          {{ exporting ? 'Exportando...' : 'Exportar CSV' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="report-summary-cards">
+      <div class="report-summary-card">
+        <strong>{{ report.totalInvitations }}</strong>
+        <small>Invitados</small>
+      </div>
+      <div class="report-summary-card">
+        <strong>{{ report.completed }}</strong>
+        <small>Completados</small>
+      </div>
+      <div class="report-summary-card">
+        <strong>{{ report.completionRate | number: '1.0-0' }}%</strong>
+        <small>Tasa de completitud</small>
+      </div>
+      <div class="report-summary-card">
+        <strong>
+          {{
+            report.averageScorePercentage !== null
+              ? (report.averageScorePercentage | number: '1.0-0') + '%'
+              : '—'
+          }}
+        </strong>
+        <small>Score promedio</small>
+      </div>
+    </div>
+
+    <article>
+      <h3>Distribución de niveles</h3>
+      <app-bar-chart [items]="levelChartItems" [maxValue]="levelChartMax" suffix="" />
+    </article>
+
+    <article>
+      <h3>
+        Tasa de acierto por pregunta
+        <app-info-button
+          label="tasa de acierto"
+          text="Porcentaje de candidatos que respondieron bien cada pregunta. Si casi todos aciertan, la pregunta puede ser muy fácil; si casi nadie acierta, puede estar mal calibrada o mal redactada."
+        />
+      </h3>
+      <p>
+        <small>
+          Ayuda a detectar preguntas mal calibradas (muy fáciles o muy difíciles para lo que se
+          esperaba).
+        </small>
+      </p>
+      <app-bar-chart [items]="questionChartItems" [maxValue]="100" />
+    </article>
+
+    <article>
+      <h3>Candidatos</h3>
+      @if (report.candidates.length === 0) {
+        <p>Todavía no se ha invitado a ningún candidato.</p>
+      }
+      @if (report.candidates.length > 0) {
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Candidato</th>
+                <th>Estado</th>
+                <th>Score</th>
+                <th>Nivel</th>
+                <th>Completado el</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of report.candidates; track c.invitationId) {
+                <tr>
+                  <td>{{ c.candidateName || c.candidateEmail || '—' }}</td>
+                  <td>
+                    <span
+                      class="badge"
+                      [class.badge-code]="c.status === 'PENDING'"
+                      [class.badge-easy]="c.status === 'COMPLETED'"
+                      [class.badge-medium]="c.status === 'STARTED'"
+                      [class.badge-hard]="c.status === 'EXPIRED'"
+                    >
+                      {{ c.status }}
+                    </span>
+                  </td>
+                  <td>{{ c.score !== null ? c.score + ' / ' + c.maxScore : '—' }}</td>
+                  <td>
+                    @if (c.level) {
+                      <span class="badge" [class]="'badge-level-' + c.level.toLowerCase()">
+                        {{ c.level }}
+                      </span>
+                    } @else {
+                      —
+                    }
+                  </td>
+                  <td>{{ c.completedAt ? (c.completedAt | date: 'short') : '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </article>
+  }
+</section>

@@ -1,0 +1,108 @@
+<section>
+  <div class="app-header">
+    <h2>Mi historial de práctica</h2>
+    <a routerLink="/practice">← Volver al catálogo</a>
+  </div>
+
+  <article>
+    <h3>
+      Mis insignias
+      <app-info-button
+        label="insignias"
+        text="Se ganan automáticamente por logros: tu primer simulacro completado, rachas de 5 o 10 simulacros, un puntaje perfecto, y una por cada nivel que alcances. Cada una se otorga una sola vez."
+      />
+    </h3>
+    @if (loadingBadges) {
+      <p aria-busy="true">Cargando insignias...</p>
+    }
+    @if (!loadingBadges && badges.length === 0) {
+      <p><small>Todavía no tienes insignias. Completa un simulacro para empezar a ganarlas.</small></p>
+    }
+    @if (badges.length > 0) {
+      <div class="grid">
+        @for (badge of badges; track badge.code) {
+          <div>
+            <p class="badge-icon" [title]="badge.description">{{ badge.icon }}</p>
+            <strong>{{ badge.label }}</strong>
+            <p><small>{{ badge.earnedAt | date: 'short' }}</small></p>
+          </div>
+        }
+      </div>
+    }
+  </article>
+
+  @if (loading) {
+    <p aria-busy="true">Cargando historial...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+  @if (!loading && attempts.length === 0) {
+    <p>Todavía no has practicado ningún simulacro.</p>
+  }
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Tipo</th>
+          <th>Estado</th>
+          <th>Score</th>
+          <th>Nivel</th>
+          <th>Fecha</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (attempt of attempts; track attempt.id) {
+          <tr>
+            <td>{{ attempt.assessmentName }}</td>
+            <td>
+              @if (attempt.assessmentVisibility === 'OFFICIAL') {
+                <span class="badge badge-code" title="Prueba oficial de una organización, vinculada a tu cuenta">
+                  Oficial
+                </span>
+              } @else {
+                <span class="badge badge-mc">Simulacro</span>
+              }
+            </td>
+            <td>
+              <span
+                class="badge"
+                [class.badge-easy]="attempt.status === 'COMPLETED'"
+                [class.badge-medium]="attempt.status === 'IN_PROGRESS'"
+              >
+                {{ attempt.status === 'COMPLETED' ? 'Completado' : 'En curso' }}
+              </span>
+            </td>
+            <td>{{ attempt.score ?? '—' }} / {{ attempt.maxScore }}</td>
+            <td>
+              @if (attempt.level) {
+                <span class="badge" [class]="'badge-level-' + attempt.level.toLowerCase()">
+                  {{ attempt.level }}
+                </span>
+              } @else {
+                —
+              }
+            </td>
+            <td>{{ attempt.startedAt | date: 'short' }}</td>
+            <td>
+              @if (attempt.status === 'COMPLETED') {
+                <a role="button" class="secondary" [routerLink]="['/attempt', attempt.id, 'result']">
+                  Ver resultado
+                </a>
+              } @else {
+                <a role="button" class="secondary" [routerLink]="['/attempt', attempt.id]">
+                  Continuar
+                </a>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-paginator [page]="page" [pageSize]="pageSize" [total]="total" (pageChange)="onPageChange($event)" />
+</section>

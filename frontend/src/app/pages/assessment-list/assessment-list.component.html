@@ -1,0 +1,35 @@
+<section>
+  <div class="app-header">
+    <h2>Assessments</h2>
+    <a role="button" routerLink="/assessments/new">+ Nuevo assessment</a>
+  </div>
+
+  @if (loading) {
+    <p aria-busy="true">Cargando...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+  @if (!loading && assessments.length === 0) {
+    <p>Todavía no hay assessments. Crea el primero.</p>
+  }
+
+  <div class="grid">
+    @for (assessment of assessments; track assessment.id) {
+      <article>
+        <h3>
+          {{ assessment.name }}
+          @if (assessment.visibility === 'PRACTICE') {
+            <span class="badge badge-code">Simulacro</span>
+          }
+        </h3>
+        @if (assessment.description) {
+          <p>{{ assessment.description }}</p>
+        }
+        <a role="button" [routerLink]="['/assessments', assessment.id]">Abrir</a>
+      </article>
+    }
+  </div>
+
+  <app-paginator [page]="page" [pageSize]="pageSize" [total]="total" (pageChange)="onPageChange($event)" />
+</section>

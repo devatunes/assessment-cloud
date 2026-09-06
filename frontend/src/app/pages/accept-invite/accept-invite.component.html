@@ -1,0 +1,29 @@
+<section class="auth-page">
+  <article>
+    <hgroup>
+      <h2>Activa tu cuenta</h2>
+      <p>Fija tu contraseña para entrar por primera vez</p>
+    </hgroup>
+
+    @if (error) {
+      <p class="form-error">{{ error }}</p>
+    }
+
+    <form (ngSubmit)="submit()">
+      <label>
+        Contraseña (mínimo 8 caracteres)
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          required
+          minlength="8"
+          autocomplete="new-password"
+        />
+      </label>
+      <button type="submit" [disabled]="loading">
+        {{ loading ? 'Activando...' : 'Activar cuenta' }}
+      </button>
+    </form>
+  </article>
+</section>
