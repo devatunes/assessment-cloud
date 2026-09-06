@@ -1,0 +1,30 @@
+# Dependencias
+node_modules/
+
+# Builds
+dist/
+backend/lambda/
+backend/lambda.zip
+executor/executor.zip
+frontend/.angular/
+frontend/out-tsc/
+coverage/
+
+# Entornos locales (nunca subir credenciales)
+.env
+.env.local
+*.local.env
+
+# Config de producción generada por deploy-frontend.sh
+frontend/src/environments/environment.prod.generated.ts
+
+# Sistema
+.DS_Store
+*.log
+
+# Presentaciones y notas de trabajo para la sustentación (no son parte del código)
+artifacts/*.pptx
+artifacts/SLIDES.md
+
+# Terraform (código de referencia, nunca se aplicó contra AWS)
+artifacts/terraform-target/.terraform/

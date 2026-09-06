@@ -1,0 +1,122 @@
+<section>
+  @if (loading) {
+    <p aria-busy="true">Calculando resultado...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+
+  @if (newBadges.length > 0) {
+    <article class="badge-unlock-banner">
+      <h3>🎉 ¡Nuevas insignias desbloqueadas!</h3>
+      <div class="grid">
+        @for (badge of newBadges; track badge.code) {
+          <div>
+            <p class="badge-icon">{{ badge.icon }}</p>
+            <strong>{{ badge.label }}</strong>
+            <p><small>{{ badge.description }}</small></p>
+          </div>
+        }
+      </div>
+    </article>
+  }
+
+  @if (result) {
+    <article>
+      <h2>Resultado — {{ result.assessmentName }}</h2>
+      <p>Candidato: {{ result.candidateName }}</p>
+      <h1 class="stat-hero">{{ result.score }} / {{ result.maxScore }}</h1>
+      @if (result.level) {
+        <p>
+          Nivel alcanzado:
+          <span class="badge" [class]="'badge-level-' + result.level.toLowerCase()">
+            {{ result.level }}
+          </span>
+          <app-info-button
+            label="nivel alcanzado"
+            text="El nivel (Junior/Semisenior/Senior) se calcula según el % de score obtenido, comparado contra los umbrales que definió el reclutador al crear este assessment."
+          />
+        </p>
+      }
+    </article>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Pregunta</th>
+            <th>Tipo</th>
+            <th>Resultado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of result.breakdown; track item.questionId) {
+            <tr>
+              <td>{{ item.title }}</td>
+              <td>{{ item.type === 'CODE' ? 'Código' : 'Opción múltiple' }}</td>
+              <td>
+                @if (item.isCorrect) {
+                  <span class="text-success">✅ Correcto</span>
+                } @else {
+                  <span class="form-error">❌ Incorrecto</span>
+                }
+              </td>
+            </tr>
+            @if (item.explanation) {
+              <tr>
+                <td colspan="3">
+                  <small><strong>¿Por qué?</strong> {{ item.explanation }}</small>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <article>
+      @if (feedbackSubmitted) {
+        <p>✅ ¡Gracias por tu retroalimentación!</p>
+      } @else {
+        <h3>¿Cómo fue tu experiencia con la plataforma?</h3>
+        <p>
+          <small>Esta encuesta es sobre la plataforma, no afecta tu resultado ni es
+          obligatoria.</small>
+        </p>
+        <fieldset role="group" aria-label="Calificación de 1 a 5">
+          @for (star of [1, 2, 3, 4, 5]; track star) {
+            <label>
+              <input
+                type="radio"
+                name="feedback-rating"
+                [value]="star"
+                [ngModel]="feedbackRating"
+                (ngModelChange)="feedbackRating = $event"
+              />
+              {{ star }}
+            </label>
+          }
+        </fieldset>
+        <label>
+          Comentarios (opcional)
+          <textarea
+            [(ngModel)]="feedbackComment"
+            rows="3"
+            placeholder="¿Algo que quieras contarnos?"
+          ></textarea>
+        </label>
+        @if (feedbackError) {
+          <p class="form-error">{{ feedbackError }}</p>
+        }
+        <button
+          type="button"
+          [disabled]="!feedbackRating || submittingFeedback"
+          [attr.aria-busy]="submittingFeedback ? 'true' : null"
+          (click)="submitFeedback()"
+        >
+          Enviar encuesta
+        </button>
+      }
+    </article>
+  }
+</section>

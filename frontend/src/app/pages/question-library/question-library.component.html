@@ -1,0 +1,109 @@
+<section>
+  <div class="app-header">
+    <h2>Biblioteca de preguntas</h2>
+    <button (click)="toggleCreateForm()">{{ showCreateForm ? 'Cancelar' : '+ Nueva pregunta' }}</button>
+  </div>
+
+  @if (showCreateForm) {
+    <article>
+      <h3>Nueva pregunta</h3>
+      <app-question-form
+        [saving]="creating"
+        [serverError]="createError"
+        (save)="createQuestion($event)"
+      />
+    </article>
+  }
+
+  <article>
+    <div class="grid">
+      <label>
+        Categoría
+        <select [(ngModel)]="filterCategory" (change)="onFilterChange()">
+          <option value="">Todas</option>
+          @for (cat of categories; track cat) {
+            <option [value]="cat">{{ categoryLabels[cat] }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Dificultad
+        <select [(ngModel)]="filterDifficulty" (change)="onFilterChange()">
+          <option value="">Todas</option>
+          <option value="EASY">EASY</option>
+          <option value="MEDIUM">MEDIUM</option>
+          <option value="HARD">HARD</option>
+        </select>
+      </label>
+      <label>
+        Tipo
+        <select [(ngModel)]="filterType" (change)="onFilterChange()">
+          <option value="">Todos</option>
+          <option value="MULTIPLE_CHOICE">Selección múltiple</option>
+          <option value="CODE">Código</option>
+        </select>
+      </label>
+    </div>
+    <button class="secondary" (click)="clearFilters()">Limpiar filtros</button>
+  </article>
+
+  @if (loading) {
+    <p aria-busy="true">Cargando preguntas...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+
+  @if (!loading && questions.length === 0) {
+    <p>No hay preguntas con estos filtros.</p>
+  }
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Título</th>
+          <th>Categoría</th>
+          <th>Etiquetas</th>
+          <th>Origen</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (question of questions; track question.id) {
+          <tr>
+            <td><a [routerLink]="['/questions', question.id]">{{ question.title }}</a></td>
+            <td>{{ categoryLabels[question.category] }}</td>
+            <td>
+              <app-difficulty-badge [difficulty]="question.difficulty" [type]="question.type" />
+            </td>
+            <td>
+              @if (isOwn(question)) {
+                @if (question.visibility === 'PUBLIC') {
+                  <span class="badge badge-code">Pública (de mi organización)</span>
+                } @else {
+                  <span class="badge badge-mc">Privada</span>
+                }
+              } @else {
+                <span class="badge badge-easy">Pública (de otra organización)</span>
+              }
+            </td>
+            <td>
+              @if (!isOwn(question)) {
+                <button
+                  class="secondary"
+                  (click)="duplicate(question)"
+                  [disabled]="duplicatingId === question.id"
+                >
+                  {{ duplicatingId === question.id ? 'Copiando...' : 'Copiar a mi biblioteca' }}
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-paginator [page]="page" [pageSize]="pageSize" [total]="total" (pageChange)="onPageChange($event)" />
+</section>

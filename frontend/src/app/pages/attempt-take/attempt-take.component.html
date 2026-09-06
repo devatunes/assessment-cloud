@@ -1,0 +1,110 @@
+<section>
+  @if (loading) {
+    <p aria-busy="true">Cargando...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+
+  @if (attempt && currentQuestion) {
+    <div class="app-header">
+      <p class="progress-indicator">
+        Pregunta {{ currentIndex + 1 }} / {{ attempt.questions.length }} — {{ attempt.assessmentName }}
+      </p>
+      @if (remainingSeconds !== null) {
+        <span class="badge" [class.badge-hard]="timeIsRunningOut" [class.badge-code]="!timeIsRunningOut">
+          ⏱ {{ remainingTimeLabel }}
+        </span>
+      }
+    </div>
+
+    <article>
+      <header>
+        <app-difficulty-badge [difficulty]="currentQuestion.difficulty" [type]="currentQuestion.type" />
+      </header>
+      <h3>{{ currentQuestion.title }}</h3>
+      <p>{{ currentQuestion.statement }}</p>
+
+      @if (currentQuestion.type === 'MULTIPLE_CHOICE') {
+        <div>
+          @for (option of currentQuestion.options; track option.id) {
+            <label>
+              <input
+                type="radio"
+                [name]="'question-' + currentQuestion.id"
+                [checked]="selectedOptionByQuestion[currentQuestion.id] === option.id"
+                (change)="selectOption(currentQuestion.id, option.id)"
+              />
+              {{ option.text }}
+            </label>
+          }
+        </div>
+      } @else {
+        <app-code-editor
+          [initialCode]="codeByQuestion[currentQuestion.id]"
+          [resetKey]="currentQuestion.id"
+          (codeChange)="onCodeChange(currentQuestion.id, $event)"
+        />
+
+        <button (click)="runCode()" [disabled]="running">
+          {{ running ? 'Ejecutando...' : 'Ejecutar' }}
+        </button>
+        <app-info-button
+          label="ejecutar código"
+          text="Corre tu código de verdad (no es una simulación) contra los casos de prueba visibles. Al finalizar el assessment se vuelve a correr contra todos los casos, incluidos los que no ves aquí."
+        />
+
+        @if (currentRunResult) {
+          <div class="mt-1">
+            <p>
+              <strong>Resultado: </strong>
+              @if (currentRunResult.allPassed) {
+                <span class="text-success">✅ Todos los casos pasaron</span>
+              } @else {
+                <span class="form-error">❌ Hay casos que no pasan</span>
+              }
+            </p>
+
+            @for (result of currentRunResult.results; track $index) {
+              <div class="test-case-result" [class.pass]="result.passed" [class.fail]="!result.passed">
+                <strong>Caso {{ $index + 1 }}: {{ result.passed ? 'PASS' : 'FAIL' }}{{ result.timedOut ? ' (timeout)' : '' }}</strong>
+                <div class="result-columns">
+                  <div>
+                    <div><small>Input</small></div>
+                    <pre>{{ result.input | json }}</pre>
+                  </div>
+                  <div>
+                    <div><small>Esperado</small></div>
+                    <pre>{{ result.expected }}</pre>
+                  </div>
+                  <div>
+                    <div><small>Obtenido</small></div>
+                    <pre>{{ result.actual }}</pre>
+                  </div>
+                  @if (result.stderr) {
+                    <div>
+                      <div><small>Error</small></div>
+                      <pre>{{ result.stderr }}</pre>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    </article>
+
+    <div class="grid">
+      <button class="secondary" (click)="goPrev()" [disabled]="currentIndex === 0 || saving">Anterior</button>
+
+      @if (!isLastQuestion) {
+        <button (click)="goNext()" [disabled]="saving">Siguiente</button>
+      } @else {
+        <button (click)="finish()" [disabled]="finishing || saving">
+          {{ finishing ? 'Finalizando...' : 'Finalizar assessment' }}
+        </button>
+      }
+    </div>
+  }
+</section>

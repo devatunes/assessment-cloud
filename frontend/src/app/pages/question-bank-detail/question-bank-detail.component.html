@@ -1,0 +1,157 @@
+<section>
+  @if (loading) {
+    <p aria-busy="true">Cargando banco...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+
+  @if (bank) {
+    <div class="app-header">
+      <hgroup>
+        <h2>{{ bank.name }}</h2>
+        <p>{{ bank.description || 'Sin descripción' }}</p>
+      </hgroup>
+      <a routerLink="/question-banks">← Volver a bancos</a>
+    </div>
+
+    <p>
+      @if (isOwn) {
+        @if (bank.visibility === 'PUBLIC') {
+          <span class="badge badge-code">Pública (de mi organización)</span>
+        } @else {
+          <span class="badge badge-mc">Privada</span>
+        }
+      } @else {
+        <span class="badge badge-easy">Pública (de otra organización) — solo lectura</span>
+      }
+    </p>
+
+    @if (isOwn) {
+      <button class="secondary" (click)="toggleEditForm()">
+        {{ showEditForm ? 'Cancelar edición' : 'Editar banco' }}
+      </button>
+
+      @if (showEditForm) {
+        <article>
+          @if (editError) {
+            <p class="form-error">{{ editError }}</p>
+          }
+          <form (ngSubmit)="saveEdit()">
+            <label>
+              Nombre
+              <input type="text" [(ngModel)]="editForm.name" name="editName" required />
+            </label>
+            <label>
+              Descripción
+              <textarea [(ngModel)]="editForm.description" name="editDescription" rows="2"></textarea>
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                [ngModel]="editForm.visibility === 'PUBLIC'"
+                (ngModelChange)="editForm.visibility = $event ? 'PUBLIC' : 'PRIVATE'"
+                name="editVisibility"
+              />
+              Compartir en el catálogo público
+            </label>
+            <button type="submit" [disabled]="savingEdit">
+              {{ savingEdit ? 'Guardando...' : 'Guardar cambios' }}
+            </button>
+          </form>
+        </article>
+      }
+    }
+
+    <div class="app-header">
+      <h3>Preguntas ({{ bank.items.length }})</h3>
+      @if (isOwn) {
+        <button (click)="toggleAddPicker()">
+          {{ showAddPicker ? 'Cancelar' : '+ Agregar preguntas' }}
+        </button>
+      }
+    </div>
+
+    @if (showAddPicker) {
+      <article>
+        @if (addError) {
+          <p class="form-error">{{ addError }}</p>
+        }
+        @if (loadingAvailable) {
+          <p aria-busy="true">Cargando preguntas disponibles...</p>
+        }
+        @if (!loadingAvailable && availableQuestions.length === 0) {
+          <p>No hay más preguntas disponibles para agregar.</p>
+        }
+        @if (!loadingAvailable && availableQuestions.length > 0) {
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Título</th>
+                  <th>Categoría</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (question of availableQuestions; track question.id) {
+                  <tr>
+                    <td>
+                      <input
+                        type="checkbox"
+                        [checked]="selectedToAdd.has(question.id)"
+                        (change)="toggleSelected(question.id)"
+                      />
+                    </td>
+                    <td>{{ question.title }}</td>
+                    <td>{{ categoryLabels[question.category] }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <button [disabled]="adding || selectedToAdd.size === 0" (click)="confirmAdd()">
+            {{ adding ? 'Agregando...' : 'Agregar seleccionadas (' + selectedToAdd.size + ')' }}
+          </button>
+        }
+      </article>
+    }
+
+    @if (bank.items.length === 0) {
+      <p>Este banco todavía no tiene preguntas.</p>
+    }
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Categoría</th>
+            <th>Dificultad</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of bank.items; track item.questionId) {
+            <tr>
+              <td>{{ item.question.title }}</td>
+              <td>{{ categoryLabels[item.question.category] }}</td>
+              <td>{{ item.question.difficulty }}</td>
+              <td>
+                @if (isOwn) {
+                  <button
+                    class="secondary"
+                    (click)="removeQuestion(item.questionId)"
+                    [disabled]="removingQuestionId === item.questionId"
+                  >
+                    {{ removingQuestionId === item.questionId ? 'Quitando...' : 'Quitar' }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

@@ -1,0 +1,11 @@
+{
+  "name": "assessment-executor",
+  "version": "0.1.0",
+  "description": "Sandboxed JavaScript code executor (AWS Lambda, zero dependencies)",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "package": "rm -f executor.zip && zip -q executor.zip index.js runner.js",
+    "test": "node test-local.js"
+  }
+}

@@ -1,0 +1,34 @@
+<section class="auth-page">
+  <article>
+    <hgroup>
+      <h2>Iniciar sesión</h2>
+      <p>Sirve tanto para cuentas de organización como de candidato</p>
+    </hgroup>
+
+    @if (error) {
+      <p class="form-error">{{ error }}</p>
+    }
+
+    <form (ngSubmit)="submit()">
+      <label>
+        Correo
+        <input type="email" name="email" [(ngModel)]="email" required autocomplete="username" />
+      </label>
+      <label>
+        Contraseña
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          required
+          autocomplete="current-password"
+        />
+      </label>
+      <button type="submit" [disabled]="loading">
+        {{ loading ? 'Ingresando...' : 'Ingresar' }}
+      </button>
+    </form>
+
+    <p><small>¿No tienes cuenta? <a routerLink="/register">Crear cuenta</a></small></p>
+  </article>
+</section>

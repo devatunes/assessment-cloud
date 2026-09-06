@@ -1,0 +1,307 @@
+<section>
+  <a routerLink="/assessments">&larr; Volver a assessments</a>
+
+  @if (loading) {
+    <p aria-busy="true">Cargando...</p>
+  }
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+
+  @if (assessment) {
+    <h2>Invitar candidatos — {{ assessment.name }}</h2>
+
+    <article>
+      <h3>Generar nueva invitación</h3>
+      <div class="grid">
+        <label>
+          Nombre (opcional)
+          <input type="text" [(ngModel)]="candidateName" name="candidateName" placeholder="Se puede dejar vacío" />
+        </label>
+        <label>
+          Correo
+          <input type="email" [(ngModel)]="candidateEmail" name="candidateEmail" required />
+        </label>
+        <label>
+          Expira en (días, opcional)
+          <input type="number" [(ngModel)]="expiresInDays" name="expiresInDays" min="1" />
+        </label>
+      </div>
+      <div class="grid">
+        <label>
+          Track (opcional)
+          <select [(ngModel)]="track" name="track">
+            <option value="">Sin especificar</option>
+            @for (t of tracks; track t) {
+              <option [value]="t">{{ trackLabels[t] }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Especialidad (opcional)
+          <input
+            type="text"
+            [(ngModel)]="specialty"
+            name="specialty"
+            placeholder="Backend, Frontend, Cloud, Automation..."
+            list="specialty-suggestions"
+          />
+          <datalist id="specialty-suggestions">
+            <option value="Backend"></option>
+            <option value="Frontend"></option>
+            <option value="Fullstack"></option>
+            <option value="Cloud"></option>
+            <option value="Mobile"></option>
+            <option value="Automation"></option>
+            <option value="Manual"></option>
+            <option value="Performance"></option>
+            <option value="Security"></option>
+          </datalist>
+        </label>
+      </div>
+      <button (click)="createInvitation()" [disabled]="creating || !candidateEmail">
+        {{ creating ? 'Generando...' : 'Generar link de invitación' }}
+      </button>
+
+      @if (lastCreatedLink) {
+        <div class="mt-1">
+          <p><strong>Copia y envía este link al candidato:</strong></p>
+          <div class="grid">
+            <input type="text" [value]="lastCreatedLink" readonly />
+            <button class="secondary" (click)="copyLink(lastCreatedLink)">
+              {{ copied ? '¡Copiado!' : 'Copiar' }}
+            </button>
+          </div>
+        </div>
+      }
+    </article>
+
+    <article>
+      <h3>Importar candidatos por CSV</h3>
+      <p>
+        <small>
+          Archivo .csv con encabezado <code>nombre,email,track,especialidad</code> (email
+          obligatorio; track y especialidad opcionales; track debe ser {{ tracks.join('/') }} o se
+          deja sin clasificar).
+        </small>
+      </p>
+      <input type="file" accept=".csv,text/csv" (change)="onCsvSelected($event)" />
+
+      @if (csvError) {
+        <p class="form-error">{{ csvError }}</p>
+      }
+
+      @if (csvResult) {
+        <p class="text-success">
+          {{ csvResult.created.length }} invitación(es) creada(s).
+          @if (csvResult.failed.length > 0) {
+            {{ csvResult.failed.length }} fila(s) fallida(s).
+          }
+        </p>
+        @if (csvResult.failed.length > 0) {
+          <ul>
+            @for (failure of csvResult.failed; track failure.row) {
+              <li>Fila {{ failure.row }} ({{ failure.email || 'sin correo' }}): {{ failure.error }}</li>
+            }
+          </ul>
+        }
+      }
+
+      @if (csvRows.length > 0) {
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Track</th>
+                <th>Especialidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of csvRows; track $index) {
+                <tr>
+                  <td>{{ row.candidateName || '—' }}</td>
+                  <td>{{ row.candidateEmail || '—' }}</td>
+                  <td>{{ row.track ? trackLabels[row.track] : '—' }}</td>
+                  <td>{{ row.specialty || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="header-actions">
+          <button (click)="importCsv()" [disabled]="importingCsv">
+            {{ importingCsv ? 'Importando...' : 'Importar ' + csvRows.length + ' candidato(s)' }}
+          </button>
+          <button class="secondary" (click)="clearCsv()">Cancelar</button>
+        </div>
+      }
+    </article>
+
+    <article>
+      <div class="app-header">
+        <h3>
+          Seleccionar de candidatos ya registrados
+          <app-info-button
+            label="candidatos ya registrados"
+            text="Candidatos que ya invitaste antes a cualquier assessment tuyo. Selecciónalos para invitarlos a este también, sin volver a escribir su nombre y correo."
+          />
+        </h3>
+        <button class="secondary" (click)="toggleCandidatePicker()">
+          {{ showCandidatePicker ? 'Cancelar' : 'Elegir de mi historial' }}
+        </button>
+      </div>
+
+      @if (showCandidatePicker) {
+        @if (candidateError) {
+          <p class="form-error">{{ candidateError }}</p>
+        }
+
+        @if (candidateResult) {
+          <p class="text-success">
+            {{ candidateResult.created.length }} invitación(es) creada(s).
+            @if (candidateResult.failed.length > 0) {
+              {{ candidateResult.failed.length }} fila(s) fallida(s).
+            }
+          </p>
+        }
+
+        @if (loadingCandidates) {
+          <p aria-busy="true">Cargando candidatos...</p>
+        }
+        @if (!loadingCandidates && availableCandidateGroups.length === 0) {
+          <p>No hay candidatos en tu historial que no estén ya invitados a este assessment.</p>
+        }
+
+        @if (!loadingCandidates && availableCandidateGroups.length > 0) {
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Nombre</th>
+                  <th>Correo</th>
+                  <th>Última clasificación</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (group of availableCandidateGroups; track group.email) {
+                  <tr>
+                    <td>
+                      <input
+                        type="checkbox"
+                        [checked]="selectedCandidateEmails.has(group.email)"
+                        (change)="toggleCandidateSelected(group.email)"
+                      />
+                    </td>
+                    <td>{{ group.name || '—' }}</td>
+                    <td>{{ group.email }}</td>
+                    <td>
+                      @if (group.entries[0].track) {
+                        <span class="badge badge-mc">{{ trackLabels[group.entries[0].track] }}</span>
+                      }
+                      @if (group.entries[0].specialty) {
+                        <span class="badge badge-code">{{ group.entries[0].specialty }}</span>
+                      }
+                      @if (!group.entries[0].track && !group.entries[0].specialty) {
+                        <small>Sin clasificar</small>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <button [disabled]="invitingSelected || selectedCandidateEmails.size === 0" (click)="inviteSelectedCandidates()">
+            {{ invitingSelected ? 'Invitando...' : 'Invitar seleccionados (' + selectedCandidateEmails.size + ')' }}
+          </button>
+        }
+      }
+    </article>
+
+    <h3>Invitaciones enviadas ({{ invitations.length }})</h3>
+    @if (invitations.length === 0) {
+      <p>Todavía no hay invitaciones para este assessment.</p>
+    }
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Candidato</th>
+            <th>Estado</th>
+            <th>Clasificación</th>
+            <th>Link</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (invitation of invitations; track invitation.id) {
+            <tr>
+              <td>{{ invitation.candidateName || invitation.candidateEmail || '—' }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [class.badge-code]="invitation.status === 'PENDING'"
+                  [class.badge-easy]="invitation.status === 'COMPLETED'"
+                  [class.badge-medium]="invitation.status === 'STARTED'"
+                  [class.badge-hard]="invitation.status === 'EXPIRED'"
+                >
+                  {{ invitation.status }}
+                </span>
+              </td>
+              <td>
+                @if (editingId === invitation.id) {
+                  <div class="grid" style="min-width: 20rem">
+                    <select [(ngModel)]="editTrack" [ngModelOptions]="{ standalone: true }">
+                      <option value="">Sin track</option>
+                      @for (t of tracks; track t) {
+                        <option [value]="t">{{ trackLabels[t] }}</option>
+                      }
+                    </select>
+                    <input
+                      type="text"
+                      [(ngModel)]="editSpecialty"
+                      [ngModelOptions]="{ standalone: true }"
+                      placeholder="Especialidad"
+                      list="specialty-suggestions"
+                    />
+                    <div>
+                      <button (click)="saveEdit(invitation)" [disabled]="savingEdit">Guardar</button>
+                      <button class="secondary" (click)="cancelEdit()">Cancelar</button>
+                    </div>
+                  </div>
+                } @else {
+                  @if (invitation.track || invitation.specialty) {
+                    @if (invitation.track) {
+                      <span class="badge badge-mc">{{ trackLabels[invitation.track] }}</span>
+                    }
+                    @if (invitation.specialty) {
+                      <span class="badge badge-code">{{ invitation.specialty }}</span>
+                    }
+                  } @else {
+                    <small>Sin clasificar</small>
+                  }
+                  <button class="secondary" (click)="startEdit(invitation)">Editar</button>
+                }
+              </td>
+              <td>
+                @if (invitation.status === 'PENDING') {
+                  <button class="secondary" (click)="copyLink(buildLink(invitation.token))">
+                    Copiar link
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <app-paginator
+      [page]="invitationsPage"
+      [pageSize]="pageSize"
+      [total]="invitationsTotal"
+      (pageChange)="onInvitationsPageChange($event)"
+    />
+  }
+</section>

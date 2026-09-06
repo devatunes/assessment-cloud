@@ -1,0 +1,639 @@
+/* Sistema de diseño de Assessment Cloud, construido sobre Pico.css (ver
+   angular.json). Se sobreescriben las variables de color/tipografía de Pico
+   en vez de pelear contra el framework — los componentes (article, table,
+   button, badge, etc.) siguen siendo los de Pico, solo con otra piel. */
+
+:root {
+  --pico-font-family:
+    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --pico-font-size: 100%;
+  --pico-line-height: 1.55;
+
+  /* Marca: índigo/violeta — look "SaaS" moderno, buen contraste en claro y oscuro */
+  --brand-50: #eef2ff;
+  --brand-100: #e0e7ff;
+  --brand-400: #818cf8;
+  --brand-500: #6366f1;
+  --brand-600: #4f46e5;
+  --brand-700: #4338ca;
+
+  --pico-border-radius: 0.6rem;
+}
+
+/* Pico define --pico-primary y compañía dentro de selectores compuestos
+   (":root:not([data-theme=dark]), [data-theme=light]" y "[data-theme=dark]",
+   más un @media(prefers-color-scheme:dark) para el default del sistema) con
+   más especificidad que un simple ":root". Para pisarlos hay que igualar
+   esos mismos selectores, no alcanza con :root solo. */
+:root:not([data-theme='dark']),
+[data-theme='light'] {
+  --pico-primary: var(--brand-600);
+  --pico-primary-background: var(--brand-600);
+  --pico-primary-border: var(--brand-600);
+  --pico-primary-hover: var(--brand-700);
+  --pico-primary-hover-background: var(--brand-700);
+  --pico-primary-focus: rgba(99, 102, 241, 0.35);
+  --pico-primary-inverse: #ffffff;
+  --pico-underline: var(--brand-600);
+  --pico-h1-color: var(--brand-700);
+  --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 14px rgba(15, 23, 42, 0.06);
+  --card-shadow-hover: 0 2px 4px rgba(15, 23, 42, 0.06), 0 10px 24px rgba(15, 23, 42, 0.09);
+}
+
+[data-theme='dark'] {
+  --pico-primary: var(--brand-400);
+  --pico-primary-background: var(--brand-500);
+  --pico-primary-border: var(--brand-500);
+  --pico-primary-hover: var(--brand-100);
+  --pico-primary-hover-background: var(--brand-400);
+  --pico-primary-focus: rgba(129, 140, 248, 0.45);
+  --pico-underline: var(--brand-400);
+  --pico-h1-color: var(--brand-400);
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.28);
+  --card-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.24), 0 10px 28px rgba(0, 0, 0, 0.36);
+}
+
+/* Sin toggle explícito (sin data-theme), sigue la preferencia del sistema —
+   mismo patrón que Pico usa para su propio default. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --pico-primary: var(--brand-400);
+    --pico-primary-background: var(--brand-500);
+    --pico-primary-border: var(--brand-500);
+    --pico-primary-hover: var(--brand-100);
+    --pico-primary-hover-background: var(--brand-400);
+    --pico-primary-focus: rgba(129, 140, 248, 0.45);
+    --pico-underline: var(--brand-400);
+    --pico-h1-color: var(--brand-400);
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.28);
+    --card-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.24), 0 10px 28px rgba(0, 0, 0, 0.36);
+  }
+}
+
+body {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 3rem;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+/* --- Utilidades del sistema de diseño (reemplazan estilos inline sueltos) --- */
+
+.auth-page {
+  max-width: 420px;
+  margin: 2rem auto;
+}
+
+.form-error {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.text-success {
+  color: #059669;
+  font-weight: 600;
+}
+
+.mt-1 {
+  margin-top: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  white-space: nowrap;
+}
+
+.stat-hero {
+  font-size: 3rem;
+  letter-spacing: -0.03em;
+  color: var(--pico-primary);
+}
+
+.badge-icon {
+  font-size: 2rem;
+  margin-bottom: 0;
+}
+
+.badge-unlock-banner {
+  border: 2px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.06);
+}
+
+/* --- Encabezado --- */
+/* Nota: ".app-header" fuera de "<header>" (ej. dentro de una página, como
+   título + acción a la derecha) sigue siendo el flex simple de layout —
+   ver la segunda regla ".app-header" más abajo. Esta primera es solo para
+   el <header> raíz de la app (la barra superior). */
+
+header.app-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  padding: 1rem 1.5rem;
+  background: var(--pico-card-background-color);
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: calc(var(--pico-border-radius) * 1.4);
+  box-shadow: var(--card-shadow);
+}
+
+.app-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.app-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ".app-header" dentro de una página (título/hgroup a la izquierda, acción
+   a la derecha) — distinto de "header.app-header" de arriba, que es solo la
+   barra superior de toda la app. */
+div.app-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+div.app-header:first-child {
+  margin-top: 0;
+}
+
+div.app-header hgroup p {
+  color: var(--pico-muted-color);
+  margin-bottom: 0;
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  color: var(--pico-color) !important;
+  text-decoration: none !important;
+}
+
+.app-brand-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  font-size: 1.4rem;
+  border-radius: 999px;
+  background: var(--brand-100);
+}
+
+.app-brand hgroup h1 {
+  margin-bottom: 0.1rem;
+  font-size: 1.5rem;
+}
+
+.app-brand hgroup p {
+  color: var(--pico-muted-color);
+  font-size: 0.85rem;
+  margin-bottom: 0;
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.nav-pill {
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--pico-color) !important;
+  text-decoration: none !important;
+  transition: background-color 0.12s ease;
+}
+
+.nav-pill:hover {
+  background: var(--pico-primary-focus);
+}
+
+.nav-pill.active {
+  background: var(--brand-100);
+  color: var(--brand-700) !important;
+  font-weight: 700;
+}
+
+:root[data-theme='dark'] .nav-pill.active {
+  background: rgba(129, 140, 248, 0.18);
+  color: var(--brand-400) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .nav-pill.active {
+    background: rgba(129, 140, 248, 0.18);
+    color: var(--brand-400) !important;
+  }
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--pico-muted-color);
+  font-weight: 500;
+}
+
+.user-chip-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.user-chip-text strong {
+  font-size: 0.85rem;
+  color: var(--pico-color);
+  font-weight: 600;
+}
+
+.user-chip-text small {
+  font-size: 0.72rem;
+  color: var(--pico-muted-color);
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: var(--pico-primary);
+  color: var(--pico-primary-inverse);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.role-toggle {
+  margin-bottom: 1.25rem;
+}
+
+.theme-toggle {
+  margin-left: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  width: auto;
+  border-radius: 999px;
+}
+
+/* --- Tarjetas (article de Pico) --- */
+
+article {
+  border-radius: calc(var(--pico-border-radius) * 1.4);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--pico-muted-border-color);
+  transition: box-shadow 0.15s ease;
+}
+
+.grid > article:hover {
+  box-shadow: var(--card-shadow-hover);
+}
+
+/* --- Botones --- */
+
+button,
+[type='submit'],
+[type='button'],
+a[role='button'] {
+  border-radius: var(--pico-border-radius);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* --- Tablas --- */
+/* En pantallas angostas una tabla de varias columnas no cabe: en vez de
+   apretar el contenido, se deja hacer scroll horizontal solo dentro de la
+   tabla (el resto de la página no se mueve). */
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--pico-border-radius);
+}
+
+.paginator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.paginator-label {
+  font-size: 0.85rem;
+  color: var(--pico-muted-color);
+  white-space: nowrap;
+}
+
+table {
+  border-radius: var(--pico-border-radius);
+  overflow: hidden;
+}
+
+table thead th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--pico-muted-color);
+}
+
+table tbody tr {
+  transition: background-color 0.1s ease;
+}
+
+table tbody tr:hover {
+  background: var(--pico-primary-focus);
+}
+
+/* --- Badges --- */
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin-right: 0.35rem;
+}
+
+.badge-easy { background: #d1fae5; color: #065f46; }
+.badge-medium { background: #fef3c7; color: #92400e; }
+.badge-hard { background: #fee2e2; color: #991b1b; }
+.badge-mc { background: var(--brand-100); color: var(--brand-700); }
+.badge-code { background: #dbeafe; color: #1e40af; }
+
+.badge-level-junior { background: var(--brand-100); color: var(--brand-700); font-size: 0.95rem; padding: 0.35rem 0.85rem; }
+.badge-level-semisenior { background: #fef3c7; color: #92400e; font-size: 0.95rem; padding: 0.35rem 0.85rem; }
+.badge-level-senior { background: #d1fae5; color: #065f46; font-size: 0.95rem; padding: 0.35rem 0.85rem; }
+
+/* --- Gráficas de barras --- */
+
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 14rem) 1fr 4rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bar-label {
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar-track {
+  background: var(--pico-muted-border-color);
+  border-radius: 999px;
+  height: 0.65rem;
+  overflow: hidden;
+}
+
+.bar-fill {
+  background: linear-gradient(90deg, var(--brand-500), var(--brand-600));
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.bar-value {
+  font-size: 0.85rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* --- Tarjetas resumen de reportes --- */
+
+.report-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.report-summary-card {
+  text-align: center;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: calc(var(--pico-border-radius) * 1.2);
+  box-shadow: var(--card-shadow);
+  padding: 1.25rem 1rem;
+}
+
+.report-summary-card strong {
+  display: block;
+  font-size: 2rem;
+  color: var(--pico-primary);
+  letter-spacing: -0.03em;
+}
+
+/* --- Tour de onboarding --- */
+
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.onboarding-modal {
+  max-width: 420px;
+  width: 100%;
+  margin: 0;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.28);
+}
+
+.onboarding-modal header {
+  color: var(--pico-muted-color);
+  font-size: 0.85rem;
+}
+
+/* --- Modal de confirmación --- */
+
+.confirm-modal {
+  max-width: 420px;
+  width: 100%;
+  margin: 0;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.28);
+}
+
+.confirm-modal-dangerous {
+  border-color: #dc2626;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.confirm-btn-dangerous {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.confirm-btn-dangerous:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+/* --- Editor de código / resultados de test cases --- */
+
+.test-case-result {
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.test-case-result.pass {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.test-case-result.fail {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.result-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  font-family: var(--pico-font-family-monospace);
+  font-size: 0.85rem;
+}
+
+.result-columns pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.progress-indicator {
+  font-weight: 700;
+  color: var(--pico-primary);
+  margin-bottom: 1rem;
+}
+
+.editor-host {
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.editor-host .cm-editor {
+  height: 260px;
+}
+
+/* --- Responsive (móvil/tablet) ---
+   Pico ya colapsa ".grid" a una columna por debajo de ~768px por su cuenta;
+   esto cubre lo específico de este sistema de diseño: header, tablas con
+   scroll horizontal propio, y las grillas manuales (result-columns,
+   bar-row) que no son ".grid" de Pico. */
+
+@media (max-width: 768px) {
+  body {
+    padding: 1rem 0.75rem 2.5rem;
+  }
+
+  header.app-header {
+    padding: 0.85rem 1rem;
+  }
+
+  .app-brand hgroup h1 {
+    font-size: 1.25rem;
+  }
+
+  .app-brand hgroup p {
+    display: none;
+  }
+
+  .app-nav {
+    gap: 0.2rem;
+  }
+
+  .nav-pill {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.85rem;
+  }
+
+  .user-chip {
+    font-size: 0.8rem;
+  }
+
+  .bar-row {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+
+  .bar-value {
+    text-align: left;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-header-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .app-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .result-columns {
+    grid-template-columns: 1fr;
+  }
+
+  table thead th,
+  table tbody td {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .auth-page {
+    margin: 1rem auto;
+  }
+}
